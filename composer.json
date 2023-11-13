@@ -1,0 +1,59 @@
+{
+    "name": "jobmetric/laravel-flow",
+    "description": "This package is for creating different workflows in different Laravel projects.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "jobmetric",
+        "laravel",
+        "package",
+        "workflow",
+        "flow"
+    ],
+    "homepage": "https://doc.jobmetric.net/package/laravel-flow",
+    "authors": [
+        {
+            "name": "Majid Mohammadian",
+            "email": "majeedmohammadian@gmail.com",
+            "homepage": "https://www.linkedin.com/in/majidmohammadian/",
+            "role": "Full Stack Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.0.1",
+        "ext-json": "*",
+        "laravel/framework": ">=9.19",
+        "spatie/laravel-data": "^3.9",
+        "jobmetric/metadata": "*"
+    },
+    "autoload": {
+        "files": [
+            "src/helpers.php"
+        ],
+        "psr-4": {
+            "JobMetric\\Flow\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JobMetric\\Flow\\FlowServiceProvider"
+            ],
+            "aliases": {
+                "Flow": "JobMetric\\Flow\\Facades\\Flow"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "support": {
+        "issues": "https://github.com/jobmetric/laravel-flow/issues",
+        "forum": "https://twitter.com/jobmetric",
+        "source": "https://github.com/jobmetric/laravel-flow"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/majidmohammadian"
+        }
+    ]
+}
