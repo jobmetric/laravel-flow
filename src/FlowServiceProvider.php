@@ -3,17 +3,17 @@
 namespace JobMetric\Flow;
 
 use Illuminate\Support\ServiceProvider;
-use JobMetric\Metadata\MetadataServiceProvider;
+use JobMetric\Translation\TranslationServiceProvider;
 
 class FlowServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
         $this->app->bind('Flow', function ($app) {
             return new Flow($app);
         });
 
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'flow');
+        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'workflow');
     }
 
     /**
@@ -51,7 +51,7 @@ class FlowServiceProvider extends ServiceProvider
     {
         if($this->app->runningInConsole()) {
             // run dependency publishable
-            $this->publishes(self::pathsToPublish(MetadataServiceProvider::class), 'metadata');
+            $this->publishes(self::pathsToPublish(TranslationServiceProvider::class), 'translation');
 
             // publish config
             $this->publishes([

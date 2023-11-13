@@ -5,7 +5,6 @@ namespace JobMetric\Flow;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use JobMetric\Metadata\JMetadata;
 use Throwable;
 
