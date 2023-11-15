@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->string('slug')->nullable()->index();
 
-            $table->unsignedBigInteger('roll_id')->nullable()->index();
+            $table->unsignedBigInteger('role_id')->nullable()->index();
 
             $table->timestamps();
         });

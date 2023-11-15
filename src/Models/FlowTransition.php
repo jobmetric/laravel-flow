@@ -17,7 +17,7 @@ class FlowTransition extends Model
         'from',
         'to',
         'slug',
-        'roll_id'
+        'role_id'
     ];
 
     protected $casts = [
@@ -25,7 +25,7 @@ class FlowTransition extends Model
         'from' => 'integer',
         'to' => 'integer',
         'slug' => 'string',
-        'roll_id' => 'integer'
+        'role_id' => 'integer'
     ];
 
     public function getTable()
@@ -48,9 +48,9 @@ class FlowTransition extends Model
         return $this->belongsTo(FlowState::class, 'to');
     }
 
-    public function roll(): BelongsTo
+    public function role(): BelongsTo
     {
-        return $this->belongsTo(config('workflow.models.roll'));
+        return $this->belongsTo(config('workflow.models.role'));
     }
 
     public function tasks(): HasMany

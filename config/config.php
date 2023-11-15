@@ -42,8 +42,8 @@ return [
     */
 
     "models" => [
-        'user' => 'App\Models\User',
-        'roll' => 'App\Models\Roll',
+        'user' => env('WORKFLOW_MODEL_USER', 'App\Models\User'),
+        'role' => env('WORKFLOW_MODEL_ROLE', 'App\Models\Role')
     ],
 
 ];
