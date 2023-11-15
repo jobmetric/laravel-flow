@@ -9,6 +9,13 @@ class FlowState extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'flow_id',
+        'type',
+        'config',
+        'status'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_state', parent::getTable());

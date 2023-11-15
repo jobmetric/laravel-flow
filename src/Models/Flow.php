@@ -9,6 +9,11 @@ class Flow extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'driver',
+        'status'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow', parent::getTable());

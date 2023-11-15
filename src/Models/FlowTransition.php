@@ -9,6 +9,14 @@ class FlowTransition extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'flow_id',
+        'from',
+        'to',
+        'slug',
+        'roll_id'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_transition', parent::getTable());

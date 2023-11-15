@@ -38,7 +38,7 @@ return new class extends Migration
              * }
              */
 
-            $table->string(config('workflow.tables.flow_state'))->nullable()->index();
+            $table->string('status')->nullable()->index();
 
             $table->timestamps();
         });
@@ -49,6 +49,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('flow_states');
+        Schema::dropIfExists(config('workflow.tables.flow_state'));
     }
 };
