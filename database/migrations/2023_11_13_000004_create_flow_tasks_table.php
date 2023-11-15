@@ -14,7 +14,7 @@ return new class extends Migration
         /**
          * #translatable
          */
-        Schema::create('flow_tasks', function (Blueprint $table) {
+        Schema::create(config('workflow.tables.flow_task'), function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('flow_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
@@ -46,6 +46,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('flow_tasks');
+        Schema::dropIfExists(config('workflow.tables.flow_task'));
     }
 };

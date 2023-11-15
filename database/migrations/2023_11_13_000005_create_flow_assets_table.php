@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('flow_assets', function (Blueprint $table) {
+        Schema::create(config('workflow.tables.flow_asset'), function (Blueprint $table) {
             $table->id();
 
             $table->morphs('assetable');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('flow_assets');
+        Schema::dropIfExists(config('workflow.tables.flow_asset'));
     }
 };

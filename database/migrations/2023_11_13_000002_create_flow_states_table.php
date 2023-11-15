@@ -15,7 +15,7 @@ return new class extends Migration
         /**
          * #translatable
          */
-        Schema::create('flow_states', function (Blueprint $table) {
+        Schema::create(config('workflow.tables.flow_state'), function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('flow_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
@@ -38,7 +38,7 @@ return new class extends Migration
              * }
              */
 
-            $table->string('status')->nullable()->index();
+            $table->string(config('workflow.tables.flow_state'))->nullable()->index();
 
             $table->timestamps();
         });

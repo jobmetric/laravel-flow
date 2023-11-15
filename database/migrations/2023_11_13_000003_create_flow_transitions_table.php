@@ -17,7 +17,7 @@ return new class extends Migration
         /**
          * #translatable
          */
-        Schema::create('flow_transitions', function (Blueprint $table) use ($_flow_state) {
+        Schema::create(config('workflow.tables.flow_transition'), function (Blueprint $table) use ($_flow_state) {
             $table->id();
 
             $table->foreignId('flow_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('flow_transitions');
+        Schema::dropIfExists(config('workflow.tables.flow_transition'));
     }
 };
