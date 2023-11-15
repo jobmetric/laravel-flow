@@ -16,6 +16,13 @@ class FlowState extends Model
         'status'
     ];
 
+    protected $casts = [
+        'flow_id' => 'integer',
+        'type' => 'string',
+        'config' => 'json',
+        'status' => 'string'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_state', parent::getTable());

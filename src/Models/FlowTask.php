@@ -17,6 +17,14 @@ class FlowTask extends Model
         'status'
     ];
 
+    protected $casts = [
+        'flow_id' => 'integer',
+        'driver' => 'string',
+        'config' => 'json',
+        'ordering' => 'integer',
+        'status' => 'boolean'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_task', parent::getTable());

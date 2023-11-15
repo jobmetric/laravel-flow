@@ -14,6 +14,11 @@ class Flow extends Model
         'status'
     ];
 
+    protected $casts = [
+        'driver' => 'string',
+        'status' => 'boolean'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow', parent::getTable());

@@ -17,6 +17,14 @@ class FlowTransition extends Model
         'roll_id'
     ];
 
+    protected $casts = [
+        'flow_id' => 'integer',
+        'from' => 'integer',
+        'to' => 'integer',
+        'slug' => 'string',
+        'roll_id' => 'integer'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_transition', parent::getTable());

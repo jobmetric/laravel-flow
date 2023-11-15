@@ -18,6 +18,13 @@ class FlowAsset extends Model
         'user_id'
     ];
 
+    protected $casts = [
+        'assetable_id' => 'integer',
+        'assetable_type' => 'string',
+        'flow_state_id' => 'integer',
+        'user_id' => 'integer'
+    ];
+
     public function getTable()
     {
         return config('workflow.tables.flow_asset', parent::getTable());
