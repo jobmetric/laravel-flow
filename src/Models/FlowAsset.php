@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class FlowAsset extends Model
 {
     use HasFactory;
+
+    public function getTable()
+    {
+        return config('workflow.tables.flow_asset', parent::getTable());
+    }
 }

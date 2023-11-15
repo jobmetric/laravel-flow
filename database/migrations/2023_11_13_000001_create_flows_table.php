@@ -14,7 +14,7 @@ return new class extends Migration
         /**
          * #translatable
          */
-        Schema::create('flows', function (Blueprint $table) {
+        Schema::create(config('workflow.tables.flow'), function (Blueprint $table) {
             $table->id();
 
             $table->string('driver')->index();
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('flows');
+        Schema::dropIfExists(config('workflow.tables.flow'));
     }
 };
