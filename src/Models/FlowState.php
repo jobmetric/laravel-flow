@@ -4,6 +4,7 @@ namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FlowState extends Model
 {
@@ -26,5 +27,10 @@ class FlowState extends Model
     public function getTable()
     {
         return config('workflow.tables.flow_state', parent::getTable());
+    }
+
+    public function flow(): BelongsTo
+    {
+        return $this->belongsTo(Flow::class);
     }
 }

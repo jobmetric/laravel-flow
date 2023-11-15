@@ -4,13 +4,14 @@ namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FlowTask extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'flow_id',
+        'flow_transition_id',
         'driver',
         'config',
         'ordering',
@@ -18,7 +19,7 @@ class FlowTask extends Model
     ];
 
     protected $casts = [
-        'flow_id' => 'integer',
+        'flow_transition_id' => 'integer',
         'driver' => 'string',
         'config' => 'json',
         'ordering' => 'integer',
@@ -28,5 +29,10 @@ class FlowTask extends Model
     public function getTable()
     {
         return config('workflow.tables.flow_task', parent::getTable());
+    }
+
+    public function flowTransition(): BelongsTo
+    {
+        return $this->belongsTo(FlowTransition::class);
     }
 }
