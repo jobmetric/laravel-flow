@@ -2,9 +2,11 @@
 
 namespace JobMetric\Flow\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FlowTransition extends Model
 {
@@ -49,5 +51,23 @@ class FlowTransition extends Model
     public function roll(): BelongsTo
     {
         return $this->belongsTo(config('workflow.models.roll'));
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(FlowTask::class);
+    }
+
+    /**
+     * Scope a query to only include flow transition of a given slug.
+     *
+     * @param Builder $query
+     * @param string $slug
+     *
+     * @return Builder
+     */
+    public function scopeOfSlug(Builder $query, string $slug): Builder
+    {
+        return $query->where('slug', $slug);
     }
 }
