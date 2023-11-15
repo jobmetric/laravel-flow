@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('from')->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('to')->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
 
+            $table->string('slug')->nullable()->index();
+
             $table->unsignedBigInteger('roll_id')->nullable()->index();
 
             $table->timestamps();
