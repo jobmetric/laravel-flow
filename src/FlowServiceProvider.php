@@ -39,6 +39,11 @@ class FlowServiceProvider extends ServiceProvider
 
             // register publishable
             $this->registerPublishables();
+
+            $this->commands([
+                Commands\MakeFlow::class,
+                Commands\MakeTask::class,
+            ]);
         }
 
         // set translations

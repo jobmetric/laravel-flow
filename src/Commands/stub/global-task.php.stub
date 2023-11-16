@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Flows\Global;
+
+use JobMetric\Flow\Contracts\TaskContract;
+
+class {{task}}GlobalTask extends TaskContract
+{
+    public function handle()
+    {
+        // write code here
+    }
+}

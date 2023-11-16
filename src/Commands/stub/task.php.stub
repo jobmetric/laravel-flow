@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Flows\Drivers\{{driver}}\Tasks;
+
+use JobMetric\Flow\Contracts\TaskContract;
+
+class {{task}}{{driver}}Task extends TaskContract
+{
+    public function handle()
+    {
+        // write code here
+    }
+}
