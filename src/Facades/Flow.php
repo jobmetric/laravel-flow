@@ -2,11 +2,12 @@
 
 namespace JobMetric\Flow\Facades;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \JobMetric\Flow\Flow
+ * @method static \JobMetric\Flow\Models\Flow store(array $data)
+ *
+ * @see \JobMetric\Flow\Services\Flow\FlowManager
  */
 class Flow extends Facade
 {
@@ -17,6 +18,6 @@ class Flow extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return 'Flow';
+        return \JobMetric\Flow\Services\Flow\FlowManager::class;
     }
 }

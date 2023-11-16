@@ -1,14 +1,15 @@
 <?php
 
-namespace JobMetric\Flow;
+namespace JobMetric\Flow\Services\Flow;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Models\Flow;
 use JobMetric\Metadata\JMetadata;
 use Throwable;
 
-class Flow
+class FlowManager
 {
     /**
      * The application instance.
@@ -37,5 +38,17 @@ class Flow
         $this->app = $app;
 
         $this->JMetadata = $app->make('JMetadata');
+    }
+
+    /**
+     * store flow
+     *
+     * @param array $data
+     *
+     * @return Flow
+     */
+    public function store(array $data = []): Flow
+    {
+        return Flow::create($data);
     }
 }
