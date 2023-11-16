@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create(config('workflow.tables.flow_task'), function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('flow_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('flow_transition_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
 
             $table->string('driver')->index();
             /**

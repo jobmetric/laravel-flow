@@ -2,11 +2,21 @@
 
 namespace JobMetric\Flow;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use JobMetric\Translation\TranslationServiceProvider;
 
 class FlowServiceProvider extends ServiceProvider
 {
+    /**
+     * This namespace is applied to your controller routes.
+     *
+     * In addition, it is set as the URL generator's root namespace.
+     *
+     * @var string
+     */
+    protected string $namespace = 'JobMetric\Flow\Http\Controllers';
+
     public function register(): void
     {
         $this->app->bind('Flow', function ($app) {
@@ -29,10 +39,18 @@ class FlowServiceProvider extends ServiceProvider
 
             // register publishable
             $this->registerPublishables();
+
+            $this->commands([
+                Commands\MakeFlow::class,
+                Commands\MakeTask::class,
+            ]);
         }
 
         // set translations
         $this->loadTranslationsFrom(realpath(__DIR__.'/../lang'), 'flow');
+
+        // set route
+        Route::prefix('workflow')->name('workflow.')->namespace($this->namespace)->group(realpath(__DIR__.'/../routes/route.php'));
     }
 
     /**
@@ -48,11 +66,11 @@ class FlowServiceProvider extends ServiceProvider
         // publish config
         $this->publishes([
             realpath(__DIR__.'/../config/config.php') => config_path('workflow.php')
-        ], 'flow-config');
+        ], ['workflow', 'flow-config']);
 
         // publish migration
         $this->publishes([
             realpath(__DIR__.'/../database/migrations') => database_path('migrations')
-        ], 'flow-migrations');
+        ], ['workflow', 'flow-migrations']);
     }
 }

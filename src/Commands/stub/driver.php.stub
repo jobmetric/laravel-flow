@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Flows\Drivers\{{driver}};
+
+use JobMetric\Flow\Contracts\DriverContract;
+
+class {{driver}}DriverFlow extends DriverContract
+{
+    public function handle()
+    {
+        // write code here
+    }
+}

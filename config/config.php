@@ -33,4 +33,17 @@ return [
         'flow_asset' => 'flow_assets',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Table Name
+    |--------------------------------------------------------------------------
+    |
+    | Table name in database
+    */
+
+    "models" => [
+        'user' => env('WORKFLOW_MODEL_USER', 'App\Models\User'),
+        'role' => env('WORKFLOW_MODEL_ROLE', 'App\Models\Role')
+    ],
+
 ];
