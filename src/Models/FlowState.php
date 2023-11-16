@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Jobmetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 
 class FlowState extends Model
 {
@@ -21,7 +22,7 @@ class FlowState extends Model
 
     protected $casts = [
         'flow_id' => 'integer',
-        'type' => 'string',
+        'type' => TableFlowStateFieldTypeEnum::class,
         'config' => 'json',
         'status' => 'string'
     ];
