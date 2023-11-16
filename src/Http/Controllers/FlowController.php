@@ -5,7 +5,9 @@ namespace JobMetric\Flow\Http\Controllers;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\StoreFlowRequest;
 use JobMetric\Flow\Http\Requests\UpdateFlowRequest;
+use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
+use \JobMetric\Flow\Facades\Flow as FlowFacade;
 
 class FlowController extends BaseFlowController
 {
@@ -22,7 +24,11 @@ class FlowController extends BaseFlowController
      */
     public function store(StoreFlowRequest $request)
     {
-        //
+        return FlowResource::make(
+            FlowFacade::store(
+                $request->validated()
+            )
+        );
     }
 
     /**

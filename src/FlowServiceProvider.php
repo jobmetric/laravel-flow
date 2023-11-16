@@ -20,7 +20,7 @@ class FlowServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind('Flow', function ($app) {
-            return new Flow($app);
+            return new FlowManager($app);
         });
 
         $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'workflow');
