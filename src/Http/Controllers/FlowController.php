@@ -2,12 +2,11 @@
 
 namespace JobMetric\Flow\Http\Controllers;
 
-use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
-use JobMetric\Flow\Http\Requests\StoreFlowRequest;
-use JobMetric\Flow\Http\Requests\UpdateFlowRequest;
-use JobMetric\Flow\Http\Resources\FlowResource;
-use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
+use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
+use JobMetric\Flow\Http\Requests\Flow\StoreFlowRequest;
+use JobMetric\Flow\Http\Requests\Flow\UpdateFlowRequest;
+use JobMetric\Flow\Http\Resources\FlowResource;
 
 class FlowController extends BaseFlowController
 {
