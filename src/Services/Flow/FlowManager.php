@@ -5,9 +5,9 @@ namespace JobMetric\Flow\Services\Flow;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Metadata\JMetadata;
-use Throwable;
 
 class FlowManager
 {
@@ -47,8 +47,97 @@ class FlowManager
      *
      * @return Flow
      */
-    public function store(array $data = []): Flow
+    public function store(array $data): Flow
     {
         return Flow::create($data);
+
+        // @todo: add first state
+    }
+
+    /**
+     * show flow
+     *
+     * @param int $flow_id
+     *
+     * @return Flow
+     */
+    public function show(int $flow_id): Flow
+    {
+        return Flow::findOrFail($flow_id);
+    }
+
+    /**
+     * update flow
+     *
+     * @param int $flow_id
+     * @param array $data
+     *
+     * @return Flow
+     * @throws FlowDriverAlreadyExistException
+     */
+    public function update(int $flow_id, array $data): Flow
+    {
+        $check = Flow::query()->where('driver', $data['driver'])->where('id', '!=', $flow_id)->first();
+        if ($check) {
+            throw new FlowDriverAlreadyExistException($data['driver']);
+        }
+
+        $flow = Flow::findOrFail($flow_id);
+
+        $flow->update($data);
+
+        return $flow;
+    }
+
+    /**
+     * delete flow
+     *
+     * @param int $flow_id
+     *
+     * @return Flow
+     */
+    public function delete(int $flow_id): Flow
+    {
+        // @todo: check exist states > 1
+
+        $flow = Flow::findOrFail($flow_id);
+
+        $flow->delete();
+
+        return $flow;
+    }
+
+    /**
+     * restore flow
+     *
+     * @param int $flow_id
+     *
+     * @return Flow
+     */
+    public function restore(int $flow_id): Flow
+    {
+        /** @var Flow $flow */
+        $flow = Flow::query()->withTrashed()->findOrFail($flow_id);
+
+        $flow->restore();
+
+        return $flow;
+    }
+
+    /**
+     * force delete flow
+     *
+     * @param int $flow_id
+     *
+     * @return Flow
+     */
+    public function forceDelete(int $flow_id): Flow
+    {
+        /** @var Flow $flow */
+        $flow = Flow::query()->withTrashed()->findOrFail($flow_id);
+
+        $flow->forceDelete();
+
+        return $flow;
     }
 }

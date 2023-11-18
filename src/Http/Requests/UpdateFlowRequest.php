@@ -12,7 +12,7 @@ class UpdateFlowRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,8 @@ class UpdateFlowRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'driver' => 'required|string',
+            'status' => 'sometimes|boolean',
         ];
     }
 }

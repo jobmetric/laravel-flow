@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \JobMetric\Flow\Models\Flow store(array $data)
+ * @method static \JobMetric\Flow\Models\Flow show(int $flow_id)
+ * @method static \JobMetric\Flow\Models\Flow update(int $flow_id, array $data)
+ * @method static \JobMetric\Flow\Models\Flow delete(int $flow_id)
+ * @method static \JobMetric\Flow\Models\Flow restore(int $flow_id)
+ * @method static \JobMetric\Flow\Models\Flow forceDelete(int $flow_id)
  *
  * @see \JobMetric\Flow\Services\Flow\FlowManager
  */
