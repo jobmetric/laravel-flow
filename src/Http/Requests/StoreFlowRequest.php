@@ -12,7 +12,7 @@ class StoreFlowRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,20 @@ class StoreFlowRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'driver' => 'required|string|unique:flows,driver',
+            'status' => 'sometimes|boolean',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'status' => $this->status ?? true,
+        ]);
     }
 }

@@ -7,7 +7,7 @@ use JobMetric\Flow\Http\Requests\StoreFlowRequest;
 use JobMetric\Flow\Http\Requests\UpdateFlowRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
-use \JobMetric\Flow\Facades\Flow as FlowFacade;
+use JobMetric\Flow\Facades\Flow as FlowFacade;
 
 class FlowController extends BaseFlowController
 {
@@ -22,7 +22,7 @@ class FlowController extends BaseFlowController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreFlowRequest $request)
+    public function store(StoreFlowRequest $request): FlowResource
     {
         return FlowResource::make(
             FlowFacade::store(
@@ -34,24 +34,53 @@ class FlowController extends BaseFlowController
     /**
      * Display the specified resource.
      */
-    public function show(Flow $flow)
+    public function show(int $flow)
     {
-        //
+        return FlowResource::make(
+            FlowFacade::show($flow)
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateFlowRequest $request, Flow $flow)
+    public function update(UpdateFlowRequest $request, int $flow)
     {
-        //
+        return FlowResource::make(
+            FlowFacade::update(
+                $flow,
+                $request->validated()
+            )
+        );
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Flow $flow)
+    public function destroy(int $flow)
     {
-        //
+        return FlowResource::make(
+            FlowFacade::delete($flow)
+        );
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function restore(int $flow)
+    {
+        return FlowResource::make(
+            FlowFacade::restore($flow)
+        );
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function forceDelete(int $flow)
+    {
+        return FlowResource::make(
+            FlowFacade::forceDelete($flow)
+        );
     }
 }
