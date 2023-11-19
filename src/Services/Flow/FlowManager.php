@@ -4,10 +4,11 @@ namespace JobMetric\Flow\Services\Flow;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Contracts\DriverContract;
 use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Metadata\JMetadata;
+use Str;
 
 class FlowManager
 {
@@ -139,5 +140,37 @@ class FlowManager
         $flow->forceDelete();
 
         return $flow;
+    }
+
+    /**
+     * Resolve the given flow instance by name.
+     *
+     * @param string $driver
+     *
+     * @return DriverContract
+     */
+    public function getDriver(string $driver): DriverContract
+    {
+        $driver = Str::studly($driver);
+
+        if ($driver == 'Global') {
+            $instance = resolve("\\JobMetric\\Flow\\Flows\\Global\\GlobalDriverFlow");
+        } else {
+            $instance = resolve("\\App\\Flows\\Drivers\\$driver\\{$driver}DriverFlow");
+        }
+
+        return $instance;
+    }
+
+    /**
+     * Get the status of the given flow instance by name.
+     *
+     * @param string $driver
+     *
+     * @return array
+     */
+    public function getStatus(string $driver): array
+    {
+        return $this->getDriver($driver)->getStatus();
     }
 }

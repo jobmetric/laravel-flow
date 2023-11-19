@@ -1,11 +1,11 @@
 <?php
 
-namespace JobMetric\Flow\Http\Requests;
+namespace JobMetric\Flow\Http\Requests\FlowState;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreFlowRequest extends FormRequest
+class UpdateFlowStateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,20 +23,8 @@ class StoreFlowRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'driver' => 'required|string|unique:flows,driver',
+            'driver' => 'required|string',
             'status' => 'sometimes|boolean',
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'status' => $this->status ?? true,
-        ]);
     }
 }

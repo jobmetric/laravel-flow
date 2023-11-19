@@ -2,13 +2,14 @@
 
 namespace JobMetric\Flow\Http\Controllers;
 
-use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
-use JobMetric\Flow\Http\Requests\Flow\StoreFlowRequest;
-use JobMetric\Flow\Http\Requests\Flow\UpdateFlowRequest;
+use JobMetric\Flow\Http\Requests\FlowState\StoreFlowStateRequest;
+use JobMetric\Flow\Http\Requests\FlowState\UpdateFlowStateRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
+use JobMetric\Flow\Facades\FlowState as FlowStateFacade;
+use JobMetric\Flow\Http\Resources\FlowStateResource;
 
-class FlowController extends BaseFlowController
+class FlowStateController extends BaseFlowController
 {
     /**
      * Display a listing of the resource.
@@ -21,10 +22,11 @@ class FlowController extends BaseFlowController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreFlowRequest $request): FlowResource
+    public function store(int $flow, StoreFlowStateRequest $request): FlowStateResource
     {
-        return FlowResource::make(
-            FlowFacade::store(
+        return FlowStateResource::make(
+            FlowStateFacade::store(
+                $flow,
                 $request->validated()
             )
         );
@@ -60,26 +62,6 @@ class FlowController extends BaseFlowController
     {
         return FlowResource::make(
             FlowFacade::delete($flow)
-        );
-    }
-
-    /**
-     * Restore the specified resource from storage.
-     */
-    public function restore(int $flow)
-    {
-        return FlowResource::make(
-            FlowFacade::restore($flow)
-        );
-    }
-
-    /**
-     * Restore the specified resource from storage.
-     */
-    public function forceDelete(int $flow)
-    {
-        return FlowResource::make(
-            FlowFacade::forceDelete($flow)
         );
     }
 }

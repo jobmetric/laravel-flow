@@ -41,7 +41,8 @@
                 "JobMetric\\Flow\\FlowServiceProvider"
             ],
             "aliases": {
-                "Flow": "JobMetric\\Flow\\Facades\\Flow"
+                "Flow": "JobMetric\\Flow\\Facades\\Flow",
+                "FlowState": "JobMetric\\Flow\\Facades\\FlowState"
             }
         }
     },
