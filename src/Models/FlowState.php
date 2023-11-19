@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Jobmetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 
+/**
+ * @method static findOrFail(int $flow_state_id)
+ */
 class FlowState extends Model
 {
     use HasFactory;

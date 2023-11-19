@@ -51,6 +51,7 @@ class FlowStateManager
      *
      * @return FlowState
      * @throws FlowInactiveException
+     * @throws FlowStateStartTypeIsExistException
      */
     public function store(int $flow_id, array $data): FlowState
     {
@@ -76,5 +77,18 @@ class FlowStateManager
         event(new FlowStateStoreEvent($flowState));
 
         return $flowState;
+    }
+
+    /**
+     * show flow state
+     *
+     * @param int $flow_state_id
+     * @param array $with
+     *
+     * @return FlowState
+     */
+    public function show(int $flow_state_id, array $with = []): FlowState
+    {
+        return FlowState::findOrFail($flow_state_id)->load($with);
     }
 }
