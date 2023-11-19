@@ -5,7 +5,7 @@ namespace JobMetric\Flow\Services\FlowState;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
-use JobMetric\Flow\Events\FlowStateStoreEvent;
+use JobMetric\Flow\Events\FlowState\FlowStateStoreEvent;
 use JobMetric\Flow\Exceptions\FlowInactiveException;
 use JobMetric\Flow\Exceptions\FlowStateStartTypeIsExistException;
 use JobMetric\Flow\Facades\Flow;

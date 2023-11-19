@@ -5,6 +5,10 @@ namespace JobMetric\Flow\Services\Flow;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Contracts\DriverContract;
+use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
+use JobMetric\Flow\Events\Flow\FlowStoreEvent;
+use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
+use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
 use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Metadata\JMetadata;
@@ -50,9 +54,13 @@ class FlowManager
      */
     public function store(array $data): Flow
     {
-        return Flow::create($data);
+        $flow = Flow::create($data);
+
+        event(new FlowStoreEvent($flow));
 
         // @todo: add first state
+
+        return $flow;
     }
 
     /**
@@ -87,6 +95,8 @@ class FlowManager
 
         $flow->update($data);
 
+        event(new FlowUpdateEvent($flow, $data));
+
         return $flow;
     }
 
@@ -105,6 +115,8 @@ class FlowManager
 
         $flow->delete();
 
+        event(new FlowDeleteEvent($flow));
+
         return $flow;
     }
 
@@ -122,6 +134,8 @@ class FlowManager
 
         $flow->restore();
 
+        event(new FlowRestoreEvent($flow));
+
         return $flow;
     }
 
@@ -138,6 +152,8 @@ class FlowManager
         $flow = Flow::query()->withTrashed()->findOrFail($flow_id);
 
         $flow->forceDelete();
+
+        event(new FlowDeleteEvent($flow));
 
         return $flow;
     }
