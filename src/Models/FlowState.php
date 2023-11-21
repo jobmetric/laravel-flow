@@ -11,6 +11,10 @@ use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 
 /**
  * @method static findOrFail(int $flow_state_id)
+ * @property Flow flow
+ * @property string type
+ * @property array config
+ * @property string status
  */
 class FlowState extends Model
 {

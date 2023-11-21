@@ -45,13 +45,10 @@ class FlowStateController extends BaseFlowController
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateFlowRequest $request, int $flow)
+    public function update(UpdateFlowStateRequest $request, int $flow_state)
     {
-        return FlowResource::make(
-            FlowFacade::update(
-                $flow,
-                $request->validated()
-            )
+        return FlowStateResource::make(
+            FlowStateFacade::update($flow_state, $request->validated())
         );
     }
 
