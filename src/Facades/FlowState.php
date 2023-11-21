@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \JobMetric\Flow\Models\FlowState store(int $flow_id, array $data)
+ * @method static \JobMetric\Flow\Models\FlowState show(int $flow_state_id, array $with = [])
+ * @method static \JobMetric\Flow\Models\FlowState update(int $flow_state_id, array $data)
  *
  * @see \JobMetric\Flow\Services\FlowState\FlowStateManager
  */

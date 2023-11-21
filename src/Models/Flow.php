@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @method static create(array $data)
  * @method static findOrFail(int $flow_id)
- * @property mixed driver
- * @property mixed status
+ * @property string driver
+ * @property boolean status
  */
 class Flow extends Model
 {

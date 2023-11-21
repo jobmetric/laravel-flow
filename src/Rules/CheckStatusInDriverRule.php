@@ -27,7 +27,7 @@ class CheckStatusInDriverRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!in_array($value, flowGetStatus($this->driver))) {
-            $fail(__('validation.in', ['attribute' => $attribute]));
+            $fail(__('flow::base.validation.check_status_in_driver', ['status' => implode(', ', flowGetStatus($this->driver))]));
         }
     }
 }
