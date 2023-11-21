@@ -11,6 +11,13 @@ use Str;
 
 class RouteParameterBinder
 {
+    public static string $modelNamespace = '\\App\\Models\\';
+
+    public static function setNamespace(string $namespace): void
+    {
+        self::$modelNamespace = $namespace;
+    }
+
     public function handle(Request $request, Closure $next)
     {
         foreach ($request->route()->parameters() as $parameter => $value) {
@@ -25,7 +32,7 @@ class RouteParameterBinder
 
     private function getValue($parameter, $value)
     {
-        $class_name = '\\JobMetric\\Flow\\Models\\' . Str::studly($parameter);
+        $class_name = self::$modelNamespace . Str::studly($parameter);
 
         if (class_exists($class_name)) {
             if (in_array(SoftDeletes::class, class_uses($class_name))) {

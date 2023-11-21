@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use JobMetric\Flow\Http\Controllers\FlowController;
 use JobMetric\Flow\Http\Controllers\FlowStateController;
+use JobMetric\Flow\Http\Middleware\RouteParameterBinder;
 use JobMetric\Flow\Models\Flow;
 
 /*
@@ -14,9 +15,11 @@ use JobMetric\Flow\Models\Flow;
 |
 */
 
+RouteParameterBinder::setNamespace(config('workflow.model_namespace'));
+
 // flow
 Route::middleware([
-    \JobMetric\Flow\Http\Middleware\RouteParameterBinder::class,
+    RouteParameterBinder::class,
 ])->group(function () {
     Route::apiResource('flow', FlowController::class);
     Route::prefix('flow/{flow}')->group(function () {
