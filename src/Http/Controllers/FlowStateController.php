@@ -55,10 +55,10 @@ class FlowStateController extends BaseFlowController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $flow)
+    public function destroy(int $flow, int $flow_state)
     {
-        return FlowResource::make(
-            FlowFacade::delete($flow)
+        return FlowStateResource::make(
+            FlowStateFacade::delete($flow_state)
         );
     }
 }
