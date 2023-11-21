@@ -46,4 +46,14 @@ return [
         'role' => env('WORKFLOW_MODEL_ROLE', 'App\Models\Role')
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Model Namespace
+    |--------------------------------------------------------------------------
+    |
+    | Set model namespace for use in route model binding middleware
+    */
+
+    "model_namespace" => env('WORKFLOW_MODEL_NAMESPACE', '\\JobMetric\\Flow\\Models\\'),
+
 ];
