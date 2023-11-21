@@ -4,6 +4,7 @@ namespace JobMetric\Flow;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use JobMetric\Flow\Models\Flow;
 use JobMetric\Translation\TranslationServiceProvider;
 
 class FlowServiceProvider extends ServiceProvider
@@ -50,6 +51,8 @@ class FlowServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(realpath(__DIR__.'/../lang'), 'flow');
 
         // set route
+
+
         Route::prefix('workflow')->name('workflow.')->namespace($this->namespace)->group(realpath(__DIR__.'/../routes/route.php'));
     }
 
