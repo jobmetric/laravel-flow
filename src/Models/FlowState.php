@@ -12,6 +12,7 @@ use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 /**
  * @method static findOrFail(int $flow_state_id)
  * @property Flow flow
+ * @property int id
  * @property string type
  * @property array config
  * @property string status
@@ -19,6 +20,8 @@ use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 class FlowState extends Model
 {
     use HasFactory;
+
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'flow_id',

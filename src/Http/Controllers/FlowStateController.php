@@ -5,9 +5,10 @@ namespace JobMetric\Flow\Http\Controllers;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\FlowState\StoreFlowStateRequest;
 use JobMetric\Flow\Http\Requests\FlowState\UpdateFlowStateRequest;
-use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Facades\FlowState as FlowStateFacade;
 use JobMetric\Flow\Http\Resources\FlowStateResource;
+use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\FlowState;
 
 class FlowStateController extends BaseFlowController
 {
@@ -21,12 +22,17 @@ class FlowStateController extends BaseFlowController
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param Flow $flow
+     * @param StoreFlowStateRequest $request
+     *
+     * @return FlowStateResource
      */
-    public function store(int $flow, StoreFlowStateRequest $request): FlowStateResource
+    public function store(Flow $flow, StoreFlowStateRequest $request): FlowStateResource
     {
         return FlowStateResource::make(
             FlowStateFacade::store(
-                $flow,
+                $flow->id,
                 $request->validated()
             )
         );
@@ -34,31 +40,45 @@ class FlowStateController extends BaseFlowController
 
     /**
      * Display the specified resource.
+     *
+     * @param Flow $flow
+     * @param FlowState $flow_state
+     *
+     * @return FlowStateResource
      */
-    public function show(int $flow_state): FlowStateResource
+    public function show(Flow $flow, FlowState $flow_state): FlowStateResource
     {
-        return FlowStateResource::make(
-            FlowStateFacade::show($flow_state, ['flow'])
-        );
+        return FlowStateResource::make($flow_state->load('flow'));
     }
 
     /**
      * Update the specified resource in storage.
+     *
+     * @param Flow $flow
+     * @param FlowState $flow_state
+     * @param UpdateFlowStateRequest $request
+     *
+     * @return FlowStateResource
      */
-    public function update(UpdateFlowStateRequest $request, int $flow_state)
+    public function update(Flow $flow, FlowState $flow_state, UpdateFlowStateRequest $request): FlowStateResource
     {
         return FlowStateResource::make(
-            FlowStateFacade::update($flow_state, $request->validated())
+            FlowStateFacade::update($flow_state->id, $request->validated())
         );
     }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param Flow $flow
+     * @param FlowState $flow_state
+     *
+     * @return FlowStateResource
      */
-    public function destroy(int $flow)
+    public function destroy(Flow $flow, FlowState $flow_state): FlowStateResource
     {
-        return FlowResource::make(
-            FlowFacade::delete($flow)
+        return FlowStateResource::make(
+            FlowStateFacade::delete($flow_state->id)
         );
     }
 }

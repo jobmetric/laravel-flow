@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @method static create(array $data)
  * @method static findOrFail(int $flow_id)
+ * @property int id
  * @property string driver
  * @property boolean status
  */
