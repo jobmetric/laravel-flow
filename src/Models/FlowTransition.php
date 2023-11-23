@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @method static ofSlug(string $slug)
+ * @method static ofFrom(int $from)
+ * @method static ofTo(int $from)
+ */
 class FlowTransition extends Model
 {
     use HasFactory;
@@ -56,6 +61,32 @@ class FlowTransition extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(FlowTask::class);
+    }
+
+    /**
+     * Scope a query to only include flow transition of a given from.
+     *
+     * @param Builder $query
+     * @param int $from
+     *
+     * @return Builder
+     */
+    public function scopeOfFrom(Builder $query, int $from): Builder
+    {
+        return $query->where('from', $from);
+    }
+
+    /**
+     * Scope a query to only include flow transition of a given to.
+     *
+     * @param Builder $query
+     * @param int $to
+     *
+     * @return Builder
+     */
+    public function scopeOfTo(Builder $query, int $to): Builder
+    {
+        return $query->where('to', $to);
     }
 
     /**

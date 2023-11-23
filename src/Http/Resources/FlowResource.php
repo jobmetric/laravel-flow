@@ -9,6 +9,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property mixed id
  * @property mixed driver
  * @property mixed status
+ * @property mixed states
+ * @property mixed transitions
  */
 class FlowResource extends JsonResource
 {
@@ -23,6 +25,14 @@ class FlowResource extends JsonResource
             'id' => $this->id,
             'driver' => $this->driver,
             'status' => $this->status,
+
+            'states' => $this->whenLoaded('states', function () {
+                return FlowStateResource::collection($this->states);
+            }),
+
+            'transitions' => $this->whenLoaded('transitions', function () {
+                return FlowTransitionResource::collection($this->transitions);
+            }),
         ];
     }
 }

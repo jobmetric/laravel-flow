@@ -4,6 +4,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use JobMetric\Flow\Http\Controllers\FlowController;
 use JobMetric\Flow\Http\Controllers\FlowStateController;
+use JobMetric\Flow\Http\Controllers\FlowTransitionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,5 +26,8 @@ Route::middleware([
 
         // flow state
         Route::apiResource('flow-state', FlowStateController::class);
+
+        // flow transition
+        Route::apiResource('flow-transition', FlowTransitionController::class);
     });
 });
