@@ -22,8 +22,8 @@ return new class extends Migration
 
             $table->foreignId('flow_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
 
-            $table->foreignId('from')->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('to')->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('from')->nullable()->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('to')->nullable()->index()->constrained($_flow_state)->cascadeOnDelete()->cascadeOnUpdate();
 
             $table->string('slug')->nullable()->index();
 

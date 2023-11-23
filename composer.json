@@ -42,7 +42,8 @@
             ],
             "aliases": {
                 "Flow": "JobMetric\\Flow\\Facades\\Flow",
-                "FlowState": "JobMetric\\Flow\\Facades\\FlowState"
+                "FlowState": "JobMetric\\Flow\\Facades\\FlowState",
+                "FlowTransition": "JobMetric\\Flow\\Facades\\FlowTransition"
             }
         }
     },
