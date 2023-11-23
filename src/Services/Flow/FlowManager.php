@@ -72,19 +72,20 @@ class FlowManager
 
         // todo: store translations for flow and start flow state
 
-        return $flow;
+        return $flow->load('states');
     }
 
     /**
      * show flow
      *
      * @param int $flow_id
+     * @param array $with
      *
      * @return Flow
      */
-    public function show(int $flow_id): Flow
+    public function show(int $flow_id, array $with = []): Flow
     {
-        return Flow::findOrFail($flow_id);
+        return Flow::findOrFail($flow_id)->load($with);
     }
 
     /**
