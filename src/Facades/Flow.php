@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \JobMetric\Flow\Contracts\DriverContract getDriver(string $driver)
  * @method static array getStatus(string $driver)
  *
- * @see \JobMetric\Flow\Services\Flow\FlowManager
+ * @see \JobMetric\Flow\Services\FlowManager
  */
 class Flow extends Facade
 {
@@ -25,6 +25,6 @@ class Flow extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \JobMetric\Flow\Services\Flow\FlowManager::class;
+        return \JobMetric\Flow\Services\FlowManager::class;
     }
 }

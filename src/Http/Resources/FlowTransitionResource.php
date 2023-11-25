@@ -11,6 +11,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property mixed to
  * @property mixed slug
  * @property mixed flow
+ * @property mixed fromState
+ * @property mixed toState
  */
 class FlowTransitionResource extends JsonResource
 {
@@ -23,8 +25,8 @@ class FlowTransitionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'from' => $this->from,
-            'to' => $this->to,
+            'from' => FlowStateResource::make($this->fromState),
+            'to' => FlowStateResource::make($this->toState),
             'slug' => $this->slug,
 
             'flow' => $this->whenLoaded('flow', function () {

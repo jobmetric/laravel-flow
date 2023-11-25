@@ -1,6 +1,6 @@
 <?php
 
-namespace JobMetric\Flow\Services\FlowTransition;
+namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
@@ -15,6 +15,7 @@ use JobMetric\Flow\Exceptions\FlowTransitionStateEndNotInFromException;
 use JobMetric\Flow\Exceptions\FlowTransitionStateStartNotInToException;
 use JobMetric\Flow\Exceptions\FlowTransitionToNotSetException;
 use JobMetric\Flow\Facades\Flow;
+use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Models\FlowTransition;
 use JobMetric\Metadata\JMetadata;
 
@@ -93,5 +94,18 @@ class FlowTransitionManager
         event(new FlowTransitionStoreEvent($flowTransition));
 
         return $flowTransition;
+    }
+
+    /**
+     * show flow transition
+     *
+     * @param int $flow_transition_id
+     * @param array $with
+     *
+     * @return FlowState
+     */
+    public function show(int $flow_transition_id, array $with = []): FlowState
+    {
+        return FlowTransition::findOrFail($flow_transition_id)->load($with);
     }
 }

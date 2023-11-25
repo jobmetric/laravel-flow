@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \JobMetric\Flow\Models\FlowState update(int $flow_state_id, array $data)
  * @method static \JobMetric\Flow\Models\FlowState delete(int $flow_state_id)
  *
- * @see \JobMetric\Flow\Services\FlowState\FlowStateManager
+ * @see \JobMetric\Flow\Services\FlowStateManager
  */
 class FlowState extends Facade
 {
@@ -21,6 +21,6 @@ class FlowState extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \JobMetric\Flow\Services\FlowState\FlowStateManager::class;
+        return \JobMetric\Flow\Services\FlowStateManager::class;
     }
 }
