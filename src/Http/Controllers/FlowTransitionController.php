@@ -11,6 +11,7 @@ use JobMetric\Flow\Http\Resources\FlowStateResource;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
+use JobMetric\Flow\Models\FlowTransition;
 
 class FlowTransitionController extends BaseFlowController
 {
@@ -44,13 +45,13 @@ class FlowTransitionController extends BaseFlowController
      * Display the specified resource.
      *
      * @param Flow $flow
-     * @param FlowState $flow_state
+     * @param FlowTransition $flow_transition
      *
-     * @return FlowStateResource
+     * @return FlowTransitionResource
      */
-    public function show(Flow $flow, FlowState $flow_state): FlowStateResource
+    public function show(Flow $flow, FlowTransition $flow_transition): FlowTransitionResource
     {
-        return FlowStateResource::make($flow_state->load('flow'));
+        return FlowTransitionResource::make($flow_transition->load(['flow', 'fromState', 'toState']));
     }
 
     /**

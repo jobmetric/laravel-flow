@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static ofSlug(string $slug)
  * @method static ofFrom(int $from)
  * @method static ofTo(int $from)
+ * @method static findOrFail(int $flow_transition_id)
  */
 class FlowTransition extends Model
 {
@@ -43,12 +44,12 @@ class FlowTransition extends Model
         return $this->belongsTo(Flow::class);
     }
 
-    public function from(): BelongsTo
+    public function fromState(): BelongsTo
     {
         return $this->belongsTo(FlowState::class, 'from');
     }
 
-    public function to(): BelongsTo
+    public function toState(): BelongsTo
     {
         return $this->belongsTo(FlowState::class, 'to');
     }
