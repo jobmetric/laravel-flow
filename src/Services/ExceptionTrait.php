@@ -1,6 +1,6 @@
 <?php
 
-namespace JobMetric\Flow\Services\FlowTransition;
+namespace JobMetric\Flow\Services;
 
 use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 use JobMetric\Flow\Exceptions\FlowInactiveException;

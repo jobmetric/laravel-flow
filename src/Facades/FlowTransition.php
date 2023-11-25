@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static \JobMetric\Flow\Models\FlowTransition store(int $flow_id, array $data)
  *
- * @see \JobMetric\Flow\Services\FlowTransition\FlowTransitionManager
+ * @see \JobMetric\Flow\Services\FlowTransitionManager
  */
 class FlowTransition extends Facade
 {
@@ -18,6 +18,6 @@ class FlowTransition extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \JobMetric\Flow\Services\FlowTransition\FlowTransitionManager::class;
+        return \JobMetric\Flow\Services\FlowTransitionManager::class;
     }
 }
