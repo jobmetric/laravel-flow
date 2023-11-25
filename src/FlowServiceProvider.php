@@ -4,11 +4,13 @@ namespace JobMetric\Flow;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Services\Flow\FlowManager;
 use JobMetric\Translation\TranslationServiceProvider;
 
 class FlowServiceProvider extends ServiceProvider
 {
+    use FactoryHelper;
+
     /**
      * This namespace is applied to your controller routes.
      *
@@ -24,19 +26,21 @@ class FlowServiceProvider extends ServiceProvider
             return new FlowManager($app);
         });
 
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'workflow');
+        $this->mergeConfigFrom(__DIR__ . '/../config/config.php', 'workflow');
+
+        $this->factoryResolver();
     }
 
     /**
-     * boot provider
+     * boot providere
      *
-     * @return void
+     * @return voide
      */
     public function boot(): void
     {
-        if($this->app->runningInConsole()) {
+        if ($this->app->runningInConsole()) {
             // load migration
-            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
             // register publishable
             $this->registerPublishables();
@@ -48,12 +52,12 @@ class FlowServiceProvider extends ServiceProvider
         }
 
         // set translations
-        $this->loadTranslationsFrom(realpath(__DIR__.'/../lang'), 'flow');
+        $this->loadTranslationsFrom(realpath(__DIR__ . '/../lang'), 'flow');
 
         // set route
 
 
-        Route::prefix('workflow')->name('workflow.')->namespace($this->namespace)->group(realpath(__DIR__.'/../routes/route.php'));
+        Route::prefix('workflow')->name('workflow.')->namespace($this->namespace)->group(realpath(__DIR__ . '/../routes/route.php'));
     }
 
     /**
@@ -68,12 +72,12 @@ class FlowServiceProvider extends ServiceProvider
 
         // publish config
         $this->publishes([
-            realpath(__DIR__.'/../config/config.php') => config_path('workflow.php')
+            realpath(__DIR__ . '/../config/config.php') => config_path('workflow.php')
         ], ['workflow', 'flow-config']);
 
         // publish migration
         $this->publishes([
-            realpath(__DIR__.'/../database/migrations') => database_path('migrations')
+            realpath(__DIR__ . '/../database/migrations') => database_path('migrations')
         ], ['workflow', 'flow-migrations']);
     }
 }

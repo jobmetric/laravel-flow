@@ -32,7 +32,8 @@
             "src/helpers.php"
         ],
         "psr-4": {
-            "JobMetric\\Flow\\": "src/"
+            "JobMetric\\Flow\\": "src/",
+            "JobMetric\\Flow\\Factories\\": "database/factories/"
         }
     },
     "extra": {
