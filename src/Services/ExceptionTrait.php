@@ -2,11 +2,15 @@
 
 namespace JobMetric\Flow\Services;
 
+use Illuminate\Database\Eloquent\Builder;
 use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
 use JobMetric\Flow\Exceptions\FlowInactiveException;
 use JobMetric\Flow\Exceptions\FlowTransitionExistException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
+use JobMetric\Flow\Exceptions\FlowTransitionFromStateStartNotMoveException;
 use JobMetric\Flow\Exceptions\FlowTransitionInvalidException;
+use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstStateException;
+use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstTransitionException;
 use JobMetric\Flow\Exceptions\FlowTransitionSlugExistException;
 use JobMetric\Flow\Exceptions\FlowTransitionStateDriverFromAndToNotEqualException;
 use JobMetric\Flow\Exceptions\FlowTransitionStateEndNotInFromException;
@@ -38,14 +42,28 @@ trait ExceptionTrait
      *
      * @param Flow $flow
      * @param array $data
+     * @param int|null $updated_flow_transition_id
      *
      * @return void
      * @throws FlowTransitionSlugExistException
      */
-    private function checkSlugExist(Flow $flow, array $data): void
+    private function checkSlugExist(Flow $flow, array $data, int|null $updated_flow_transition_id = null): void
     {
-        if (isset($data['slug'])) {
-            if (FlowTransition::ofSlug($data['slug'])->exists()) {
+        if (array_key_exists('slug', $data)) {
+            if (is_null($data['slug'])) {
+                return;
+            }
+
+            $query = FlowTransition::ofSlug($data['slug'])
+                ->whereHas('flow', function (Builder $q) use ($flow) {
+                    $q->where('driver', $flow->driver);
+                });
+
+            if ($updated_flow_transition_id) {
+                $query->where('id', '<>', $updated_flow_transition_id);
+            }
+
+            if ($query->exists()) {
                 throw new FlowTransitionSlugExistException($data['slug']);
             }
         }
@@ -61,7 +79,7 @@ trait ExceptionTrait
      */
     private function checkFromExist(array $data): void
     {
-        if (!isset($data['from'])) {
+        if (!array_key_exists('from', $data)) {
             throw new FlowTransitionFromNotSetException;
         }
     }
@@ -76,7 +94,7 @@ trait ExceptionTrait
      */
     private function checkToExist(array $data): void
     {
-        if (!isset($data['to'])) {
+        if (!array_key_exists('to', $data)) {
             throw new FlowTransitionToNotSetException;
         }
     }
@@ -91,7 +109,7 @@ trait ExceptionTrait
      */
     private function checkFromAndToExist(array $data): void
     {
-        if (!$data['from'] && !$data['to']) {
+        if (!array_key_exists('from', $data) && !array_key_exists('to', $data)) {
             throw new FlowTransitionInvalidException;
         }
     }
@@ -106,7 +124,7 @@ trait ExceptionTrait
      */
     private function checkFromAndToIsEqual(array $data): void
     {
-        if ($data['from'] && $data['to'] && $data['from'] == $data['to']) {
+        if (array_key_exists('from', $data) && array_key_exists('to', $data) && $data['from'] == $data['to']) {
             throw new FlowTransitionInvalidException;
         }
     }
@@ -121,10 +139,10 @@ trait ExceptionTrait
      */
     private function checkStateEndNotInFrom(array $data): void
     {
-        if ($data['from']) {
+        if (array_key_exists('from', $data)) {
             $stateFrom = FlowStateFacade::show($data['from']);
 
-            if ($stateFrom->type == TableFlowStateFieldTypeEnum::END) {
+            if ($stateFrom?->type == TableFlowStateFieldTypeEnum::END) {
                 throw new FlowTransitionStateEndNotInFromException;
             }
         }
@@ -140,10 +158,10 @@ trait ExceptionTrait
      */
     private function checkStateStartNotInTo(array $data): void
     {
-        if ($data['to']) {
+        if (array_key_exists('to', $data)) {
             $stateTo = FlowStateFacade::show($data['to']);
 
-            if ($stateTo->type == TableFlowStateFieldTypeEnum::START) {
+            if ($stateTo?->type == TableFlowStateFieldTypeEnum::START) {
                 throw new FlowTransitionStateStartNotInToException;
             }
         }
@@ -159,7 +177,7 @@ trait ExceptionTrait
      */
     private function checkStateDriverFromAndToNotEqual(array $data): void
     {
-        if ($data['from'] && $data['to']) {
+        if (array_key_exists('from', $data) && array_key_exists('to', $data)) {
             $stateFrom = FlowStateFacade::show($data['from']);
             $stateTo = FlowStateFacade::show($data['to']);
 
@@ -175,16 +193,59 @@ trait ExceptionTrait
      * check transition exist
      *
      * @param array $data
+     * @param int|null $updated_flow_transition_id
      *
      * @return void
      * @throws FlowTransitionExistException
      */
-    private function checkTransitionExist(array $data): void
+    private function checkTransitionExist(array $data, int|null $updated_flow_transition_id = null): void
     {
-        $check = FlowTransition::ofFrom($data['from'])->ofTo($data['to'])->exists();
+        $query = FlowTransition::ofFrom($data['from'])->ofTo($data['to']);
+
+        if ($updated_flow_transition_id) {
+            $query->where('id', '<>', $updated_flow_transition_id);
+        }
+
+        $check = $query->exists();
 
         if ($check) {
             throw new FlowTransitionExistException;
+        }
+    }
+
+    /**
+     * check from state start not move
+     *
+     * @param FlowTransition $flowTransition
+     * @param array $data
+     *
+     * @return void
+     * @throws FlowTransitionFromStateStartNotMoveException
+     */
+    private function checkFromStateStartNotMove(FlowTransition $flowTransition, array $data): void
+    {
+        $flowTransition->load(['fromState']);
+
+        if ($flowTransition?->fromState?->type === TableFlowStateFieldTypeEnum::START && $flowTransition?->fromState?->id != $data['from']) {
+            throw new FlowTransitionFromStateStartNotMoveException;
+        }
+    }
+
+    /**
+     * check not store before first transition
+     *
+     * @param Flow $flow
+     * @param array $data
+     *
+     * @return void
+     * @throws FlowTransitionNotStoreBeforeFirstStateException
+     */
+    private function checkNotStoreBeforeFirstTransition(Flow $flow, array $data): void
+    {
+        if ($flow->transitions()->count() == 0) {
+            if ($data['from'] != $flow->states()->ofType(TableFlowStateFieldTypeEnum::START())->first()?->id) {
+                throw new FlowTransitionNotStoreBeforeFirstStateException;
+            }
         }
     }
 }

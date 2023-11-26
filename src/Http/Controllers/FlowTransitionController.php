@@ -7,6 +7,7 @@ use JobMetric\Flow\Http\Requests\FlowState\StoreFlowStateRequest;
 use JobMetric\Flow\Http\Requests\FlowState\UpdateFlowStateRequest;
 use JobMetric\Flow\Facades\FlowTransition as FlowTransitionFacade;
 use JobMetric\Flow\Http\Requests\FlowTransition\StoreFlowTransitionRequest;
+use JobMetric\Flow\Http\Requests\FlowTransition\UpdateFlowTransitionRequest;
 use JobMetric\Flow\Http\Resources\FlowStateResource;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\Flow;
@@ -58,15 +59,15 @@ class FlowTransitionController extends BaseFlowController
      * Update the specified resource in storage.
      *
      * @param Flow $flow
-     * @param FlowState $flow_state
-     * @param UpdateFlowStateRequest $request
+     * @param FlowTransition $flow_transition
+     * @param UpdateFlowTransitionRequest $request
      *
-     * @return FlowStateResource
+     * @return FlowTransitionResource
      */
-    public function update(Flow $flow, FlowState $flow_state, UpdateFlowStateRequest $request): FlowStateResource
+    public function update(Flow $flow, FlowTransition $flow_transition, UpdateFlowTransitionRequest $request): FlowTransitionResource
     {
-        return FlowStateResource::make(
-            FlowStateFacade::update($flow_state->id, $request->validated())
+        return FlowTransitionResource::make(
+            FlowTransitionFacade::update($flow_transition->id, $request->validated())
         );
     }
 

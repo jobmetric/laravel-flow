@@ -9,10 +9,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @method static ofSlug(string $slug)
- * @method static ofFrom(int $from)
- * @method static ofTo(int $from)
- * @method static findOrFail(int $flow_transition_id)
+ * @method Builder ofSlug(string $slug)
+ * @method Builder ofFrom(int $from)
+ * @method Builder ofTo(int $from)
+ * @method mixed findOrFail(int $flow_transition_id)
+ * @property int id
+ * @property int flow_id
+ * @property int from
+ * @property int to
+ * @property string slug
+ * @property int role_id
+ * @property mixed flow
+ * @property FlowState fromState
+ * @property FlowState toState
  */
 class FlowTransition extends Model
 {
@@ -68,11 +77,11 @@ class FlowTransition extends Model
      * Scope a query to only include flow transition of a given from.
      *
      * @param Builder $query
-     * @param int $from
+     * @param int|null $from
      *
      * @return Builder
      */
-    public function scopeOfFrom(Builder $query, int $from): Builder
+    public function scopeOfFrom(Builder $query, int|null $from): Builder
     {
         return $query->where('from', $from);
     }
@@ -81,11 +90,11 @@ class FlowTransition extends Model
      * Scope a query to only include flow transition of a given to.
      *
      * @param Builder $query
-     * @param int $to
+     * @param int|null $to
      *
      * @return Builder
      */
-    public function scopeOfTo(Builder $query, int $to): Builder
+    public function scopeOfTo(Builder $query, int|null $to): Builder
     {
         return $query->where('to', $to);
     }
@@ -94,11 +103,11 @@ class FlowTransition extends Model
      * Scope a query to only include flow transition of a given slug.
      *
      * @param Builder $query
-     * @param string $slug
+     * @param string|null $slug
      *
      * @return Builder
      */
-    public function scopeOfSlug(Builder $query, string $slug): Builder
+    public function scopeOfSlug(Builder $query, string|null $slug): Builder
     {
         return $query->where('slug', $slug);
     }
