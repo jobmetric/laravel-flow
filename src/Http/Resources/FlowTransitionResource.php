@@ -10,6 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property mixed from
  * @property mixed to
  * @property mixed slug
+ * @property mixed role_id
  * @property mixed flow
  * @property mixed fromState
  * @property mixed toState
@@ -28,6 +29,7 @@ class FlowTransitionResource extends JsonResource
             'from' => FlowStateResource::make($this->fromState),
             'to' => FlowStateResource::make($this->toState),
             'slug' => $this->slug,
+            'role_id' => $this->role_id,
 
             'flow' => $this->whenLoaded('flow', function () {
                 return FlowResource::make($this->flow);

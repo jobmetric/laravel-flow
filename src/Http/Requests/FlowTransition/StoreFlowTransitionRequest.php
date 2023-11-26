@@ -23,8 +23,8 @@ class StoreFlowTransitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'from' => 'nullable|exists:flow_states,id',
-            'to' => 'nullable|exists:flow_states,id',
+            'from' => 'nullable|exists:'.config('workflow.tables.flow_state').',id',
+            'to' => 'nullable|exists:'.config('workflow.tables.flow_state').',id',
             'slug' => 'nullable|string',
         ];
     }

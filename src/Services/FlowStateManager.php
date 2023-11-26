@@ -88,13 +88,17 @@ class FlowStateManager
     /**
      * show flow state
      *
-     * @param int $flow_state_id
+     * @param int|null $flow_state_id
      * @param array $with
      *
-     * @return FlowState
+     * @return ?FlowState
      */
-    public function show(int $flow_state_id, array $with = []): FlowState
+    public function show(int|null $flow_state_id, array $with = []): ?FlowState
     {
+        if(is_null($flow_state_id)) {
+            return null;
+        }
+
         return FlowState::findOrFail($flow_state_id)->load($with);
     }
 
