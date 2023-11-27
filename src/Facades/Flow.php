@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \JobMetric\Flow\Models\Flow forceDelete(int $flow_id)
  * @method static \JobMetric\Flow\Contracts\DriverContract getDriver(string $driver)
  * @method static array getStatus(string $driver)
+ * @method static \JobMetric\Flow\Models\FlowState|null getStartState(int $flow_id)
  *
  * @see \JobMetric\Flow\Services\FlowManager
  */

@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int to
  * @property string slug
  * @property int role_id
- * @property mixed flow
+ * @property Flow flow
  * @property FlowState fromState
  * @property FlowState toState
  */

@@ -6,12 +6,13 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Contracts\DriverContract;
 use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
 use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
 use JobMetric\Flow\Events\Flow\FlowStoreEvent;
 use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
-use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
 use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\FlowState;
 use JobMetric\Metadata\JMetadata;
 use Str;
 
@@ -201,5 +202,23 @@ class FlowManager
     public function getStatus(string $driver): array
     {
         return $this->getDriver($driver)->getStatus();
+    }
+
+    /**
+     * Get start state
+     *
+     * @param int $flow_id
+     *
+     * @return FlowState|null
+     */
+    public function getStartState(int $flow_id): FlowState|null
+    {
+        /* @var FlowState $flow_state */
+        $flow_state = FlowState::query()->where([
+            'flow_id' => $flow_id,
+            'type' => TableFlowStateFieldTypeEnum::START()
+        ])->first();
+
+        return $flow_state;
     }
 }
