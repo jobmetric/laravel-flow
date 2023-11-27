@@ -35,6 +35,7 @@ return [
         'exist' => 'Flow transition already exists.',
         'from_state_start_not_move' => 'Flow transition from state start not move.',
         'not_store_before_first_state' => 'Flow transition not store, Because there is no transition from the starting state.',
+        'have_at_least_one_transition_from_the_start_beginning' => 'Flow have at least one transition from the start beginning.',
     ],
 
     'validation' => [

@@ -4,12 +4,14 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
+use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
 use JobMetric\Flow\Exceptions\FlowInactiveException;
 use JobMetric\Flow\Exceptions\FlowTransitionExistException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromStateStartNotMoveException;
+use JobMetric\Flow\Exceptions\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
 use JobMetric\Flow\Exceptions\FlowTransitionInvalidException;
 use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstStateException;
 use JobMetric\Flow\Exceptions\FlowTransitionSlugExistException;
@@ -167,5 +169,28 @@ class FlowTransitionManager
         event(new FlowTransitionUpdateEvent($flowTransition, $data));
 
         return $flowTransition;
+    }
+
+    /**
+     * delete flow transition
+     *
+     * @param int $flow_transition_id
+     *
+     * @return FlowTransition
+     * @throws FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
+     */
+    public function delete(int $flow_transition_id): FlowTransition
+    {
+        $flow_transition = $this->show($flow_transition_id);
+
+        $this->checkTransitionHaveAtLeastOneTransitionFromTheStartBeginning($flow_transition);
+
+        // @todo: before delete remove tasks
+
+        $flow_transition->delete();
+
+        event(new FlowTransitionDeleteEvent($flow_transition));
+
+        return $flow_transition;
     }
 }

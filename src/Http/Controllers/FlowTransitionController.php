@@ -2,16 +2,12 @@
 
 namespace JobMetric\Flow\Http\Controllers;
 
-use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
-use JobMetric\Flow\Http\Requests\FlowState\StoreFlowStateRequest;
-use JobMetric\Flow\Http\Requests\FlowState\UpdateFlowStateRequest;
 use JobMetric\Flow\Facades\FlowTransition as FlowTransitionFacade;
+use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\FlowTransition\StoreFlowTransitionRequest;
 use JobMetric\Flow\Http\Requests\FlowTransition\UpdateFlowTransitionRequest;
-use JobMetric\Flow\Http\Resources\FlowStateResource;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\Flow;
-use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Models\FlowTransition;
 
 class FlowTransitionController extends BaseFlowController
@@ -75,14 +71,14 @@ class FlowTransitionController extends BaseFlowController
      * Remove the specified resource from storage.
      *
      * @param Flow $flow
-     * @param FlowState $flow_state
+     * @param FlowTransition $flowTransition
      *
-     * @return FlowStateResource
+     * @return FlowTransitionResource
      */
-    public function destroy(Flow $flow, FlowState $flow_state): FlowStateResource
+    public function destroy(Flow $flow, FlowTransition $flowTransition): FlowTransitionResource
     {
-        return FlowStateResource::make(
-            FlowStateFacade::delete($flow_state->id)
+        return FlowTransitionResource::make(
+            FlowTransitionFacade::delete($flowTransition->id)
         );
     }
 }

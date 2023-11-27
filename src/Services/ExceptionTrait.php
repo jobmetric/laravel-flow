@@ -8,6 +8,7 @@ use JobMetric\Flow\Exceptions\FlowInactiveException;
 use JobMetric\Flow\Exceptions\FlowTransitionExistException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromStateStartNotMoveException;
+use JobMetric\Flow\Exceptions\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
 use JobMetric\Flow\Exceptions\FlowTransitionInvalidException;
 use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstStateException;
 use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstTransitionException;
@@ -16,6 +17,7 @@ use JobMetric\Flow\Exceptions\FlowTransitionStateDriverFromAndToNotEqualExceptio
 use JobMetric\Flow\Exceptions\FlowTransitionStateEndNotInFromException;
 use JobMetric\Flow\Exceptions\FlowTransitionStateStartNotInToException;
 use JobMetric\Flow\Exceptions\FlowTransitionToNotSetException;
+use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Facades\FlowState as FlowStateFacade;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowTransition;
@@ -242,10 +244,34 @@ trait ExceptionTrait
      */
     private function checkNotStoreBeforeFirstTransition(Flow $flow, array $data): void
     {
+        $startState = FlowFacade::getStartState($flow->id);
+
         if ($flow->transitions()->count() == 0) {
-            if ($data['from'] != $flow->states()->ofType(TableFlowStateFieldTypeEnum::START())->first()?->id) {
+            if ($data['from'] != $startState?->id) {
                 throw new FlowTransitionNotStoreBeforeFirstStateException;
             }
+        }
+    }
+
+    /**
+     * check have at least one transition from the start beginning
+     *
+     * @param FlowTransition $flowTransition
+     *
+     * @return void
+     * @throws FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
+     */
+    private function checkTransitionHaveAtLeastOneTransitionFromTheStartBeginning(FlowTransition $flowTransition): void
+    {
+        $startState = FlowFacade::getStartState($flowTransition->flow->id);
+
+        $countTransitionWithStartState = FlowTransition::query()->where([
+            'flow_id' => $flowTransition->flow->id,
+            'from' => $startState->id
+        ])->count();
+
+        if (1 == $countTransitionWithStartState) {
+            throw new FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
         }
     }
 }
