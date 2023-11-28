@@ -17,6 +17,12 @@
             "email": "majeedmohammadian@gmail.com",
             "homepage": "https://www.linkedin.com/in/majidmohammadian/",
             "role": "Full Stack Developer"
+        },
+        {
+            "name": "MohammadAli Farshchian",
+            "email": "farshchian2014@gmail.com",
+            "homepage": "https://github.com/farshchian2090",
+            "role": "Full Stack Developer"
         }
     ],
     "require": {
