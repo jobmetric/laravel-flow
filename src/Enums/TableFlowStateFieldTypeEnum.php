@@ -11,5 +11,5 @@ enum TableFlowStateFieldTypeEnum : string {
     use EnumToArray;
     case START = "start";
     case END = "end";
-    case STATE = "state";
+    case MIDDLE = "middle";
 }
