@@ -4,6 +4,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use JobMetric\Flow\Http\Controllers\FlowController;
 use JobMetric\Flow\Http\Controllers\FlowStateController;
+use JobMetric\Flow\Http\Controllers\FlowTaskController;
 use JobMetric\Flow\Http\Controllers\FlowTransitionController;
 
 /*
@@ -30,4 +31,5 @@ Route::middleware([
         // flow transition
         Route::apiResource('flow-transition', FlowTransitionController::class);
     });
+    Route::get('/flow-task/drivers', [FlowTaskController::class, 'getList']);
 });
