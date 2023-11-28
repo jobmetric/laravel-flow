@@ -19,12 +19,11 @@
             "role": "Full Stack Developer"
         },
         {
-
             "name": "MohammadAli Farshchian",
             "email": "farshchian2014@gmail.com",
-            "homepage": "https://github.com/farshchian2090",
+            "homepage": "https://www.linkedin.com/in/farshchian2090",
             "role": "Full Stack Developer"
-        },
+        },{
             "name": "Mahdi MalekiFard",
             "email": "maleki1344py@gmail.com",
             "homepage": "https://www.linkedin.com/in/mahdi-malekifard-py/",
@@ -37,7 +36,8 @@
         "laravel/framework": ">=9.19",
         "spatie/laravel-data": "^3.9",
         "spatie/laravel-query-builder": "^5.1",
-        "jobmetric/translation": "*"
+        "jobmetric/translation": "*",
+      "ext-http": "*"
     },
     "autoload": {
         "files": [
