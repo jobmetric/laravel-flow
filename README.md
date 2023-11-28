@@ -18,9 +18,6 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/jobmetric/laravel-flow">
-    <img src="images/jobmetric.png" alt="Logo" width="300" height="300" style="border-radius: 50%">
-  </a>
 
 <h3 align="center" style="color: red;">Workflow for laravel</h3>
 
@@ -29,12 +26,7 @@
   </p>
 </div>
 
-# <span style="color: aqua;">About The Project</span>
-
 <br>
-
-[product-screenshot]: images/banner-workflow.png
-[![product-screenshot][product-screenshot]](https://example.com)
 
 ### <span style="color: lightblue;">Make Work Flow your Way</span>
 
@@ -77,51 +69,11 @@ composer require jobmetric/laravel-flow
 
 ## <span style="color: aqua;">Contributing</span>
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### <span style="color: pink;">Contributors so far</span>
-1. [![Gmail Badge1](https://img.shields.io/badge/-majeedmohammadian@gmail.com-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:majeedmohammadian@gmail.com)](mailto:majeedmohammadian@gmail.com)
-2. [![Gmail Badge2](https://img.shields.io/badge/-maleki1344py@gmail.com-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:maleki1344py@gmail.com)](mailto:maleki1344py@gmail.com)
-3. Mohammad Ali Farshchian
-4. Mehran Manouchehri
-5. Ahmad Dehestani
-6. Ehsan Shakeri
+See `CONTRIBUTING.md` for more information.
 
 <!-- LICENSE -->
 ## <span style="color: aqua;">License</span>
 
-Distributed under the MIT License. See `LICENSE.md` for more information.
-
-
-<!-- CONTACT -->
-## <span style="color: aqua;">Contact</span>
-
-[![Instagram Badge](https://img.shields.io/badge/Instagram-3f729b?style=flat&logo=instagram&logoColor=white&link=https://instagram.com/majeedmohammadian/)](https://instagram.com/majeedmohammadian/)
-[![Telegram Badge](https://img.shields.io/badge/-Telegram-blue?style=flat&logo=telegram&logoColor=white&link=https://t.me/majeedmohammadian/)](https://t.me/majeedmohammadian/)
-[![Linkedin Badge](https://img.shields.io/badge/-Linkedin-0072b1?style=flat&logo=Linkedin&logoColor=white&link=https://linkedin.com/in/majidmohammadian/)](https://linkedin.com/in/majidmohammadian/)
-
-
-<!-- ACKNOWLEDGMENTS -->
-## <span style="color: aqua;">Acknowledgments</span>
-
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+See `LICENSE.md` for more information.
 
 <br>
