@@ -9,7 +9,7 @@
 
 ## <span style="color: lightblue;">What are workflow statuses?</span>
 >Statuses help people understand the state of a piece of work.
-They appear in many views across your Jira site, linked Atlassian products, and third-party apps.
+They appear in many views across your site.
 
 [flow-status]: ../../images/flowStatuses.png
 [![product-screenshot][flow-status]](https://example.com)
