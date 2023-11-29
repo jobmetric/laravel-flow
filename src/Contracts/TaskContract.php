@@ -7,6 +7,8 @@ abstract class TaskContract
     protected string $title;
     protected string $description = "";
     protected array  $fields=[];
+    protected bool $is_global=false;
+
     abstract function handle();
 
     public function getTitle(): string
@@ -22,5 +24,10 @@ abstract class TaskContract
     public function getFields(): array
     {
         return $this->fields;
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->is_global;
     }
 }

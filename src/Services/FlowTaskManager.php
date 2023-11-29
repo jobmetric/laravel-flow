@@ -10,7 +10,6 @@ use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
 use JobMetric\Flow\Exceptions\DriverNotFoundException;
 use JobMetric\Flow\Exceptions\FlowTaskNotFoundException;
-use JobMetric\Flow\Http\Resources\FlowTaskDriverResource;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Metadata\JMetadata;
 
@@ -45,31 +44,31 @@ class FlowTaskManager
         $this->JMetadata = $app->make('JMetadata');
     }
 
-    public function store(array $data):FlowTask
+    public function store(array $data): FlowTask
     {
         $task = FlowTask::create($data);
         event(new FlowTaskStoreEvent($task));
         return $task;
     }
 
-    public function update(int $flow_task_id, $data = []):FlowTask
+    public function update(int $flow_task_id, $data = []): FlowTask
     {
-        $task=FlowTask::findOrFail($flow_task_id);
+        $task = FlowTask::findOrFail($flow_task_id);
         $task->update($data);
-        event(new FlowTaskUpdateEvent($task,$data));
+        event(new FlowTaskUpdateEvent($task, $data));
         return $task;
     }
 
-    public function delete(int $flow_task_id):FlowTask
+    public function delete(int $flow_task_id): FlowTask
     {
-        $task=FlowTask::findOrFail($flow_task_id);
+        $task = FlowTask::findOrFail($flow_task_id);
         $task->delete();
         event(new FlowTaskDeleteEvent($task));
         return $task;
     }
 
 
-    public function show(int $flow_task_id):FlowTask
+    public function show(int $flow_task_id): FlowTask
     {
         return FlowTask::findOrFail($flow_task_id);
     }
@@ -79,16 +78,21 @@ class FlowTaskManager
      */
     public function getTasksList(string $flowDriver): array
     {
-        $flowDriver=\Str::studly($flowDriver);
+        $flowDriver = \Str::studly($flowDriver);
         return array_merge(resolveClassesFromDirectory('App\\Flows\\Global'),
-            resolveClassesFromDirectory('App\\Flows\\Drivers\\'.$flowDriver.'\\Tasks'));
+            resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flowDriver . '\\Tasks'));
     }
-
 
 
     public function getTaskDetails(string $flowDriver = '', string $taskClassName = '')
     {
-
+        if ($flowDriver=='global'){
+            $directory='App\\Flows\\Global';
+        }
+        else{
+            $directory='App\\Flows\\Drivers\\' . $flowDriver.'\\Tasks';
+        }
+        return resolveClassFromDirectory($directory,$taskClassName);
     }
 
     public function assignTo(int $task_id, int $transitionId)

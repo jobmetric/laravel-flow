@@ -45,6 +45,7 @@ return [
     ],
 
     'flow_task' => [
-        'not_found' => 'flow task with id [:id] not found'
+        'not_found' => 'flow task with id [:id] not found',
+        'task_driver_not_found' =>'flow task driver [:task] not found',
     ]
 ];

@@ -36,6 +36,9 @@ if (!function_exists('resolveClassesFromDirectory')) {
     function resolveClassesFromDirectory(string $namespace=''): array
     {
         $directoryPath = base_path($namespace);
+        if (!is_dir($directoryPath)){
+            throw new \Illuminate\Contracts\Filesystem\FileNotFoundException();
+        }
         $phpFiles = File::files($directoryPath, '*.php');
         $objs = [];
         foreach ($phpFiles as $file) {
@@ -46,3 +49,19 @@ if (!function_exists('resolveClassesFromDirectory')) {
         return $objs;
     }
 }
+
+if (!function_exists('resolveClassfromDirectory')) {
+    function resolveClassFromDirectory(string $namespace,string $className){
+        $directoryPath = base_path($namespace);
+        if (!is_dir($directoryPath)){
+            throw new \Symfony\Component\Finder\Exception\DirectoryNotFoundException(code:404);
+        }
+        $className=Str::studly($className);
+        $file=$directoryPath.DIRECTORY_SEPARATOR.$className;
+        if (!is_file($file.'.php')){
+            throw new \Illuminate\Contracts\Filesystem\FileNotFoundException(); 
+        }
+        return resolve($file);
+    }
+}
+

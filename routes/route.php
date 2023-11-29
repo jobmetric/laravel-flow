@@ -32,4 +32,5 @@ Route::middleware([
         Route::apiResource('flow-transition', FlowTransitionController::class);
     });
     Route::get('/flow-task/drivers', [FlowTaskController::class, 'getList']);
+    Route::get('/flow-task/driver/show', [FlowTaskController::class, 'getTaskDetails']);
 });

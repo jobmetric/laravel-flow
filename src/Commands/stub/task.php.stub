@@ -8,6 +8,7 @@ class {{task}}{{driver}}Task extends TaskContract
 {
     protected string $title       = ""; // required
     protected string $description = ""; // optional
+    protected bool $is_global=false;
     protected array  $fields      = [ // you can define multiple fields
         [
             'type'        => '', // input,select,checkbox,radio,textarea

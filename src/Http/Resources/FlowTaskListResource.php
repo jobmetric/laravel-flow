@@ -4,7 +4,6 @@ namespace JobMetric\Flow\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use JobMetric\Flow\Contracts\TaskContract;
 
 /**
  * @property mixed id
@@ -13,7 +12,7 @@ use JobMetric\Flow\Contracts\TaskContract;
  * @property mixed states
  * @property mixed transitions
  */
-class FlowTaskDriverResource extends JsonResource
+class FlowTaskListResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -25,6 +24,8 @@ class FlowTaskDriverResource extends JsonResource
         return [
             'title'       => $this->getTitle(),
             'description' => $this->getDescription(),
+            'is_global'   => $this->isGlobal(),
+            'class'       => class_basename($this->resource),
         ];
     }
 }
