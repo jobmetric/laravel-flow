@@ -6,10 +6,10 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Contracts\DriverContract;
 use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
-use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
-use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
-use JobMetric\Flow\Events\Flow\FlowStoreEvent;
-use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
+use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
+use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
+use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
+use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
 use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
@@ -58,7 +58,7 @@ class FlowManager
     {
         $flow = Flow::create($data);
 
-        event(new FlowStoreEvent($flow));
+        event(new FlowTaskStoreEvent($flow));
 
         $flowState = $flow->states()->create([
             'type' => TableFlowStateFieldTypeEnum::START(),
@@ -109,7 +109,7 @@ class FlowManager
 
         $flow->update($data);
 
-        event(new FlowUpdateEvent($flow, $data));
+        event(new FlowTaskUpdateEvent($flow, $data));
 
         return $flow;
     }
@@ -129,7 +129,7 @@ class FlowManager
 
         $flow->delete();
 
-        event(new FlowDeleteEvent($flow));
+        event(new FlowTaskDeleteEvent($flow));
 
         return $flow;
     }
@@ -167,7 +167,7 @@ class FlowManager
 
         $flow->forceDelete();
 
-        event(new FlowDeleteEvent($flow));
+        event(new FlowTaskDeleteEvent($flow));
 
         return $flow;
     }
