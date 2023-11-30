@@ -6,6 +6,20 @@ use Illuminate\Support\Str;
 
 abstract class DriverContract
 {
+    /**
+     * title of driver
+     *
+     * validation: required
+     * @var string
+     */
+    protected string $title = "";
+
+    /**
+     * status of driver
+     *
+     * validation: optional
+     * @var array
+     */
     protected array $status;
 
     abstract function handle();
@@ -16,7 +30,17 @@ abstract class DriverContract
     }
 
     /**
-     * Get the table associated with the model.
+     * Get the title associated with the driver.
+     *
+     * @return string|null
+     */
+    public function getTitle(): ?string
+    {
+        return $this->title ?? null;
+    }
+
+    /**
+     * Get the status associated with the driver.
      *
      * @return array
      */
@@ -26,7 +50,7 @@ abstract class DriverContract
     }
 
     /**
-     * Set the status associated with the flow.
+     * Set the status associated with the driver.
      *
      * @param  array $status
      *

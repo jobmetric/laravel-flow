@@ -15,8 +15,8 @@ class FlowTaskUpdateEvent
      * Create a new event instance.
      */
     public function __construct(
-        public readonly FlowTask $flow,
-        public readonly array $data
+        public readonly FlowTask $flowTask,
+        public readonly array    $data
     )
     {
     }

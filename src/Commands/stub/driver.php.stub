@@ -6,6 +6,14 @@ use JobMetric\Flow\Contracts\DriverContract;
 
 class {{driver}}DriverFlow extends DriverContract
 {
+    /**
+     * title of driver
+     *
+     * validation: required
+     * @var string
+     */
+    protected string $title = "";
+
     public function handle()
     {
         // write code here
