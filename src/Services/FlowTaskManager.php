@@ -124,22 +124,6 @@ class FlowTaskManager
         ];
     }
 
-
-    public function getTaskDetails(string $flowDriver = '', string $taskClassName = '')
-    {
-        if ($flowDriver == 'global') {
-            $directory = 'App\\Flows\\Global';
-        } else {
-            $directory = 'App\\Flows\\Drivers\\' . $flowDriver . '\\Tasks';
-        }
-        return resolveClassFromDirectory($directory, $taskClassName);
-    }
-
-    public function assignTo(int $task_id, int $transitionId)
-    {
-
-    }
-
     /**
      * restore flow task driver with namespace
      *

@@ -11,8 +11,6 @@ use JobMetric\Flow\Services\FlowTaskManager;
  * @method static \JobMetric\Flow\Models\FlowTask update(int $flow_task_id, array $data)
  * @method static \JobMetric\Flow\Models\FlowTask delete(int $flow_task_id)
  * @method static array drivers(string $flowDriver = '')
- * @method static \JobMetric\Flow\Models\FlowTask getTaskDetails(string $flowDriver = '', string $taskClassName = '')
- * @method static \JobMetric\Flow\Models\FlowTask assignTo(int $task_id, int $transitionId)
  *
  * @see \JobMetric\Flow\Services\FlowTaskManager
  */
