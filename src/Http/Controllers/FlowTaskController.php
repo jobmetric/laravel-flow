@@ -2,17 +2,12 @@
 
 namespace JobMetric\Flow\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use JobMetric\Flow\Exceptions\DriverNotFoundException;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Facades\FlowTask;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\Flow\StoreFlowTaskRequest;
 use JobMetric\Flow\Http\Requests\Flow\UpdateFlowTaskRequest;
-use JobMetric\Flow\Http\Requests\FlowTask\FlowTaskDetailsRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
-use JobMetric\Flow\Http\Resources\FlowTaskDetailsResource;
 use JobMetric\Flow\Http\Resources\FlowTaskDriversResource;
 use JobMetric\Flow\Models\Flow;
 
@@ -53,7 +48,7 @@ class FlowTaskController extends BaseFlowController
     /**
      * Update the specified resource in storage.
      *
-     * @param Flow                  $flow
+     * @param Flow $flow
      * @param UpdateFlowTaskRequest $request
      *
      * @return FlowResource
@@ -107,19 +102,10 @@ class FlowTaskController extends BaseFlowController
         );
     }
 
-
     public function drivers(Flow $flow)
     {
         $drivers = FlowTask::drivers($flow->driver);
 
         return FlowTaskDriversResource::collection($drivers);
     }
-
-    public function getTaskDetails(FlowTaskDetailsRequest $request)
-    {
-        $data=$request->validated();
-        return FlowTaskDetailsResource::make(FlowTask::getTaskDetails($data['driver'],$data['task']));
-    }
-
-
 }
