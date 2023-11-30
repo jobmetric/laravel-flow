@@ -39,13 +39,14 @@ return [
         'have_at_least_one_transition_from_the_start_beginning' => 'Flow have at least one transition from the start beginning.',
     ],
 
+    'flow_task' => [
+        'global' => 'Global',
+        'not_found' => 'flow task with id [:id] not found',
+        'task_driver_not_found' =>'flow task driver [:task] not found',
+    ],
+
     'validation' => [
         'check_status_in_driver' => 'The selected status is invalid, you must select from (:status) items.',
         'check_driver_exists' =>'The selected driver :driver does not exists',
     ],
-
-    'flow_task' => [
-        'not_found' => 'flow task with id [:id] not found',
-        'task_driver_not_found' =>'flow task driver [:task] not found',
-    ]
 ];

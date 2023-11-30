@@ -3,15 +3,18 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\File;
+use JobMetric\Flow\Contracts\TaskContract;
 use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
-use JobMetric\Flow\Exceptions\DriverNotFoundException;
 use JobMetric\Flow\Exceptions\FlowTaskNotFoundException;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Metadata\JMetadata;
+use Str;
 
 class FlowTaskManager
 {
@@ -46,16 +49,25 @@ class FlowTaskManager
 
     public function store(array $data): FlowTask
     {
+        // @todo: add exception
+
         $task = FlowTask::create($data);
+
         event(new FlowTaskStoreEvent($task));
+
         return $task;
     }
 
     public function update(int $flow_task_id, $data = []): FlowTask
     {
+        // @todo: add exception
+
         $task = FlowTask::findOrFail($flow_task_id);
+
         $task->update($data);
+
         event(new FlowTaskUpdateEvent($task, $data));
+
         return $task;
     }
 
@@ -74,25 +86,53 @@ class FlowTaskManager
     }
 
     /**
-     * @throws DriverNotFoundException
+     * get all flow task drivers
+     *
+     * @param string $flow_driver
+     *
+     * @return array
+     * @throws FileNotFoundException
      */
-    public function getTasksList(string $flowDriver): array
+    public function drivers(string $flow_driver): array
     {
-        $flowDriver = \Str::studly($flowDriver);
-        return array_merge(resolveClassesFromDirectory('App\\Flows\\Global'),
-            resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flowDriver . '\\Tasks'));
+        $flow_driver = Str::studly($flow_driver);
+        $driver = flowResolve($flow_driver);
+
+        $global_tasks = [];
+        $results = $this->resolveClassesFromDirectory('App\\Flows\\Global');
+        foreach ($results as $result) {
+            $global_tasks[] = $this->getDetailsFromTask($result);
+        }
+
+        $driver_tasks = [];
+        $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
+        foreach ($results as $result) {
+            $driver_tasks[] = $this->getDetailsFromTask($result);
+        }
+
+        return [
+            [
+                'key' => 'Global',
+                'title' => __('flow::base.flow_task.global'),
+                'tasks' => $global_tasks
+            ],
+            [
+                'key' => $flow_driver,
+                'title' => $driver->getTitle(),
+                'tasks' => $driver_tasks
+            ]
+        ];
     }
 
 
     public function getTaskDetails(string $flowDriver = '', string $taskClassName = '')
     {
-        if ($flowDriver=='global'){
-            $directory='App\\Flows\\Global';
+        if ($flowDriver == 'global') {
+            $directory = 'App\\Flows\\Global';
+        } else {
+            $directory = 'App\\Flows\\Drivers\\' . $flowDriver . '\\Tasks';
         }
-        else{
-            $directory='App\\Flows\\Drivers\\' . $flowDriver.'\\Tasks';
-        }
-        return resolveClassFromDirectory($directory,$taskClassName);
+        return resolveClassFromDirectory($directory, $taskClassName);
     }
 
     public function assignTo(int $task_id, int $transitionId)
@@ -100,4 +140,32 @@ class FlowTaskManager
 
     }
 
+    /**
+     * restore flow task driver with namespace
+     *
+     * @param string $namespace
+     *
+     * @return array
+     */
+    private function resolveClassesFromDirectory(string $namespace): array
+    {
+        $files = File::files(base_path($namespace), '*.php');
+
+        $class = [];
+        foreach ($files as $file) {
+            $class[] = resolve($namespace . '\\' . pathinfo($file, PATHINFO_FILENAME));
+        }
+
+        return $class;
+    }
+
+    private function getDetailsFromTask(TaskContract $task): array
+    {
+        return [
+            'key' => class_basename($task),
+            'title' => $task->getTitle(),
+            'description' => $task->getDescription(),
+            'fields' => $task->getFields()
+        ];
+    }
 }

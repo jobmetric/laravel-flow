@@ -4,10 +4,49 @@ namespace JobMetric\Flow\Contracts;
 
 abstract class TaskContract
 {
+    /**
+     * title of task
+     *
+     * validation: required
+     * @var string
+     */
     protected string $title;
-    protected string $description = "";
+
+    /**
+     * description of task
+     *
+     * validation: optional
+     * @var ?string
+     */
+    protected ?string $description = null;
+
+    /**
+     * fields of task
+     *
+     * validation: optional
+     * sample: [
+     *     [
+     *          'type' => 'input',
+     *          'key' => 'name',
+     *          'value' => null,
+     *          'placeholder' => 'name',
+     *          'options' => [
+     *              [
+     *                  'key' => 'name',
+     *                  'value' => 'name'
+     *              ],
+     *              ...
+     *          ],
+     *          'validation' => [
+     *              'required',
+     *          ],
+     *          ...
+     *     ]
+     * ]
+     *
+     * @var array
+     */
     protected array  $fields=[];
-    protected bool $is_global=false;
 
     abstract function handle();
 
@@ -16,7 +55,7 @@ abstract class TaskContract
         return $this->title;
     }
 
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -24,10 +63,5 @@ abstract class TaskContract
     public function getFields(): array
     {
         return $this->fields;
-    }
-
-    public function isGlobal(): bool
-    {
-        return $this->is_global;
     }
 }

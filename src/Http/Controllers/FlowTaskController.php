@@ -11,10 +11,9 @@ use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\Flow\StoreFlowTaskRequest;
 use JobMetric\Flow\Http\Requests\Flow\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Requests\FlowTask\FlowTaskDetailsRequest;
-use JobMetric\Flow\Http\Requests\FlowTask\FlowTaskListRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Http\Resources\FlowTaskDetailsResource;
-use JobMetric\Flow\Http\Resources\FlowTaskListResource;
+use JobMetric\Flow\Http\Resources\FlowTaskDriversResource;
 use JobMetric\Flow\Models\Flow;
 
 class FlowTaskController extends BaseFlowController
@@ -109,10 +108,11 @@ class FlowTaskController extends BaseFlowController
     }
 
 
-    public function getList(FlowTaskListRequest $request)
+    public function drivers(Flow $flow)
     {
-        $driver= \Str::studly($request->validated()['driver']);
-        return FlowTaskListResource::collection(FlowTask::getTasksList($driver));
+        $drivers = FlowTask::drivers($flow->driver);
+
+        return FlowTaskDriversResource::collection($drivers);
     }
 
     public function getTaskDetails(FlowTaskDetailsRequest $request)

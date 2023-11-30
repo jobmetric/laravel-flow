@@ -6,23 +6,31 @@ use JobMetric\Flow\Contracts\TaskContract;
 
 class {{task}}GlobalTask extends TaskContract
 {
-    protected string $title       = ""; // required
-    protected string $description = ""; // optional
-    protected array  $fields      = [ // you can define multiple fields
-        [
-            'type'        => '', // input,select,checkbox,radio,textarea
-            'key'         => '', //required
-            'value'       => null, //mixed
-            'placeholder' => '', //optional
-            'options'     => [  // for type select
-                                [
-                                    'key'   => '', //required
-                                    'value' => ''
-                                ]
-            ], //optional
-            'validation'  => [] // validation rules laravel
-        ],
-    ];
+    /**
+     * title of task
+     *
+     * validation: required
+     * @var string
+     */
+    protected string $title = "";
+
+    /**
+     * description of task
+     *
+     * validation: optional
+     * @var ?string
+     */
+    protected ?string $description = null;
+
+    /**
+     * fields of task
+     *
+     * validation: optional
+     * sample: sample in parent class(TaskContract)
+     *
+     * @var array
+     */
+    protected array $fields = [];
 
     public function handle()
     {
