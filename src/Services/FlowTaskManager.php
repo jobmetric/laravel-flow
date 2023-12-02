@@ -3,15 +3,12 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use JobMetric\Flow\Contracts\TaskContract;
-use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
-use JobMetric\Flow\Exceptions\FlowTaskNotFoundException;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Metadata\JMetadata;
 use Str;
@@ -91,37 +88,64 @@ class FlowTaskManager
      * @param string $flow_driver
      *
      * @return array
-     * @throws FileNotFoundException
      */
-    public function drivers(string $flow_driver): array
+    public function drivers(string $flow_driver = ''): array
     {
-        $flow_driver = Str::studly($flow_driver);
-        $driver = flowResolve($flow_driver);
+        $output = [];
 
         $global_tasks = [];
         $results = $this->resolveClassesFromDirectory('App\\Flows\\Global');
         foreach ($results as $result) {
-            $global_tasks[] = $this->getDetailsFromTask($result);
+            $global_tasks[] = $this->getDetailsFromTask($result, false);
         }
+        $output[] = [
+            'key' => 'Global',
+            'title' => __('flow::base.flow_task.global'),
+            'tasks' => $global_tasks
+        ];
 
-        $driver_tasks = [];
-        $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
-        foreach ($results as $result) {
-            $driver_tasks[] = $this->getDetailsFromTask($result);
-        }
+        if($flow_driver != '') {
+            $flow_driver = Str::studly($flow_driver);
+            $driver = flowResolve($flow_driver);
 
-        return [
-            [
-                'key' => 'Global',
-                'title' => __('flow::base.flow_task.global'),
-                'tasks' => $global_tasks
-            ],
-            [
+            $driver_tasks = [];
+            $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
+            foreach ($results as $result) {
+                $driver_tasks[] = $this->getDetailsFromTask($result, false);
+            }
+
+            $output[] = [
                 'key' => $flow_driver,
                 'title' => $driver->getTitle(),
                 'tasks' => $driver_tasks
-            ]
-        ];
+            ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * get details flow task drivers
+     *
+     * @param string $flow_driver
+     * @param string $task_driver
+     *
+     * @return array
+     */
+    public function details(string $flow_driver, string $task_driver): array
+    {
+        $flow_driver = Str::studly($flow_driver);
+        $task_driver = Str::studly($task_driver);
+
+        if('Global' == $flow_driver) {
+            $object = resolve('\\App\\Flows\\Global\\' . $task_driver);
+
+            return $this->getDetailsFromTask($object);
+        }
+
+        $object = resolve('\\App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks\\' . $task_driver);
+
+        return $this->getDetailsFromTask($object);
     }
 
     /**
@@ -143,13 +167,12 @@ class FlowTaskManager
         return $class;
     }
 
-    private function getDetailsFromTask(TaskContract $task): array
+    private function getDetailsFromTask(TaskContract $task, bool $has_field = true): array
     {
-        return [
+        return array_merge([
             'key' => class_basename($task),
             'title' => $task->getTitle(),
             'description' => $task->getDescription(),
-            'fields' => $task->getFields()
-        ];
+        ], $has_field ? ['fields' => $task->getFields()] : []);
     }
 }

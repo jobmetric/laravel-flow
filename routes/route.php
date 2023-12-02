@@ -34,4 +34,5 @@ Route::middleware([
         // flow task
         Route::get('/flow-task/drivers', [FlowTaskController::class, 'drivers']);
     });
+    Route::get('/flow-task/{flow_driver}/{task_driver}', [FlowTaskController::class, 'details']);
 });

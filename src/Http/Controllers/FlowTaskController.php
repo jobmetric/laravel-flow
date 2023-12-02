@@ -2,12 +2,15 @@
 
 namespace JobMetric\Flow\Http\Controllers;
 
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Facades\FlowTask;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\Flow\StoreFlowTaskRequest;
 use JobMetric\Flow\Http\Requests\Flow\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
+use JobMetric\Flow\Http\Resources\FlowTaskDetailResource;
 use JobMetric\Flow\Http\Resources\FlowTaskDriversResource;
 use JobMetric\Flow\Models\Flow;
 
@@ -102,10 +105,32 @@ class FlowTaskController extends BaseFlowController
         );
     }
 
-    public function drivers(Flow $flow)
+    /**
+     * get all task driver
+     *
+     * @param Flow $flow
+     *
+     * @return AnonymousResourceCollection
+     */
+    public function drivers(Flow $flow): AnonymousResourceCollection
     {
-        $drivers = FlowTask::drivers($flow->driver);
+        return FlowTaskDriversResource::collection(
+            FlowTask::drivers($flow->driver)
+        );
+    }
 
-        return FlowTaskDriversResource::collection($drivers);
+    /**
+     * get details task driver
+     *
+     * @param string $flow_driver
+     * @param string $task_driver
+     *
+     * @return JsonResource
+     */
+    public function details(string $flow_driver, string $task_driver): JsonResource
+    {
+        return FlowTaskDetailResource::make(
+            FlowTask::details($flow_driver, $task_driver)
+        );
     }
 }
