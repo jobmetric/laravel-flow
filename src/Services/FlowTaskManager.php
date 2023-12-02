@@ -89,35 +89,63 @@ class FlowTaskManager
      *
      * @return array
      */
-    public function drivers(string $flow_driver): array
+    public function drivers(string $flow_driver = ''): array
     {
-        $flow_driver = Str::studly($flow_driver);
-        $driver = flowResolve($flow_driver);
+        $output = [];
 
         $global_tasks = [];
         $results = $this->resolveClassesFromDirectory('App\\Flows\\Global');
         foreach ($results as $result) {
             $global_tasks[] = $this->getDetailsFromTask($result, false);
         }
+        $output[] = [
+            'key' => 'Global',
+            'title' => __('flow::base.flow_task.global'),
+            'tasks' => $global_tasks
+        ];
 
-        $driver_tasks = [];
-        $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
-        foreach ($results as $result) {
-            $driver_tasks[] = $this->getDetailsFromTask($result, false);
-        }
+        if($flow_driver != '') {
+            $flow_driver = Str::studly($flow_driver);
+            $driver = flowResolve($flow_driver);
 
-        return [
-            [
-                'key' => 'Global',
-                'title' => __('flow::base.flow_task.global'),
-                'tasks' => $global_tasks
-            ],
-            [
+            $driver_tasks = [];
+            $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
+            foreach ($results as $result) {
+                $driver_tasks[] = $this->getDetailsFromTask($result, false);
+            }
+
+            $output[] = [
                 'key' => $flow_driver,
                 'title' => $driver->getTitle(),
                 'tasks' => $driver_tasks
-            ]
-        ];
+            ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * get details flow task drivers
+     *
+     * @param string $flow_driver
+     * @param string $task_driver
+     *
+     * @return array
+     */
+    public function details(string $flow_driver, string $task_driver): array
+    {
+        $flow_driver = Str::studly($flow_driver);
+        $task_driver = Str::studly($task_driver);
+
+        if('Global' == $flow_driver) {
+            $object = resolve('\\App\\Flows\\Global\\' . $task_driver);
+
+            return $this->getDetailsFromTask($object);
+        }
+
+        $object = resolve('\\App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks\\' . $task_driver);
+
+        return $this->getDetailsFromTask($object);
     }
 
     /**
