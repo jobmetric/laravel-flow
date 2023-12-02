@@ -3,15 +3,12 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use JobMetric\Flow\Contracts\TaskContract;
-use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
-use JobMetric\Flow\Exceptions\FlowTaskNotFoundException;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Metadata\JMetadata;
 use Str;
@@ -91,7 +88,6 @@ class FlowTaskManager
      * @param string $flow_driver
      *
      * @return array
-     * @throws FileNotFoundException
      */
     public function drivers(string $flow_driver): array
     {
@@ -101,13 +97,13 @@ class FlowTaskManager
         $global_tasks = [];
         $results = $this->resolveClassesFromDirectory('App\\Flows\\Global');
         foreach ($results as $result) {
-            $global_tasks[] = $this->getDetailsFromTask($result);
+            $global_tasks[] = $this->getDetailsFromTask($result, false);
         }
 
         $driver_tasks = [];
         $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
         foreach ($results as $result) {
-            $driver_tasks[] = $this->getDetailsFromTask($result);
+            $driver_tasks[] = $this->getDetailsFromTask($result, false);
         }
 
         return [
@@ -143,13 +139,12 @@ class FlowTaskManager
         return $class;
     }
 
-    private function getDetailsFromTask(TaskContract $task): array
+    private function getDetailsFromTask(TaskContract $task, bool $has_field = true): array
     {
-        return [
+        return array_merge([
             'key' => class_basename($task),
             'title' => $task->getTitle(),
             'description' => $task->getDescription(),
-            'fields' => $task->getFields()
-        ];
+        ], $has_field ? ['fields' => $task->getFields()] : []);
     }
 }

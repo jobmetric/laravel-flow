@@ -104,8 +104,8 @@ class FlowTaskController extends BaseFlowController
 
     public function drivers(Flow $flow)
     {
-        $drivers = FlowTask::drivers($flow->driver);
-
-        return FlowTaskDriversResource::collection($drivers);
+        return FlowTaskDriversResource::collection(
+            FlowTask::drivers($flow->driver)
+        );
     }
 }

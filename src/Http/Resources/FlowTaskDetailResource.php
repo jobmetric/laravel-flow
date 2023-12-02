@@ -18,7 +18,10 @@ class FlowTaskDetailResource extends JsonResource
             'key' => $this['key'],
             'title' => $this['title'],
             'description' => $this['description'],
-            'fields' => $this['fields']
+
+            'fields' => $this->when(isset($this['fields']), function () {
+                return $this['fields'];
+            }),
         ];
     }
 }
