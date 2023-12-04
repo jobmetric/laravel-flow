@@ -7,7 +7,7 @@ use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Services\FlowTaskManager;
 
 /**
- * @method static \JobMetric\Flow\Models\FlowTask store(array $data)
+ * @method static \JobMetric\Flow\Models\FlowTask store(int $flow_id, int $flow_transition_id, array $data)
  * @method static \JobMetric\Flow\Models\FlowTask show(int $flow_task_id)
  * @method static \JobMetric\Flow\Models\FlowTask update(int $flow_task_id, array $data)
  * @method static \JobMetric\Flow\Models\FlowTask delete(int $flow_task_id)

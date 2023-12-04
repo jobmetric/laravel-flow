@@ -44,7 +44,7 @@ class FlowTaskManager
         $this->JMetadata = $app->make('JMetadata');
     }
 
-    public function store(array $data): FlowTask
+    public function store(int $flow_id, int $flow_transition_id, array $data): FlowTask
     {
         // @todo: add exception
 

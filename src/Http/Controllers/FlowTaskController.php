@@ -5,6 +5,7 @@ namespace JobMetric\Flow\Http\Controllers;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
+use JobMetric\Flow\Facades\FlowTask as FlowTaskFacade;
 use JobMetric\Flow\Facades\FlowTask;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
 use JobMetric\Flow\Http\Requests\Flow\StoreFlowTaskRequest;
@@ -12,7 +13,9 @@ use JobMetric\Flow\Http\Requests\Flow\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Http\Resources\FlowTaskDetailResource;
 use JobMetric\Flow\Http\Resources\FlowTaskDriversResource;
+use JobMetric\Flow\Http\Resources\FlowTaskResource;
 use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\FlowTransition;
 
 class FlowTaskController extends BaseFlowController
 {
@@ -27,13 +30,21 @@ class FlowTaskController extends BaseFlowController
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreFlowTaskRequest $request
+     * @param Flow $flow
+     * @param FlowTransition $flowTransition
+     * @param StoreFlowTaskRequest $storeFlowTaskRequest
      *
-     * @return FlowResource
+     * @return FlowTaskResource
      */
-    public function store(StoreFlowTaskRequest $request): FlowResource
+    public function store(Flow $flow, FlowTransition $flowTransition, StoreFlowTaskRequest $storeFlowTaskRequest): FlowTaskResource
     {
-
+        return FlowTaskResource::make(
+            FlowTaskFacade::store(
+                $flow->id,
+                $flowTransition->id,
+                $storeFlowTaskRequest->validated()
+            )
+        );
     }
 
     /**
