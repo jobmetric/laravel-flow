@@ -23,10 +23,10 @@ class StoreFlowTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'flow_transition_id' => 'int|exists:flow_transitions,id',
-            'driver'             => 'string',
-            'config'             => 'array',
-            'order'              => 'int',
+            'flow_driver' => 'int|exists:flow_transitions,id',
+            'task_driver' => 'string',
+            'config' => 'array',
+            'order' => 'int',
         ];
     }
 }
