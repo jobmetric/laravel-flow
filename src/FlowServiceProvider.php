@@ -2,82 +2,41 @@
 
 namespace JobMetric\Flow;
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
-use JobMetric\Flow\Services\Flow\FlowManager;
+use JobMetric\Flow\Services\FlowManager;
+use JobMetric\Flow\Services\FlowStateManager;
+use JobMetric\Flow\Services\FlowTaskManager;
+use JobMetric\Flow\Services\FlowTransitionManager;
+use JobMetric\PackageCore\Exceptions\DependencyPublishableClassNotFoundException;
+use JobMetric\PackageCore\Exceptions\MigrationFolderNotFoundException;
+use JobMetric\PackageCore\Exceptions\RegisterClassTypeNotFoundException;
+use JobMetric\PackageCore\PackageCore;
+use JobMetric\PackageCore\PackageCoreServiceProvider;
 use JobMetric\Translation\TranslationServiceProvider;
 
-class FlowServiceProvider extends ServiceProvider
+class FlowServiceProvider extends PackageCoreServiceProvider
 {
-    use FactoryHelper;
-
     /**
-     * This namespace is applied to your controller routes.
-     *
-     * In addition, it is set as the URL generator's root namespace.
-     *
-     * @var string
-     */
-    protected string $namespace = 'JobMetric\Flow\Http\Controllers';
-
-    public function register(): void
-    {
-        $this->app->bind('Flow', function ($app) {
-            return new FlowManager($app);
-        });
-
-        $this->mergeConfigFrom(__DIR__ . '/../config/config.php', 'workflow');
-
-        $this->factoryResolver();
-    }
-
-    /**
-     * boot providere
-     *
-     * @return voide
-     */
-    public function boot(): void
-    {
-        if ($this->app->runningInConsole()) {
-            // load migration
-            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-
-            // register publishable
-            $this->registerPublishables();
-
-            $this->commands([
-                Commands\MakeFlow::class,
-                Commands\MakeTask::class,
-            ]);
-        }
-
-        // set translations
-        $this->loadTranslationsFrom(realpath(__DIR__ . '/../lang'), 'flow');
-
-        // set route
-
-
-        Route::prefix('workflow')->name('workflow.')->namespace($this->namespace)->group(realpath(__DIR__ . '/../routes/route.php'));
-    }
-
-    /**
-     * register publishables
+     * @param PackageCore $package
      *
      * @return void
+     * @throws MigrationFolderNotFoundException
+     * @throws RegisterClassTypeNotFoundException
+     * @throws DependencyPublishableClassNotFoundException
      */
-    protected function registerPublishables(): void
+    public function configuration(PackageCore $package): void
     {
-        // run dependency publishable
-        $this->publishes(self::pathsToPublish(TranslationServiceProvider::class), 'translation');
-
-        // publish config
-        $this->publishes([
-            realpath(__DIR__ . '/../config/config.php') => config_path('workflow.php')
-        ], ['workflow', 'flow-config']);
-
-        // publish migration
-        $this->publishes([
-            realpath(__DIR__ . '/../database/migrations') => database_path('migrations')
-        ], ['workflow', 'flow-migrations']);
+        $package
+            ->name('laravel-flow')
+            ->hasConfig()
+            ->hasMigration()
+            ->hasRoute()
+            ->hasTranslation()
+            ->registerDependencyPublishable(TranslationServiceProvider::class)
+            ->registerCommand(Commands\MakeFlow::class)
+            ->registerCommand(Commands\MakeTask::class)
+            ->registerClass('Flow', FlowManager::class)
+            ->registerClass('FlowState', FlowStateManager::class)
+            ->registerClass('FlowTransition', FlowTransitionManager::class)
+            ->registerClass('FlowTask', FlowTaskManager::class);
     }
 }

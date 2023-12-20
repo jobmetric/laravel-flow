@@ -11,33 +11,13 @@
         "flow"
     ],
     "homepage": "https://doc.jobmetric.net/package/laravel-flow",
-    "authors": [
-        {
-            "name": "Majid Mohammadian",
-            "email": "majeedmohammadian@gmail.com",
-            "homepage": "https://www.linkedin.com/in/majidmohammadian/",
-            "role": "Full Stack Developer"
-        },
-        {
-            "name": "MohammadAli Farshchian",
-            "email": "farshchian2014@gmail.com",
-            "homepage": "https://www.linkedin.com/in/farshchian2090",
-            "role": "Full Stack Developer"
-        },{
-            "name": "Mahdi MalekiFard",
-            "email": "maleki1344py@gmail.com",
-            "homepage": "https://www.linkedin.com/in/mahdi-malekifard-py/",
-            "role": "BackEnd Developer"
-        }
-    ],
     "require": {
         "php": ">=8.0.1",
         "ext-json": "*",
         "laravel/framework": ">=9.19",
-        "spatie/laravel-data": "^3.9",
         "spatie/laravel-query-builder": "^5.1",
-        "jobmetric/translation": "*",
-      "ext-http": "*"
+        "jobmetric/laravel-package-core": "^1.0",
+        "jobmetric/translation": "*"
     },
     "autoload": {
         "files": [
