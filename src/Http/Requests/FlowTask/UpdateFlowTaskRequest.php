@@ -1,6 +1,6 @@
 <?php
 
-namespace JobMetric\Flow\Http\Requests\Flow;
+namespace JobMetric\Flow\Http\Requests\FlowTask;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
