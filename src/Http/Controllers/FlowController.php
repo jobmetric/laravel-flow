@@ -4,8 +4,8 @@ namespace JobMetric\Flow\Http\Controllers;
 
 use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Http\Controllers\Controller as BaseFlowController;
-use JobMetric\Flow\Http\Requests\Flow\StoreFlowTaskRequest;
-use JobMetric\Flow\Http\Requests\Flow\UpdateFlowTaskRequest;
+use JobMetric\Flow\Http\Requests\Flow\StoreFlowRequest;
+use JobMetric\Flow\Http\Requests\Flow\UpdateFlowRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
 
@@ -22,11 +22,11 @@ class FlowController extends BaseFlowController
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreFlowTaskRequest $request
+     * @param StoreFlowRequest $request
      *
      * @return FlowResource
      */
-    public function store(StoreFlowTaskRequest $request): FlowResource
+    public function store(StoreFlowRequest $request): FlowResource
     {
         return FlowResource::make(
             FlowFacade::store(
@@ -51,11 +51,11 @@ class FlowController extends BaseFlowController
      * Update the specified resource in storage.
      *
      * @param Flow                  $flow
-     * @param UpdateFlowTaskRequest $request
+     * @param UpdateFlowRequest $request
      *
      * @return FlowResource
      */
-    public function update(Flow $flow, UpdateFlowTaskRequest $request): FlowResource
+    public function update(Flow $flow, UpdateFlowRequest $request): FlowResource
     {
         return FlowResource::make(
             FlowFacade::update($flow->id, $request->validated())
