@@ -19,7 +19,7 @@
 <br />
 <div align="center">
 
-<h3 align="center" style="color: red;">Workflow for laravel</h3>
+<h1 align="center" style="color: red;">Workflow for laravel</h1>
 
   <p align="center" style="color: cadetblue;">
     This package is for creating different workflows in different Laravel projects
