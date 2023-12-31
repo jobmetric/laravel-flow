@@ -4,8 +4,8 @@ namespace JobMetric\Flow\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\File;
-use Str;
+use Illuminate\Support\Str;
+use JobMetric\PackageCore\Commands\ConsoleTools;
 
 class MakeTask extends Command
 {

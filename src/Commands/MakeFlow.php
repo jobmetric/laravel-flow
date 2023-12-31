@@ -3,7 +3,8 @@
 namespace JobMetric\Flow\Commands;
 
 use Illuminate\Console\Command;
-use Str;
+use Illuminate\Support\Str;
+use JobMetric\PackageCore\Commands\ConsoleTools;
 
 class MakeFlow extends Command
 {
