@@ -48,7 +48,7 @@ class MakeTask extends Command
                 return 1;
             }
 
-            $content_task = $this->getStub('task', [
+            $content_task = $this->getStub(__DIR__ . '/stub/task', [
                 'task' => $task,
                 'driver' => $driver,
             ]);
@@ -71,7 +71,7 @@ class MakeTask extends Command
                 return 1;
             }
 
-            $content_task = $this->getStub('global-task', [
+            $content_task = $this->getStub(__DIR__ . '/stub/global-task', [
                 'task' => $task
             ]);
 

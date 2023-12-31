@@ -39,7 +39,7 @@ class MakeFlow extends Command
             return 1;
         }
 
-        $content_driver = $this->getStub('driver', [
+        $content_driver = $this->getStub(__DIR__ . '/stub/driver', [
             'driver' => $driver,
         ]);
 
