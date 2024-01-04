@@ -16,7 +16,7 @@ use JobMetric\Flow\Exceptions\FlowStateStartTypeIsNotDeleteException;
 use JobMetric\Flow\Exceptions\FlowStatusInvalidException;
 use JobMetric\Flow\Facades\Flow;
 use JobMetric\Flow\Models\FlowState;
-use JobMetric\Metadata\JMetadata;
+use JobMetric\Metadata\Metadata;
 
 class FlowStateManager
 {
@@ -30,9 +30,9 @@ class FlowStateManager
     /**
      * The metadata instance.
      *
-     * @var JMetadata
+     * @var Metadata
      */
-    protected JMetadata $JMetadata;
+    protected Metadata $metadata;
 
     /**
      * Create a new Translation instance.

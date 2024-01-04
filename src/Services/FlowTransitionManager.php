@@ -21,7 +21,7 @@ use JobMetric\Flow\Exceptions\FlowTransitionStateStartNotInToException;
 use JobMetric\Flow\Exceptions\FlowTransitionToNotSetException;
 use JobMetric\Flow\Facades\Flow;
 use JobMetric\Flow\Models\FlowTransition;
-use JobMetric\Metadata\JMetadata;
+use JobMetric\Metadata\Metadata;
 
 class FlowTransitionManager
 {
@@ -37,9 +37,9 @@ class FlowTransitionManager
     /**
      * The metadata instance.
      *
-     * @var JMetadata
+     * @var Metadata
      */
-    protected JMetadata $JMetadata;
+    protected Metadata $metadata;
 
     /**
      * Create a new Translation instance.

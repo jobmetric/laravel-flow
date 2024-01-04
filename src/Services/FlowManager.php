@@ -13,7 +13,7 @@ use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
 use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
-use JobMetric\Metadata\JMetadata;
+use JobMetric\Metadata\Metadata;
 use Str;
 
 class FlowManager
@@ -28,9 +28,9 @@ class FlowManager
     /**
      * The metadata instance.
      *
-     * @var JMetadata
+     * @var Metadata
      */
-    protected JMetadata $JMetadata;
+    protected Metadata $metadata;
 
     /**
      * Create a new Translation instance.

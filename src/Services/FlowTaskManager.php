@@ -10,7 +10,7 @@ use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
 use JobMetric\Flow\Models\FlowTask;
-use JobMetric\Metadata\JMetadata;
+use JobMetric\Metadata\Metadata;
 use Str;
 
 class FlowTaskManager
@@ -25,9 +25,9 @@ class FlowTaskManager
     /**
      * The metadata instance.
      *
-     * @var JMetadata
+     * @var Metadata
      */
-    protected JMetadata $JMetadata;
+    protected Metadata $metadata;
 
     /**
      * Create a new Translation instance.
