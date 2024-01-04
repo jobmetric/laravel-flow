@@ -1,9 +1,3 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
 [contributors-shield]: https://img.shields.io/github/contributors/jobmetric/laravel-flow.svg?style=for-the-badge
 [contributors-url]: https://github.com/jobmetric/laravel-flow/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/jobmetric/laravel-flow.svg?style=for-the-badge&label=Fork
@@ -13,52 +7,43 @@
 [license-shield]: https://img.shields.io/github/license/jobmetric/laravel-flow.svg?style=for-the-badge
 [license-url]: https://github.com/jobmetric/laravel-flow/blob/master/LICENSE.md
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-blue.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/yourlinkedinusername
+[linkedin-url]: https://linkedin.com/in/majidmohammadian
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
 
-<h1 align="center" style="color: red;">Workflow for laravel</h1>
+# Workflow for laravel
 
-  <p align="center" style="color: cadetblue;">
-    This package is for creating different workflows in different Laravel projects
-  </p>
-</div>
+This package is for creating different workflows in different Laravel projects.
 
-<br>
+### Make Workflow your Way
 
-### <span style="color: lightblue;">Make Work Flow your Way</span>
+`Workflow` streamlines the creation of processes within your program. By entrusting process creation to system administrators, you alleviate yourself from redundant tasks. This methodology not only allows you to tackle smaller tasks more efficiently but also empowers you to craft comprehensive projects with ease. Additionally, the package automates updates and handles a variety of other functionalities, enhancing the overall productivity of your development process.
 
-> Workflows represent your team’s process and control how people progress your project’s work.
-Here, you can add statuses, which appear as drop zones for the cards on your project’s board.
-You can create pathways between statuses called transitions, and automate repetitive actions using rules.
+### What is Workflow?
 
+Expanding on this example, envision the intricacies involved in the salary increase request. As it navigates through various hierarchical levels department manager, company manager, and finance manager each step introduces a unique state. These transitions aren't merely a change in status; they represent a dynamic evolution of the request.
 
-### <span style="color: lightblue;">What is Workflow?</span>
+Consider the scenario where the finance unit gives its approval. This transition triggers a series of automated tasks, such as sending an SMS notification to the user. The power of workflow management lies not only in progressing through states but also in orchestrating corresponding actions seamlessly.
 
-> Suppose that in a human resource system we want to make a request for a salary increase, this request must go through a series of procedures for final approval.
-For example, first the department manager, then the company manager, and finally the finance manager must approve this request.
-This is a flow. When this request is placed at any stage, it means that we are in one state, and confirmation or rejection causes us to go to another state, that is, a transition occurs.
-This transition can be accompanied by a series of tasks that must happen, for example, if the financial unit approves, an SMS must be sent to the user.
-Each flow has only one start state and at least one end state. That is, a flow can have several end states.
+Moreover, in the realm of workflows, the concept of end states becomes pivotal. A workflow may culminate in multiple end states, reflecting different outcomes or resolutions. This flexibility caters to the diverse paths a process can take based on approvals, rejections, or any other pertinent factors.
 
+In essence, leveraging a robust workflow system empowers your program to efficiently handle complex processes, providing a structured and automated approach to tasks. By incorporating this package into your development toolkit, you can streamline processes, enhance productivity, and navigate the intricate web of state transitions with ease.
 
-### <span style="color: lightblue;">Built With</span>
-
-[![Php](https://img.shields.io/badge/Php-%20-orange?logo=php&style=flat-square)](https://laravel.com)
-[![Laravel](https://img.shields.io/badge/Laravel-%20-orange?logo=laravel&style=flat-square)](https://laravel.com)
-
-
-## <span style="color: aqua;">Install via composer</span>
+## Install via composer
 
 Run the following command to pull in the latest version:
+
 ```php
 composer require jobmetric/laravel-flow
 ```
 
+## Documentation
 
-## <span style="color: aqua;">Documentation</span>
+The documents of this system include the following sections:
 
 - [General](https://github.com/jobmetric/laravel-flow/blob/master/docs/general/index.md)
 - [Flow](https://github.com/jobmetric/laravel-flow/blob/master/docs/flow/index.md)
@@ -66,14 +51,10 @@ composer require jobmetric/laravel-flow
 - [Flow Transition](https://github.com/jobmetric/laravel-flow/blob/master/docs/flow-transition/index.md)
 - [Flow Asset](https://github.com/jobmetric/laravel-flow/blob/master/docs/flow-asset/index.md)
 
+## Contributing
 
-## <span style="color: aqua;">Contributing</span>
+Thank you for participating in `laravel-flow`, A contribution guide can be found [CONTRIBUTING.md](https://github.com/jobmetric/laravel-flow/blob/master/CONTRIBUTING.md).
 
-See `CONTRIBUTING.md` for more information.
+## License
 
-<!-- LICENSE -->
-## <span style="color: aqua;">License</span>
-
-See `LICENSE.md` for more information.
-
-<br>
+The `laravel-flow` is open-sourced software licensed under the MIT license. See [License File](https://github.com/jobmetric/laravel-flow/blob/master/LICENCE.md) for more information.
