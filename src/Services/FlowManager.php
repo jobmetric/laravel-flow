@@ -44,7 +44,7 @@ class FlowManager
     {
         $this->app = $app;
 
-        $this->JMetadata = $app->make('JMetadata');
+        $this->Metadata = $app->make('Metadata');
     }
 
     /**

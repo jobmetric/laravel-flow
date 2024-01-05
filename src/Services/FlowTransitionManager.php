@@ -53,7 +53,7 @@ class FlowTransitionManager
     {
         $this->app = $app;
 
-        $this->JMetadata = $app->make('JMetadata');
+        $this->Metadata = $app->make('Metadata');
     }
 
     /**

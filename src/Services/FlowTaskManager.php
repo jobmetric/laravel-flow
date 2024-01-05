@@ -41,7 +41,7 @@ class FlowTaskManager
     {
         $this->app = $app;
 
-        $this->JMetadata = $app->make('JMetadata');
+        $this->Metadata = $app->make('Metadata');
     }
 
     public function store(int $flow_id, int $flow_transition_id, array $data): FlowTask
