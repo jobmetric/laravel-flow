@@ -2,11 +2,11 @@
 
 namespace JobMetric\Flow\Models;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use JobMetric\PackageCore\Models\HasBooleanStatus;
 
 /**
  * @method static create(array $data)
@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Flow extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasBooleanStatus;
 
     protected $fillable = [
         'driver',
@@ -42,29 +42,5 @@ class Flow extends Model
     public function transitions(): HasMany
     {
         return $this->hasMany(FlowTransition::class);
-    }
-
-    /**
-     * Scope active.
-     *
-     * @param Builder $query
-     *
-     * @return Builder
-     */
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('status', true);
-    }
-
-    /**
-     * Scope inactive.
-     *
-     * @param Builder $query
-     *
-     * @return Builder
-     */
-    public function scopeInactive(Builder $query): Builder
-    {
-        return $query->where('status', false);
     }
 }

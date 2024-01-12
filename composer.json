@@ -16,7 +16,7 @@
         "ext-json": "*",
         "laravel/framework": ">=9.19",
         "spatie/laravel-query-builder": "^5.1",
-        "jobmetric/laravel-package-core": "^1.2",
+        "jobmetric/laravel-package-core": "^1.4",
         "jobmetric/translation": "*"
     },
     "autoload": {
