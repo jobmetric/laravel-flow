@@ -2,6 +2,8 @@
 
 namespace JobMetric\Flow\Enums;
 
+use JobMetric\PackageCore\Enums\EnumToArray;
+
 /**
  * @method static START()
  * @method static end()
@@ -9,6 +11,7 @@ namespace JobMetric\Flow\Enums;
  */
 enum TableFlowStateFieldTypeEnum : string {
     use EnumToArray;
+    
     case START = "start";
     case END = "end";
     case MIDDLE = "middle";
