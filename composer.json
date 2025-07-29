@@ -17,7 +17,7 @@
         "laravel/framework": ">=9.19",
         "spatie/laravel-query-builder": "^6.3",
         "jobmetric/laravel-package-core": "^1.4",
-        "jobmetric/translation": "*"
+        "jobmetric/laravel-translation": "^2.23"
     },
     "autoload": {
         "files": [
