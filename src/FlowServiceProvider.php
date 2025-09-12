@@ -26,7 +26,7 @@ class FlowServiceProvider extends PackageCoreServiceProvider
     public function configuration(PackageCore $package): void
     {
         $package
-            ->name('laravel-flow')
+            ->name('laravel-workflow')
             ->hasConfig()
             ->hasMigration()
             ->hasRoute()
