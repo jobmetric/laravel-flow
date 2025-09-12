@@ -11,33 +11,56 @@ return new class extends Migration
      */
     public function up(): void
     {
-        /**
-         * #translatable
-         */
         Schema::create(config('workflow.tables.flow_task'), function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('flow_transition_id')->index()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('flow_transition_id')->index()->constrained(config('workflow.tables.flow_transition'))->cascadeOnDelete()->cascadeOnUpdate();
 
             $table->string('driver')->index();
             /**
-             * value: driver name
-             * use: read file in address: app/Flow/{model}/Tasks/{driver_name}.php
+             * Driver class name of task
+             *
+             * use: read file in address: app/Flow/{model}/{TaskType}/{driver_name}.php
+             *
+             * TaskType means the type of task, can be:
+             * - Restriction
+             * - Validation
+             * - Action
              */
 
             $table->json('config')->nullable();
             /**
+             * Configuration for the task
+             *
              * value: json
              * use: {
-             *     // any config
+             *     "key": "value",
              * }
              */
 
-            $table->integer('ordering')->default(0);
+            $table->unsignedSmallInteger('ordering')->default(0)->index();
+            /**
+             * ordering of task within the transition
+             *
+             * - lower numbers run first
+             * - allows multiple tasks per transition
+             * - used to control sequence of tasks
+             */
 
             $table->boolean('status')->default(true)->index();
+            /**
+             * status of task
+             *
+             * - allows soft-disable of tasks without deletion
+             * - true = active, false = inactive
+             */
 
             $table->timestamps();
+
+            $table->unique([
+                'flow_transition_id',
+                'ordering'
+            ],'FLOW_TASK_ORDER_UNIQUE');
         });
     }
 

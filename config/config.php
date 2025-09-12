@@ -30,7 +30,8 @@ return [
         'flow_state' => 'flow_states',
         'flow_transition' => 'flow_transitions',
         'flow_task' => 'flow_tasks',
-        'flow_asset' => 'flow_assets',
+        'flow_instances' => 'flow_instances',
+        'flow_uses' => 'flow_uses',
     ],
 
     /*
