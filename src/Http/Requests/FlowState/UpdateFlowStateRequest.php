@@ -5,7 +5,7 @@ namespace JobMetric\Flow\Http\Requests\FlowState;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Rules\CheckStatusInDriverRule;
 
@@ -34,7 +34,7 @@ class UpdateFlowStateRequest extends FormRequest
         return [
             'type' => [
                 'sometimes',
-                Rule::in(array_diff(TableFlowStateFieldTypeEnum::values(), [TableFlowStateFieldTypeEnum::START()])),
+                Rule::in(array_diff(FlowStateTypeEnum::values(), [FlowStateTypeEnum::START()])),
             ],
             'color' => 'sometimes|string',
             'position' => 'nullable|array',

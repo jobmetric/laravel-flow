@@ -3,7 +3,7 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Builder;
-use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Exceptions\FlowInactiveException;
 use JobMetric\Flow\Exceptions\FlowTransitionExistException;
 use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
@@ -144,7 +144,7 @@ trait ExceptionTrait
         if (array_key_exists('from', $data)) {
             $stateFrom = FlowStateFacade::show($data['from']);
 
-            if ($stateFrom?->type == TableFlowStateFieldTypeEnum::END) {
+            if ($stateFrom?->type == FlowStateTypeEnum::END) {
                 throw new FlowTransitionStateEndNotInFromException;
             }
         }
@@ -163,7 +163,7 @@ trait ExceptionTrait
         if (array_key_exists('to', $data)) {
             $stateTo = FlowStateFacade::show($data['to']);
 
-            if ($stateTo?->type == TableFlowStateFieldTypeEnum::START) {
+            if ($stateTo?->type == FlowStateTypeEnum::START) {
                 throw new FlowTransitionStateStartNotInToException;
             }
         }
@@ -228,7 +228,7 @@ trait ExceptionTrait
     {
         $flowTransition->load(['fromState']);
 
-        if ($flowTransition?->fromState?->type === TableFlowStateFieldTypeEnum::START && $flowTransition?->fromState?->id != $data['from']) {
+        if ($flowTransition?->fromState?->type === FlowStateTypeEnum::START && $flowTransition?->fromState?->id != $data['from']) {
             throw new FlowTransitionFromStateStartNotMoveException;
         }
     }

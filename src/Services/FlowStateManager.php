@@ -4,7 +4,7 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
-use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowState\FlowStateDeleteEvent;
 use JobMetric\Flow\Events\FlowState\FlowStateStoreEvent;
 use JobMetric\Flow\Events\FlowState\FlowStateUpdateEvent;
@@ -67,7 +67,7 @@ class FlowStateManager
             throw new FlowInactiveException($flow->driver);
         }
 
-        if ($data['type'] == TableFlowStateFieldTypeEnum::START()) {
+        if ($data['type'] == FlowStateTypeEnum::START()) {
             throw new FlowStateStartTypeIsExistException($flow->driver);
         }
 
@@ -118,11 +118,11 @@ class FlowStateManager
         $flowState = $this->show($flow_state_id);
 
         if (isset($data['type'])) {
-            if (!in_array($data['type'], array_diff(TableFlowStateFieldTypeEnum::values(), [TableFlowStateFieldTypeEnum::START()]))) {
+            if (!in_array($data['type'], array_diff(FlowStateTypeEnum::values(), [FlowStateTypeEnum::START()]))) {
                 throw new FlowStateInvalidTypeException($data['type']);
             }
 
-            if($flowState->type == TableFlowStateFieldTypeEnum::START() && $data['type'] != TableFlowStateFieldTypeEnum::START()) {
+            if($flowState->type == FlowStateTypeEnum::START() && $data['type'] != FlowStateTypeEnum::START()) {
                 throw new FlowStateStartTypeIsNotChangeException($flowState->flow->driver);
             } else {
                 $flowState->type = $data['type'];
@@ -170,7 +170,7 @@ class FlowStateManager
 
         $flow_state = $this->show($flow_state_id);
 
-        if($flow_state->type == TableFlowStateFieldTypeEnum::START) {
+        if($flow_state->type == FlowStateTypeEnum::START) {
             throw new FlowStateStartTypeIsNotDeleteException;
         }
 

@@ -5,7 +5,7 @@ namespace JobMetric\Flow\Services;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Contracts\DriverContract;
-use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
@@ -61,7 +61,7 @@ class FlowManager
         event(new FlowTaskStoreEvent($flow));
 
         $flowState = $flow->states()->create([
-            'type' => TableFlowStateFieldTypeEnum::START(),
+            'type' => FlowStateTypeEnum::START(),
             'config' => [
                 'color' => '#fff',
                 'position' => [
@@ -216,7 +216,7 @@ class FlowManager
         /* @var FlowState $flow_state */
         $flow_state = FlowState::query()->where([
             'flow_id' => $flow_id,
-            'type' => TableFlowStateFieldTypeEnum::START()
+            'type' => FlowStateTypeEnum::START()
         ])->first();
 
         return $flow_state;

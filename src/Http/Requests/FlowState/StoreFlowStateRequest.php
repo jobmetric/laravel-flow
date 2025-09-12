@@ -4,7 +4,7 @@ namespace JobMetric\Flow\Http\Requests\FlowState;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use JobMetric\Flow\Enums\TableFlowStateFieldTypeEnum;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Rules\CheckStatusInDriverRule;
@@ -31,7 +31,7 @@ class StoreFlowStateRequest extends FormRequest
         $flow = $parameters['flow'];
 
         return [
-            'type' => 'in:' . implode(',', TableFlowStateFieldTypeEnum::values()),
+            'type' => 'in:' . implode(',', FlowStateTypeEnum::values()),
             'color' => 'sometimes|string',
             'position' => 'nullable|array',
             'position.x' => 'required_with:position|numeric',
