@@ -2,53 +2,186 @@
 
 namespace JobMetric\Flow\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Carbon;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 
 /**
- * @method static findOrFail(int $flow_state_id)
- * @property Flow flow
- * @property int id
- * @property string type
- * @property array config
- * @property string status
+ * Class FlowState
+ *
+ * Represents a state (node) inside a workflow definition. The "type" field
+ * indicates whether the state is a starting node, a normal state, or an ending node.
+ * Expected values for "type": start | state | end.
+ *
+ * @package JobMetric\Flow
+ *
+ * @property int $id The primary identifier of the flow state row.
+ * @property int $flow_id The owning flow identifier.
+ * @property FlowStateTypeEnum|string $type The state type: start | state | end.
+ * @property array|null $config Optional UI/behavior configuration (JSON).
+ * @property string|null $status Optional domain status key mapped to the subject model.
+ * @property Carbon $created_at The timestamp when this state was created.
+ * @property Carbon $updated_at The timestamp when this state was last updated.
+ *
+ * @property-read Flow $flow The owning flow.
+ * @property-read Collection<int, FlowTransition> $outgoing Transitions originating from this state.
+ * @property-read Collection<int, FlowTransition> $incoming Transitions pointing to this state.
+ * @property-read Collection<int, FlowTask> $tasks Tasks reachable from this state via outgoing transitions.
+ * @property-read bool $is_start Convenience flag: true when type is 'start'.
+ * @property-read bool $is_end Convenience flag: true when type is 'end'.
+ *
+ * @method static Builder|FlowState whereFlowId(int $flow_id)
+ * @method static Builder|FlowState whereType(string $type)
+ * @method static Builder|FlowState whereStatus(?string $status)
+ * @method static Builder|FlowState ofType(FlowStateTypeEnum|string $type)
+ * @method static Builder|FlowState start()
+ * @method static Builder|FlowState end()
  */
 class FlowState extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id';
+    /**
+     * Touch the parent flow when this state is updated.
+     *
+     * @var array<int, string>
+     */
+    protected $touches = ['flow'];
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'flow_id',
         'type',
         'config',
-        'status'
+        'status',
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'flow_id' => 'integer',
         'type' => FlowStateTypeEnum::class,
-        'config' => 'json',
-        'status' => 'string'
+        'config' => 'array',
+        'status' => 'string',
     ];
 
-    public function getTable()
+    /**
+     * Override the table name using config.
+     *
+     * @return string
+     */
+    public function getTable(): string
     {
         return config('workflow.tables.flow_state', parent::getTable());
     }
 
+    /**
+     * Get the owning flow.
+     *
+     * @return BelongsTo
+     */
     public function flow(): BelongsTo
     {
-        return $this->belongsTo(Flow::class);
+        return $this->belongsTo(Flow::class, 'flow_id');
     }
 
-    public function assets(): HasMany
+    /**
+     * Get transitions originating from this state.
+     *
+     * @return HasMany
+     */
+    public function outgoing(): HasMany
     {
-        return $this->hasMany(FlowAsset::class);
+        return $this->hasMany(FlowTransition::class, 'from');
+    }
+
+    /**
+     * Get transitions pointing to this state.
+     *
+     * @return HasMany
+     */
+    public function incoming(): HasMany
+    {
+        return $this->hasMany(FlowTransition::class, 'to');
+    }
+
+    /**
+     * Get tasks reachable from this state via outgoing transitions.
+     *
+     * @return HasManyThrough
+     */
+    public function tasks(): HasManyThrough
+    {
+        return $this->hasManyThrough(FlowTask::class, FlowTransition::class, 'from', 'flow_transition_id', 'id', 'id');
+    }
+
+    /**
+     * Scope: filter by type (accepts enum or string).
+     *
+     * @param Builder $q
+     * @param FlowStateTypeEnum|string $type
+     *
+     * @return Builder
+     */
+    public function scopeOfType(Builder $q, FlowStateTypeEnum|string $type): Builder
+    {
+        return $q->where('type', $type instanceof FlowStateTypeEnum ? $type->value : $type);
+    }
+
+    /**
+     * Scope: only start states.
+     *
+     * @param Builder $q
+     *
+     * @return Builder
+     */
+    public function scopeStart(Builder $q): Builder
+    {
+        return $this->scopeOfType($q, 'start');
+    }
+
+    /**
+     * Scope: only end states.
+     *
+     * @param Builder $q
+     *
+     * @return Builder
+     */
+    public function scopeEnd(Builder $q): Builder
+    {
+        return $this->scopeOfType($q, 'end');
+    }
+
+    /**
+     * Accessor: is this a start state?
+     *
+     * @return bool
+     */
+    public function getIsStartAttribute(): bool
+    {
+        return ($this->type instanceof FlowStateTypeEnum ? $this->type->value : $this->type) === 'start';
+    }
+
+    /**
+     * Accessor: is this an end state?
+     *
+     * @return bool
+     */
+    public function getIsEndAttribute(): bool
+    {
+        return ($this->type instanceof FlowStateTypeEnum ? $this->type->value : $this->type) === 'end';
     }
 }
