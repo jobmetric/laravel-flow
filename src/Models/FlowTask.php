@@ -27,8 +27,8 @@ use JobMetric\PackageCore\Models\HasBooleanStatus;
  * @property Carbon $created_at The timestamp when this task was created.
  * @property Carbon $updated_at The timestamp when this task was last updated.
  *
- * @property-read FlowTransition $transition The owning transition (relation).
- * @property-read Flow|null $flow The owning flow (computed via transition; not a relation).
+ * @property-read FlowTransition $transition
+ * @property-read Flow|null $flow
  *
  * @method static Builder|FlowTask whereFlowTransitionId(int $flow_transition_id)
  * @method static Builder|FlowTask whereDriver(string $driver)

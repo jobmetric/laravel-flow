@@ -4,33 +4,56 @@ namespace JobMetric\Flow\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
+use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\FlowTransition;
 
 /**
- * @property mixed id
- * @property mixed driver
- * @property mixed config
- * @property mixed ordering
- * @property mixed status
- * @property mixed flowTransition
+ * Class FlowTaskResource
+ *
+ * Transforms the FlowTask model into a structured JSON resource.
+ *
+ * @property int $id
+ * @property int $flow_transition_id
+ * @property string $driver
+ * @property array|null $config
+ * @property int $ordering
+ * @property bool $status
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property-read FlowTransition $transition
+ * @property-read Flow|null $flow
  */
 class FlowTaskResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
+     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
+            'flow_transition_id' => $this->flow_transition_id,
             'driver' => $this->driver,
             'config' => $this->config,
             'ordering' => $this->ordering,
-            'status' => $this->status,
+            'status' => (bool)$this->status,
 
-            'flow_transition' => $this->whenLoaded('flow_transition', function () {
-                return FlowTransitionResource::make($this->flowTransition);
+            // ISO 8601 timestamps for interoperability across clients
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+
+            // Follow your exact whenLoaded pattern for nested resources
+            'transition' => $this->whenLoaded('transition', function () {
+                return FlowTransitionResource::make($this->transition);
+            }),
+
+            'flow' => $this->whenLoaded('flow', function () {
+                return $this->flow ? FlowResource::make($this->flow) : null;
             }),
         ];
     }
