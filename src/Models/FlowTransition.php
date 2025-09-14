@@ -3,7 +3,6 @@
 namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,13 +27,13 @@ use Illuminate\Support\Carbon;
  * @property Carbon $created_at The timestamp when this transition was created.
  * @property Carbon $updated_at The timestamp when this transition was last updated.
  *
- * @property-read Flow $flow The owning flow.
- * @property-read FlowState|null $fromState The source state (nullable for start edge).
- * @property-read FlowState|null $toState The destination state (nullable for end edge).
- * @property-read Collection<int, FlowTask> $tasks Tasks attached to this transition.
- * @property-read Collection<int, FlowInstance> $instances Instances currently at this transition.
- * @property-read bool $is_start_edge Convenience flag: true when from is NULL.
- * @property-read bool $is_end_edge Convenience flag: true when to is NULL.
+ * @property-read Flow $flow
+ * @property-read FlowState|null $fromState
+ * @property-read FlowState|null $toState
+ * @property-read FlowTask[] $tasks
+ * @property-read FlowInstance[] $instances
+ * @property-read bool $is_start_edge
+ * @property-read bool $is_end_edge
  *
  * @method static Builder|FlowTransition whereFlowId(int $flow_id)
  * @method static Builder|FlowTransition whereFrom(?int $from)
