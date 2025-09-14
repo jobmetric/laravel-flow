@@ -61,8 +61,8 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
  */
 class Flow extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory,
+        SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

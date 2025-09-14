@@ -3,6 +3,7 @@
 namespace JobMetric\Flow\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Models\FlowState;
 
 /**
@@ -21,14 +22,22 @@ class FlowStateFactory extends Factory
     {
         return [
             'flow_id' => null,
-            'type' => $this->faker->word,
-            'config' => $this->faker->boolean,
-            'status' => $this->faker->word
+
+            // default to a normal state to satisfy CHECK (status must be null)
+            'type' => FlowStateTypeEnum::STATE(),
+            'config' => [
+                'color' => $this->faker->hexColor(),
+                'position' => [
+                    'x' => $this->faker->numberBetween(0, 1200),
+                    'y' => $this->faker->numberBetween(0, 800),
+                ],
+            ],
+            'status' => null,
         ];
     }
 
     /**
-     * set flow id
+     * set flow_id
      *
      * @param int $flow_id
      *
@@ -37,49 +46,84 @@ class FlowStateFactory extends Factory
     public function setFlow(int $flow_id): static
     {
         return $this->state(fn(array $attributes) => [
-            'flow_id' => $flow_id
+            'flow_id' => $flow_id,
         ]);
     }
 
     /**
      * set type
      *
-     * @param string $type
+     * @param FlowStateTypeEnum|string $type
      *
      * @return static
      */
-    public function setType(string $type): static
+    public function setType(FlowStateTypeEnum|string $type): static
     {
         return $this->state(fn(array $attributes) => [
-            'type' => $type
+            'type' => $type,
         ]);
     }
 
     /**
-     * set config
+     * set config (will replace entire config)
      *
-     * @param string $config
+     * @param array|null $config
      *
      * @return static
      */
-    public function setConfig(string $config): static
+    public function setConfig(?array $config): static
     {
         return $this->state(fn(array $attributes) => [
-            'config' => $config
+            'config' => $config,
         ]);
     }
 
     /**
-     * set status
+     * merge/override color inside config
      *
-     * @param string $status
+     * @param string $hex
      *
      * @return static
      */
-    public function setStatus(string $status): static
+    public function setColor(string $hex): static
+    {
+        return $this->state(function (array $attributes) use ($hex) {
+            $cfg = $attributes['config'] ?? [];
+            $cfg['color'] = $hex;
+
+            return ['config' => $cfg];
+        });
+    }
+
+    /**
+     * merge/override position inside config
+     *
+     * @param int $x
+     * @param int $y
+     *
+     * @return static
+     */
+    public function setPosition(int $x, int $y): static
+    {
+        return $this->state(function (array $attributes) use ($x, $y) {
+            $cfg = $attributes['config'] ?? [];
+            $cfg['position'] = ['x' => $x, 'y' => $y];
+
+            return ['config' => $cfg];
+        });
+    }
+
+    /**
+     * set status (caller must ensure it matches domain rules)
+     *
+     * @param string|null $status
+     *
+     * @return static
+     */
+    public function setStatus(?string $status): static
     {
         return $this->state(fn(array $attributes) => [
-            'status' => $status
+            'status' => $status,
         ]);
     }
 }

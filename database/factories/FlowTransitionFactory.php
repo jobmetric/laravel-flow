@@ -23,13 +23,12 @@ class FlowTransitionFactory extends Factory
             'flow_id' => null,
             'from' => null,
             'to' => null,
-            'slug' => $this->faker->word,
-            'role_id' => null
+            'slug' => $this->faker->boolean(20) ? $this->randomSlug() : null,
         ];
     }
 
     /**
-     * set flow id
+     * set flow_id
      *
      * @param int $flow_id
      *
@@ -38,63 +37,119 @@ class FlowTransitionFactory extends Factory
     public function setFlow(int $flow_id): static
     {
         return $this->state(fn(array $attributes) => [
-            'flow_id' => $flow_id
+            'flow_id' => $flow_id,
         ]);
     }
 
     /**
-     * set from
+     * set from state id (nullable for start edge)
      *
-     * @param string $from
+     * @param int|null $from
      *
      * @return static
      */
-    public function setFrom(string $from): static
+    public function setFrom(?int $from): static
     {
         return $this->state(fn(array $attributes) => [
-            'from' => $from
+            'from' => $from,
         ]);
     }
 
     /**
-     * set to
+     * set to state id (nullable for end edge)
      *
-     * @param string $to
+     * @param int|null $to
      *
      * @return static
      */
-    public function setTo(string $to): static
+    public function setTo(?int $to): static
     {
         return $this->state(fn(array $attributes) => [
-            'to' => $to
+            'to' => $to,
         ]);
     }
 
     /**
-     * set slug
+     * define a normal edge between two states (from != to)
      *
-     * @param string $slug
+     * @param int $fromId
+     * @param int $toId
      *
      * @return static
      */
-    public function setSlug(string $slug): static
+    public function between(int $fromId, int $toId): static
     {
         return $this->state(fn(array $attributes) => [
-            'slug' => $slug
+            'from' => $fromId,
+            'to' => $toId,
         ]);
     }
 
     /**
-     * set role id
+     * define a START edge (from = null, to = $toStateId)
      *
-     * @param int $role_id
+     * @param int $toStateId
      *
      * @return static
      */
-    public function setRole(int $role_id): static
+    public function startEdge(int $toStateId): static
     {
         return $this->state(fn(array $attributes) => [
-            'role_id' => $role_id
+            'from' => null,
+            'to' => $toStateId,
+        ]);
+    }
+
+    /**
+     * define an END edge (from = $fromStateId, to = null)
+     *
+     * @param int $fromStateId
+     *
+     * @return static
+     */
+    public function endEdge(int $fromStateId): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'from' => $fromStateId,
+            'to' => null,
+        ]);
+    }
+
+    /**
+     * set slug (leave null to auto-generate with randomSlug())
+     *
+     * @param string|null $slug
+     *
+     * @return static
+     */
+    public function setSlug(?string $slug): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'slug' => $slug,
+        ]);
+    }
+
+    /**
+     * set a random slug (lowercase [a-z0-9-])
+     *
+     * @return static
+     */
+    public function randomSlug(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'slug' => str_replace('_', '-', $this->faker->slug()),
+        ]);
+    }
+
+    /**
+     * explicitly remove slug (allow multiple edges between same states)
+     *
+     * @return static
+     */
+    public function withoutSlug(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'slug' => null,
         ]);
     }
 }

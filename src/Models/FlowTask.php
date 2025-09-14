@@ -40,7 +40,8 @@ use JobMetric\PackageCore\Models\HasBooleanStatus;
  */
 class FlowTask extends Model
 {
-    use HasFactory, HasBooleanStatus;
+    use HasFactory,
+        HasBooleanStatus;
 
     /**
      * Touch the parent transition when this task changes.
