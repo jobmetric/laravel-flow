@@ -30,13 +30,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon $started_at The timestamp when this instance started.
  * @property Carbon|null $completed_at The timestamp when this instance completed.
  *
- * @property-read Model|MorphTo $instanceable The related Eloquent model.
- * @property-read Model|MorphTo|null $actor The actor (user/system) responsible for the current state.
- * @property-read FlowTransition $transition The current transition record.
- * @property-read FlowState|null $current_state Convenience: current state (toState OR fromState).
- * @property-read string|null $current_status Convenience: domain status of current state.
- * @property-read bool $is_active Convenience: true when completed_at is NULL.
- * @property-read int|null $duration_seconds Convenience: (completed_at ?? now) - started_at in seconds.
+ * @property-read Model|MorphTo $instanceable
+ * @property-read Model|MorphTo|null $actor
+ * @property-read FlowTransition $transition
+ * @property-read Flow|null $flow
+ * @property-read FlowState|null $current_state
+ * @property-read string|null $current_status
+ * @property-read bool $is_active
+ * @property-read int|null $duration_seconds
  *
  * @method static Builder|FlowInstance whereInstanceableType(string $instanceable_type)
  * @method static Builder|FlowInstance whereInstanceableId(int $instanceable_id)
