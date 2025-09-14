@@ -23,7 +23,7 @@ class FlowTransitionFactory extends Factory
             'flow_id' => null,
             'from' => null,
             'to' => null,
-            'slug' => $this->faker->boolean(20) ? $this->randomSlug() : null,
+            'slug' => $this->faker->boolean(20) ? $this->faker->slug : null,
         ];
     }
 
