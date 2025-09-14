@@ -29,12 +29,12 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
  * @property Carbon $created_at The timestamp when this state was created.
  * @property Carbon $updated_at The timestamp when this state was last updated.
  *
- * @property-read Flow $flow The owning flow.
- * @property-read Collection<int, FlowTransition> $outgoing Transitions originating from this state.
- * @property-read Collection<int, FlowTransition> $incoming Transitions pointing to this state.
- * @property-read Collection<int, FlowTask> $tasks Tasks reachable from this state via outgoing transitions.
- * @property-read bool $is_start Convenience flag: true when type is 'start'.
- * @property-read bool $is_end Convenience flag: true when type is 'end'.
+ * @property-read Flow $flow
+ * @property-read FlowTransition[] $outgoing
+ * @property-read FlowTransition[] $incoming
+ * @property-read FlowTask[] $tasks
+ * @property-read bool $is_start
+ * @property-read bool $is_end
  *
  * @method static Builder|FlowState whereFlowId(int $flow_id)
  * @method static Builder|FlowState whereType(string $type)
