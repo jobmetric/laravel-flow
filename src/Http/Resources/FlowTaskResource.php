@@ -47,7 +47,7 @@ class FlowTaskResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
 
-            // Follow your exact whenLoaded pattern for nested resources
+            // Loaded relations
             'transition' => $this->whenLoaded('transition', function () {
                 return FlowTransitionResource::make($this->transition);
             }),

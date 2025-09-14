@@ -24,9 +24,8 @@ use Illuminate\Support\Carbon;
  * @property int $flowable_id The ID of the bound model instance.
  * @property Carbon $used_at The timestamp when this binding was created.
  *
- * @property-read Flow $flow The related flow definition.
- * @property-read Model|MorphTo $flowable The related Eloquent model.
- * @property-read string $binding_key Convenience: "{flowable_type}:{flowable_id}" (computed).
+ * @property-read Flow $flow
+ * @property-read Model|MorphTo $flowable
  *
  * @method static Builder|FlowUse whereFlowId(int $flow_id)
  * @method static Builder|FlowUse whereFlowableType(string $flowable_type)
@@ -189,15 +188,5 @@ class FlowUse extends Model
     public function scopeLatest(Builder $query): Builder
     {
         return $query->orderByDesc('used_at')->orderByDesc('id');
-    }
-
-    /**
-     * Convenience accessor: "{flowable_type}:{flowable_id}".
-     *
-     * @return string
-     */
-    public function getBindingKeyAttribute(): string
-    {
-        return "{$this->flowable_type}:{$this->flowable_id}";
     }
 }

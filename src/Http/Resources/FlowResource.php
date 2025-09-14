@@ -52,6 +52,7 @@ class FlowResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'subject_type' => $this->subject_type,
             'subject_scope' => $this->subject_scope,
             'subject_key' => $this->subject_key,
@@ -65,12 +66,14 @@ class FlowResource extends JsonResource
             'rollout_pct' => $this->rollout_pct,
             'environment' => $this->environment,
 
+            // ISO 8601 timestamps for interoperability across clients
             'active_from' => $this->active_from?->toISOString(),
             'active_to' => $this->active_to?->toISOString(),
             'deleted_at' => $this->deleted_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
 
+            // Loaded relations
             'states' => $this->whenLoaded('states', function () {
                 return FlowStateResource::collection($this->states);
             }),
