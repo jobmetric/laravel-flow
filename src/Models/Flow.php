@@ -40,11 +40,11 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
  * @property Carbon $created_at The timestamp when this flow was created.
  * @property Carbon $updated_at The timestamp when this flow was last updated.
  *
- * @property-read Collection<int, FlowState> $states
- * @property-read Collection<int, FlowTransition> $transitions
- * @property-read Collection<int, FlowTask> $tasks
- * @property-read Collection<int, FlowInstance> $flowInstances
- * @property-read Collection<int, FlowUse> $uses
+ * @property-read FlowState[] $states
+ * @property-read FlowTransition[] $transitions
+ * @property-read FlowTask[] $tasks
+ * @property-read FlowInstance[] $flowInstances
+ * @property-read FlowUse[] $uses
  * @property-read FlowState|null $startState
  * @property-read FlowState|null $endState
  *
