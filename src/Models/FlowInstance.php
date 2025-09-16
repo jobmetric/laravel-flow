@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
 
 /**
  * Class FlowInstance
@@ -38,6 +39,8 @@ use Illuminate\Support\Carbon;
  * @property-read string|null $current_status
  * @property-read bool $is_active
  * @property-read int|null $duration_seconds
+ * @property-read mixed $instanceable_resource
+ * @property-read mixed $actor_resource
  *
  * @method static Builder|FlowInstance whereInstanceableType(string $instanceable_type)
  * @method static Builder|FlowInstance whereInstanceableId(int $instanceable_id)
@@ -55,7 +58,8 @@ use Illuminate\Support\Carbon;
  */
 class FlowInstance extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        HasMorphResourceAttributes;
 
     /**
      * This table does not have Laravel's created_at/updated_at columns.

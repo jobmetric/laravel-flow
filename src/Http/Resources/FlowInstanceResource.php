@@ -33,6 +33,9 @@ use JobMetric\Flow\Models\FlowTransition;
  * @property-read string|null $current_status
  * @property-read bool $is_active
  * @property-read int|null $duration_seconds
+ * @property-read mixed $instanceable_resource
+ * @property-read mixed $actor_resource
+ * @property-read string $resource_morph_default_context
  */
 class FlowInstanceResource extends JsonResource
 {
@@ -63,13 +66,11 @@ class FlowInstanceResource extends JsonResource
 
             // Loaded relations
             'instanceable' => $this->whenLoaded('instanceable', function () {
-                // Unknown concrete resource type => wrap as generic JsonResource
-                return JsonResource::make($this->instanceable);
+                return $this->instanceable_resource ?? $this->resource_morph_default_context;
             }),
 
             'actor' => $this->whenLoaded('actor', function () {
-                // Unknown concrete resource type => wrap as generic JsonResource
-                return JsonResource::make($this->actor);
+                return $this->actor_resource ?? $this->resource_morph_default_context;
             }),
 
             'transition' => $this->whenLoaded('transition', function () {

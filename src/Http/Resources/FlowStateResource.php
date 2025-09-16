@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
 use JobMetric\Flow\Models\Flow;
-use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Flow\Models\FlowTransition;
 

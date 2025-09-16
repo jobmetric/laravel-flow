@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
 
 /**
  * Class FlowUse
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  *
  * @property-read Flow $flow
  * @property-read Model|MorphTo $flowable
+ * @property-read mixed $flowable_resource
  *
  * @method static Builder|FlowUse whereFlowId(int $flow_id)
  * @method static Builder|FlowUse whereFlowableType(string $flowable_type)
@@ -38,7 +40,8 @@ use Illuminate\Support\Carbon;
  */
 class FlowUse extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        HasMorphResourceAttributes;
 
     /**
      * This table does not have Laravel's created_at/updated_at columns.

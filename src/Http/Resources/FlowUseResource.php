@@ -21,6 +21,8 @@ use JobMetric\Flow\Models\Flow;
  *
  * @property-read Flow $flow
  * @property-read Model $flowable
+ * @property-read mixed $flowable_resource
+ * @property-read string $resource_morph_default_context
  */
 class FlowUseResource extends JsonResource
 {
@@ -47,8 +49,7 @@ class FlowUseResource extends JsonResource
             }),
 
             'flowable' => $this->whenLoaded('flowable', function () {
-                // Unknown concrete resource type => wrap as generic JsonResource
-                return JsonResource::make($this->flowable);
+                return $this->flowable_resource ?? $this->resource_morph_default_context;
             }),
         ];
     }
