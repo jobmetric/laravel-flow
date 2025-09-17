@@ -59,8 +59,24 @@ class FlowInstanceResource extends JsonResource
             'started_at' => $this->started_at?->toISOString(),
             'completed_at' => $this->completed_at?->toISOString(),
 
-            // Convenience fields from accessors (if defined on the model)
-            'current_status' => $this->current_status ?? null,
+            // if load relation 'transition.flow'
+            'flow' => $this->when($this->relationLoaded('transition') && $this->transition->relationLoaded('flow'), function () {
+                return FlowResource::make($this->transition->flow);
+            }),
+
+            // if load two relations 'transition.toState', 'transition.fromState'
+            'current_state' => $this->when($this->relationLoaded('transition') && (
+                    $this->transition->relationLoaded('toState') || $this->transition->relationLoaded('fromState')
+                ), function () {
+                return FlowStateResource::make($this->transition->toState ?? $this->transition->fromState);
+            }),
+
+            // if load two relations 'transition.toState', 'transition.fromState'
+            'current_status' => $this->when($this->relationLoaded('transition') && (
+                    $this->transition->relationLoaded('toState') || $this->transition->relationLoaded('fromState')
+                ), function () {
+                return ($this->transition->toState ?? $this->transition->fromState)?->status;
+            }),
             'is_active' => (bool)($this->is_active ?? is_null($this->completed_at)),
             'duration_seconds' => $this->duration_seconds ?? null,
 
@@ -75,20 +91,6 @@ class FlowInstanceResource extends JsonResource
 
             'transition' => $this->whenLoaded('transition', function () {
                 return FlowTransitionResource::make($this->transition);
-            }),
-
-            // Expose current_state via transition when it's eagerly loaded (and optionally its nested state)
-            'current_state' => $this->whenLoaded('transition', function () {
-                $t = $this->transition;
-
-                // Prefer toState when present; otherwise fall back to fromState.
-                // Avoid triggering additional queries by checking relationLoaded().
-                $state = null;
-                if ($t->relationLoaded('toState') || $t->relationLoaded('fromState')) {
-                    $state = $t->toState ?? $t->fromState;
-                }
-
-                return $state ? FlowStateResource::make($state) : null;
             }),
         ];
     }

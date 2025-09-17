@@ -88,6 +88,8 @@ class FlowTask extends Model
 
     /**
      * Model boot hooks.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -128,15 +130,13 @@ class FlowTask extends Model
      */
     public function getFlowAttribute(): ?Flow
     {
-        // Use loaded relation if available; fall back to a minimal query chain.
         if ($this->relationLoaded('transition')) {
-            /** @var FlowTransition|null $t */
-            $t = $this->getRelation('transition');
+            /** @var FlowTransition|null $transition */
+            $transition = $this->getRelation('transition');
 
-            return $t?->relationLoaded('flow') ? $t->getRelation('flow') : $t?->flow()->first();
+            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()->first();
         }
 
-        // Minimal hop: load transition->flow on demand
         $transition = $this->transition()->first();
 
         return $transition?->flow()->first();

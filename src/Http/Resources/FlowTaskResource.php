@@ -52,8 +52,9 @@ class FlowTaskResource extends JsonResource
                 return FlowTransitionResource::make($this->transition);
             }),
 
-            'flow' => $this->whenLoaded('flow', function () {
-                return $this->flow ? FlowResource::make($this->flow) : null;
+            // if load relation 'transition.flow'
+            'flow' => $this->when($this->relationLoaded('transition') && $this->transition->relationLoaded('flow'), function () {
+                return FlowResource::make($this->transition->flow);
             }),
         ];
     }

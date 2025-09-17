@@ -3,7 +3,6 @@
 namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -141,7 +140,7 @@ class Flow extends Model
      */
     public function tasks(): HasManyThrough
     {
-        return $this->hasManyThrough(FlowTask::class,FlowTransition::class,'flow_id','flow_transition_id','id','id');
+        return $this->hasManyThrough(FlowTask::class, FlowTransition::class, 'flow_id', 'flow_transition_id', 'id', 'id');
     }
 
     /**
@@ -151,7 +150,7 @@ class Flow extends Model
      */
     public function flowInstances(): HasManyThrough
     {
-        return $this->hasManyThrough(FlowInstance::class,FlowTransition::class,'flow_id','flow_transition_id','id','id');
+        return $this->hasManyThrough(FlowInstance::class, FlowTransition::class, 'flow_id', 'flow_transition_id', 'id', 'id');
     }
 
     /**

@@ -140,6 +140,26 @@ class FlowTransition extends Model
     }
 
     /**
+     * Accessor: is this a start edge?
+     *
+     * @return bool
+     */
+    public function getIsStartEdgeAttribute(): bool
+    {
+        return is_null($this->from) && !is_null($this->to);
+    }
+
+    /**
+     * Accessor: is this an end edge?
+     *
+     * @return bool
+     */
+    public function getIsEndEdgeAttribute(): bool
+    {
+        return !is_null($this->from) && is_null($this->to);
+    }
+
+    /**
      * Scope: only start edges (from IS NULL).
      *
      * @param Builder $query
@@ -191,25 +211,5 @@ class FlowTransition extends Model
     public function scopeWithSlug(Builder $query, string $slug): Builder
     {
         return $query->whereNotNull('slug')->where('slug', $slug);
-    }
-
-    /**
-     * Accessor: is this a start edge?
-     *
-     * @return bool
-     */
-    public function getIsStartEdgeAttribute(): bool
-    {
-        return is_null($this->from) && !is_null($this->to);
-    }
-
-    /**
-     * Accessor: is this an end edge?
-     *
-     * @return bool
-     */
-    public function getIsEndEdgeAttribute(): bool
-    {
-        return !is_null($this->from) && is_null($this->to);
     }
 }

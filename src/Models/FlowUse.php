@@ -82,7 +82,19 @@ class FlowUse extends Model
     ];
 
     /**
+     * Override the table name using config.
+     *
+     * @return string
+     */
+    public function getTable(): string
+    {
+        return config('workflow.tables.flow_uses', parent::getTable());
+    }
+
+    /**
      * Initialize model events.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -92,16 +104,6 @@ class FlowUse extends Model
                 $binding->used_at = now();
             }
         });
-    }
-
-    /**
-     * Override the table name using config.
-     *
-     * @return string
-     */
-    public function getTable(): string
-    {
-        return config('workflow.tables.flow_uses', parent::getTable());
     }
 
     /**

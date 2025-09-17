@@ -146,17 +146,17 @@ class FlowInstance extends Model
     }
 
     /**
-     * Computed accessor to the owning flow via transition (NOT a direct relation).
+     * Computed accessor to owning flow via transition (NOT an Eloquent relation).
      *
      * @return Flow|null
      */
     public function getFlowAttribute(): ?Flow
     {
         if ($this->relationLoaded('transition')) {
-            /** @var FlowTransition|null $t */
-            $t = $this->getRelation('transition');
+            /** @var FlowTransition|null $transition */
+            $transition = $this->getRelation('transition');
 
-            return $t?->relationLoaded('flow') ? $t->getRelation('flow') : $t?->flow()->first();
+            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()->first();
         }
 
         $transition = $this->transition()->first();
@@ -171,12 +171,15 @@ class FlowInstance extends Model
      */
     public function getCurrentStateAttribute(): ?FlowState
     {
-        $t = $this->relationLoaded('transition') ? $this->getRelation('transition') : $this->transition()->with(['toState', 'fromState'])->first();
-        if (!$t) {
+        $transition = $this->relationLoaded('transition') ?
+            $this->getRelation('transition') :
+            $this->transition()->with(['toState', 'fromState'])->first();
+
+        if (!$transition) {
             return null;
         }
 
-        return $t->toState ?: $t->fromState;
+        return $transition->toState ?: $transition->fromState;
     }
 
     /**

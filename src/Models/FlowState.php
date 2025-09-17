@@ -3,7 +3,6 @@
 namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -129,43 +128,6 @@ class FlowState extends Model
     }
 
     /**
-     * Scope: filter by type (accepts enum or string).
-     *
-     * @param Builder $q
-     * @param FlowStateTypeEnum|string $type
-     *
-     * @return Builder
-     */
-    public function scopeOfType(Builder $q, FlowStateTypeEnum|string $type): Builder
-    {
-        return $q->where('type', $type instanceof FlowStateTypeEnum ? $type->value : $type);
-    }
-
-    /**
-     * Scope: only start states.
-     *
-     * @param Builder $q
-     *
-     * @return Builder
-     */
-    public function scopeStart(Builder $q): Builder
-    {
-        return $this->scopeOfType($q, 'start');
-    }
-
-    /**
-     * Scope: only end states.
-     *
-     * @param Builder $q
-     *
-     * @return Builder
-     */
-    public function scopeEnd(Builder $q): Builder
-    {
-        return $this->scopeOfType($q, 'end');
-    }
-
-    /**
      * Accessor: is this a start state?
      *
      * @return bool
@@ -183,5 +145,42 @@ class FlowState extends Model
     public function getIsEndAttribute(): bool
     {
         return ($this->type instanceof FlowStateTypeEnum ? $this->type->value : $this->type) === 'end';
+    }
+
+    /**
+     * Scope: filter by type (accepts enum or string).
+     *
+     * @param Builder $query
+     * @param FlowStateTypeEnum|string $type
+     *
+     * @return Builder
+     */
+    public function scopeOfType(Builder $query, FlowStateTypeEnum|string $type): Builder
+    {
+        return $query->where('type', $type instanceof FlowStateTypeEnum ? $type->value : $type);
+    }
+
+    /**
+     * Scope: only start states.
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeStart(Builder $query): Builder
+    {
+        return $this->scopeOfType($query, 'start');
+    }
+
+    /**
+     * Scope: only end states.
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeEnd(Builder $query): Builder
+    {
+        return $this->scopeOfType($query, 'end');
     }
 }
