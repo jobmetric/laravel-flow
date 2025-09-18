@@ -42,7 +42,7 @@ return new class extends Migration {
              * default flow for subject (per version)
              *
              * - when true: preferred choice if multiple candidates match
-             * - only one per subject_type+subject_scope+subject_key+version (enforce in app layer)
+             * - only one per subject_type+subject_scope+version (enforce in app layer)
              * - fallback to the highest version without is_default if none marked
              */
 
@@ -101,14 +101,12 @@ return new class extends Migration {
             $table->unique([
                 'subject_type',
                 'subject_scope',
-                'subject_key',
                 'version'
             ], 'FLOW_UNIQUE');
 
             $table->index([
                 'subject_type',
                 'subject_scope',
-                'subject_key',
                 'status',
                 'is_default',
                 'active_from',
