@@ -27,7 +27,6 @@ class FlowFactory extends Factory
         return [
             'subject_type' => null,
             'subject_scope' => null,
-            'subject_key' => null,
 
             'version' => 1,
             'is_default' => $this->faker->boolean(20),
@@ -68,20 +67,6 @@ class FlowFactory extends Factory
     {
         return $this->state(fn(array $attributes) => [
             'subject_scope' => $subject_scope,
-        ]);
-    }
-
-    /**
-     * set subject_key
-     *
-     * @param int|null $subject_key
-     *
-     * @return static
-     */
-    public function setSubjectKey(?int $subject_key): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'subject_key' => $subject_key,
         ]);
     }
 

@@ -30,14 +30,6 @@ return new class extends Migration {
              * validation: regex:/^[a-zA-Z0-9_\-]+$/
              */
 
-            $table->unsignedBigInteger('subject_key')->nullable()->index();
-            /**
-             * optional primary key of subject
-             *
-             * e.g. 12345
-             * validation: integer > 0
-             */
-
             $table->unsignedInteger('version')->default(1)->index();
             /**
              * version of flow for subject

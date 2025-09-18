@@ -25,7 +25,6 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
  * @property int $id The primary identifier of the flow row.
  * @property string $subject_type The class name of the related subject model.
  * @property string|null $subject_scope Optional scope discriminator (tenant/org/etc.).
- * @property int|null $subject_key Optional subject primary key to pin a specific entity.
  * @property int $version Version number of this flow definition.
  * @property bool $is_default Whether this flow is preferred among candidates.
  * @property bool $status Active flag (true=enabled, false=disabled).
@@ -71,7 +70,6 @@ class Flow extends Model
     protected $fillable = [
         'subject_type',
         'subject_scope',
-        'subject_key',
         'version',
         'is_default',
         'status',
@@ -91,7 +89,6 @@ class Flow extends Model
     protected $casts = [
         'subject_type' => 'string',
         'subject_scope' => 'string',
-        'subject_key' => 'integer',
         'version' => 'integer',
         'is_default' => 'boolean',
         'status' => 'boolean',

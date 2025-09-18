@@ -19,7 +19,6 @@ use JobMetric\Flow\Models\FlowUse;
  * @property int $id
  * @property string $subject_type
  * @property string|null $subject_scope
- * @property int|null $subject_key
  * @property int $version
  * @property bool $is_default
  * @property bool $status
@@ -55,7 +54,6 @@ class FlowResource extends JsonResource
             'id' => $this->id,
             'subject_type' => $this->subject_type,
             'subject_scope' => $this->subject_scope,
-            'subject_key' => $this->subject_key,
 
             'version' => $this->version,
             'is_default' => (bool)$this->is_default,
