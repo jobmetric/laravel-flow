@@ -1,6 +1,6 @@
 {
     "name": "jobmetric/laravel-flow",
-    "description": "This package is for creating different workflows in different Laravel projects.",
+    "description": "This package is for creating various workflows in Laravel projects.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -13,11 +13,10 @@
     "homepage": "https://doc.jobmetric.net/package/laravel-flow",
     "require": {
         "php": ">=8.0.1",
-        "ext-json": "*",
         "laravel/framework": ">=9.19",
         "spatie/laravel-query-builder": "^6.3",
         "jobmetric/laravel-package-core": "^1.28.2",
-        "jobmetric/laravel-translation": "^2.23"
+        "jobmetric/laravel-translation": "^3.0"
     },
     "autoload": {
         "files": [
@@ -36,6 +35,7 @@
             "aliases": {
                 "Flow": "JobMetric\\Flow\\Facades\\Flow",
                 "FlowState": "JobMetric\\Flow\\Facades\\FlowState",
+                "FlowTask": "JobMetric\\Flow\\Facades\\FlowTask",
                 "FlowTransition": "JobMetric\\Flow\\Facades\\FlowTransition"
             }
         }
@@ -58,18 +58,6 @@
             "email": "majeedmohammadian@gmail.com",
             "homepage": "https://www.linkedin.com/in/majidmohammadian/",
             "role": "Full Stack Developer"
-        },
-        {
-            "name": "MohammadAli Farshchian",
-            "email": "farshchian2014@gmail.com",
-            "homepage": "https://github.com/farshchian2090",
-            "role": "Full Stack Developer"
-        },
-        {
-            "name": "Mahdi MalekiFard",
-            "email": "maleki1344py@gmail.com",
-            "homepage": "https://www.linkedin.com/in/mahdi-malekifard-py/",
-            "role": "BackEnd Developer"
         }
     ]
 }
