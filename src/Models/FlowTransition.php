@@ -80,6 +80,13 @@ class FlowTransition extends Model
     ];
 
     /**
+     * The attributes that are translatable.
+     *
+     * @var array<int, string>
+     */
+    protected array $translatables = ['name'];
+
+    /**
      * Override the table name using config.
      *
      * @return string

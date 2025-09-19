@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
+use JobMetric\Translation\HasTranslation;
 
 /**
  * Class FlowState
@@ -44,7 +45,8 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
  */
 class FlowState extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        HasTranslation;
 
     /**
      * Touch the parent flow when this state is updated.
@@ -76,6 +78,13 @@ class FlowState extends Model
         'config' => 'array',
         'status' => 'string',
     ];
+
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array<int, string>
+     */
+    protected array $translatables = ['name', 'description'];
 
     /**
      * Override the table name using config.

@@ -9,6 +9,7 @@ use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowInstance;
 use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Models\FlowTask;
+use JobMetric\Translation\Http\Resources\TranslationCollectionResource;
 
 /**
  * Class FlowTransitionResource
@@ -43,6 +44,12 @@ class FlowTransitionResource extends JsonResource
     {
         return [
             'id' => $this->id,
+
+            'translations' => $this->whenLoaded('translations', function(){
+                return TranslationCollectionResource::make($this)
+                    ->withLocale(app()->getLocale());
+            }),
+
             'flow_id' => $this->flow_id,
 
             'from' => $this->from,

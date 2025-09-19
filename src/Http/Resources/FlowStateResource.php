@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Flow\Models\FlowTransition;
+use JobMetric\Translation\Http\Resources\TranslationCollectionResource;
 
 /**
  * Class FlowStateResource
@@ -45,6 +46,12 @@ class FlowStateResource extends JsonResource
 
         return [
             'id' => $this->id,
+
+            'translations' => $this->whenLoaded('translations', function(){
+                return TranslationCollectionResource::make($this)
+                    ->withLocale(app()->getLocale());
+            }),
+
             'flow_id' => $this->flow_id,
 
             'type' => $type,

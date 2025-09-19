@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
+use JobMetric\Translation\HasTranslation;
 
 /**
  * Class Flow
@@ -60,7 +61,8 @@ use JobMetric\Flow\Enums\FlowStateTypeEnum;
 class Flow extends Model
 {
     use HasFactory,
-        SoftDeletes;
+        SoftDeletes,
+        HasTranslation;
 
     /**
      * The attributes that are mass assignable.
@@ -99,6 +101,13 @@ class Flow extends Model
         'rollout_pct' => 'integer',
         'environment' => 'string',
     ];
+
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array<int, string>
+     */
+    protected array $translatables = ['name', 'description'];
 
     /**
      * Override the table name using config.
