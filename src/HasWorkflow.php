@@ -2,8 +2,8 @@
 
 namespace JobMetric\Flow;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
 use JobMetric\Flow\Models\Flow;
@@ -14,27 +14,35 @@ use JobMetric\Flow\Support\FlowPickerBuilder;
 /**
  * Trait HasWorkflow
  *
- * Provides a one-to-one polymorphic binding from the model to a selected Flow
- * via the `flow_uses` table. The trait:
- *  - Builds a per-model FlowPickerBuilder (overridable) to declare constraints.
- *  - Picks a Flow on "creating" and stores its id temporarily.
- *  - Persists the FlowUse row on "created".
- *  - Exposes relations: flowUse() and flow() for convenience.
+ * Binds a model instance to a single Flow via the flow_uses table.
+ * Responsibilities:
+ * - Build a per-model FlowPickerBuilder (overridable via buildFlowPicker()).
+ * - Pick a Flow during "creating" and cache its id temporarily.
+ * - Persist the FlowUse row on "created".
+ * - Provide helpers to (re)bind, unbind, and eager-load the bound Flow.
  *
- * Models can override buildFlowPicker() to add model-specific constraints,
- * rollout rules, channels, environments, scopes, and more.
+ * Usage:
+ *   class Order extends Model {
+ *       use HasWorkflow;
+ *
+ *       protected function buildFlowPicker(FlowPickerBuilder $builder): void
+ *       {
+ *           parent::buildFlowPicker($builder);
+ *           // Customize here (subject scope, channel, environment, rollout key, etc.)
+ *       }
+ *   }
  */
 trait HasWorkflow
 {
     /**
-     * Temporarily stores the selected flow id computed during creating event.
+     * Cached flow id selected at "creating" time.
      *
      * @var int|null
      */
     protected ?int $selectedFlowIdForBinding = null;
 
     /**
-     * Polymorphic one-to-one relation to FlowUse binding row.
+     * Polymorphic binding row.
      *
      * @return MorphOne<FlowUse>
      */
@@ -44,29 +52,25 @@ trait HasWorkflow
     }
 
     /**
-     * Convenient accessor to the bound Flow through FlowUse.
+     * Convenience accessor to the bound Flow (not an Eloquent relation).
+     * Prefer eager-loading via with(['flowUse.flow']) for performance.
      *
-     * @return BelongsTo<Flow, FlowUse>
+     * @return Flow|null
      */
-    public function flow(): BelongsTo
+    public function boundFlow(): ?Flow
     {
-        /** @var FlowUse $relation */
-        $relation = $this->flowUse()->getRelated();
+        $use = $this->relationLoaded('flowUse')
+            ? $this->getRelation('flowUse')
+            : $this->flowUse()->first();
 
-        return $relation->belongsTo(Flow::class, 'flow_id');
+        return $use?->flow()->first();
     }
 
     /**
-     * Builds a FlowPickerBuilder for this model. Override in the model to add custom logic.
+     * Configure a FlowPickerBuilder for this model. Override to customize constraints.
      *
-     * @param FlowPickerBuilder $builder The builder to configure.
+     * @param FlowPickerBuilder $builder
      * @return void
-     *
-     * @example
-     * $builder->subjectType(static::class)
-     *         ->onlyActive(true)
-     *         ->evaluateRollout(true)
-     *         ->orderByDefault();
      */
     protected function buildFlowPicker(FlowPickerBuilder $builder): void
     {
@@ -83,31 +87,118 @@ trait HasWorkflow
     }
 
     /**
-     * Picks a Flow based on the builder configuration.
+     * Create and return a configured builder for advanced scenarios.
+     *
+     * @return FlowPickerBuilder
+     */
+    protected function makeFlowPicker(): FlowPickerBuilder
+    {
+        $builder = new FlowPickerBuilder();
+        $this->buildFlowPicker($builder);
+
+        return $builder;
+    }
+
+    /**
+     * Pick a Flow based on the current builder configuration.
      *
      * @return Flow|null
      */
     public function pickFlow(): ?Flow
     {
-        $builder = new FlowPickerBuilder();
-        $this->buildFlowPicker($builder);
-
-        return (new FlowPicker())->pick($this, $builder);
+        return (new FlowPicker())->pick($this, $this->makeFlowPicker());
     }
 
     /**
-     * Boots the HasFlow trait lifecycle callbacks.
+     * Bind the given Flow to this model (create/update the FlowUse row).
+     *
+     * @param Flow $flow
+     * @param Carbon|null $usedAt
+     *
+     * @return Model|MorphOne|FlowUse
+     */
+    public function bindFlow(Flow $flow, ?Carbon $usedAt = null): Model|MorphOne|FlowUse
+    {
+        $usedAt = $usedAt ?? Carbon::now('UTC');
+
+        if ($this->relationLoaded('flowUse') && $this->getRelation('flowUse')) {
+            /** @var FlowUse $use */
+            $use = $this->getRelation('flowUse');
+            $use->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+
+            return $use;
+        }
+
+        $existing = $this->flowUse()->first();
+        if ($existing) {
+            $existing->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+
+            return $existing;
+        }
+
+        return $this->flowUse()->create([
+            'flow_id' => $flow->getKey(),
+            'used_at' => $usedAt,
+        ]);
+    }
+
+    /**
+     * Re-pick using the builder and rebind to the chosen Flow if any.
+     *
+     * @param callable(FlowPickerBuilder):void|null $tuner Optional builder mutator.
+     * @return Flow|null
+     */
+    public function rebindFlow(?callable $tuner = null): ?Flow
+    {
+        $builder = $this->makeFlowPicker();
+        if ($tuner) {
+            $tuner($builder);
+        }
+
+        $flow = (new FlowPicker())->pick($this, $builder);
+        if ($flow) {
+            $this->bindFlow($flow);
+        }
+
+        return $flow;
+    }
+
+    /**
+     * Remove the binding row if present.
      *
      * @return void
      */
-    public static function bootHasFlow(): void
+    public function unbindFlow(): void
+    {
+        $this->flowUse()->delete();
+        $this->selectedFlowIdForBinding = null;
+    }
+
+    /**
+     * Local scope to eager-load the bound Flow efficiently.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeWithFlow(Builder $query): Builder
+    {
+        return $query->with(['flowUse.flow']);
+    }
+
+    /**
+     * Boot the HasWorkflow trait lifecycle hooks.
+     *
+     * @return void
+     */
+    public static function bootHasWorkflow(): void
     {
         static::creating(function (Model $model): void {
+            // Skip if already bound (defensive).
             if (method_exists($model, 'flowUse') && $model->flowUse()->exists()) {
                 return;
             }
 
-            if (property_exists($model, 'selectedFlowIdForBinding') === false) {
+            if (!property_exists($model, 'selectedFlowIdForBinding')) {
                 $model->selectedFlowIdForBinding = null;
             }
 
@@ -123,6 +214,8 @@ trait HasWorkflow
             }
 
             $flowId = $model->selectedFlowIdForBinding;
+
+            // If nothing was selected at "creating", try again (id is now available).
             if ($flowId === null) {
                 $flow = $model->pickFlow();
                 $flowId = $flow?->getKey();
