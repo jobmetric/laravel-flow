@@ -12,6 +12,13 @@ return [
     |
     */
 
+    'entity_names' => [
+        'flow' => 'جریان',
+        'flow_state' => 'حالت جریان',
+        'flow_transition' => 'انتقال جریان',
+        'flow_task' => 'وظیفه جریان',
+    ],
+
     'flow' => [
         'exist' => 'درایور فلو `:driver` قبلاً وجود دارد.',
         'inactive' => 'فلو `:driver` غیرفعال است.',
