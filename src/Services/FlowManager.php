@@ -2,180 +2,191 @@
 
 namespace JobMetric\Flow\Services;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use JobMetric\Flow\Contracts\DriverContract;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
-use JobMetric\Flow\Events\FlowTask\FlowRestoreEvent;
-use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
-use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
-use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
-use JobMetric\Flow\Exceptions\FlowDriverAlreadyExistException;
+use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
+use JobMetric\Flow\Events\Flow\FlowForceDeleteEvent;
+use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
+use JobMetric\Flow\Events\Flow\FlowStoreEvent;
+use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
+use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
-use JobMetric\Metadata\Metadata;
-use Str;
+use JobMetric\PackageCore\Output\Response;
+use JobMetric\PackageCore\Services\AbstractCrudService;
+use Throwable;
 
-class FlowManager
+/**
+ * Class FlowManager
+ *
+ * Flow CRUD service built on top of AbstractCrudService.
+ * - Uses Laravel API Resources (FlowResource) for output
+ * - Handles START state creation on store
+ * - Fires domain events on store/update/delete/restore/forceDelete
+ * - Clears related caches after mutations
+ * - Adds a toggleStatus() helper
+ * - Provides driver resolution helpers
+ */
+class FlowManager extends AbstractCrudService
 {
     /**
-     * The application instance.
+     * Enable soft-deletes + restore/forceDelete APIs.
      *
-     * @var Application
+     * @var bool
      */
-    protected Application $app;
+    protected bool $softDelete = true;
 
     /**
-     * The metadata instance.
+     * Human-readable entity name used in response messages.
      *
-     * @var Metadata
+     * @var string
      */
-    protected Metadata $metadata;
+    protected string $entityName = 'workflow::base.entity_names.flow';
 
     /**
-     * Create a new Translation instance.
+     * Bind model/resource classes for the base CRUD.
      *
-     * @param Application $app
+     * @var class-string
+     */
+    protected static string $modelClass = Flow::class;
+    protected static string $resourceClass = FlowResource::class;
+
+    /**
+     * Allowed fields for selection/filter/sort in QueryBuilder.
+     *
+     * @var string[]
+     */
+    protected static array $fields = [
+        'id',
+        'subject_type',
+        'subject_scope',
+        'subject_collection',
+        'version',
+        'is_default',
+        'status',
+        'active_from',
+        'active_to',
+        'channel',
+        'ordering',
+        'rollout_pct',
+        'environment',
+        'deleted_at',
+        'created_at',
+        'updated_at',
+    ];
+
+    protected static ?string $storeEventClass = FlowStoreEvent::class;
+    protected static ?string $updateEventClass = FlowUpdateEvent::class;
+    protected static ?string $deleteEventClass = FlowDeleteEvent::class;
+    protected static ?string $restoreEventClass = FlowRestoreEvent::class;
+    protected static ?string $forceDeleteEventClass = FlowForceDeleteEvent::class;
+
+    /**
+     * Runs right after model is persisted (create).
+     *
+     * @param Model $model
+     * @param array $data
      *
      * @return void
-     * @throws BindingResolutionException
      */
-    public function __construct(Application $app)
+    protected function afterStore(Model $model, array &$data): void
     {
-        $this->app = $app;
+        /** @var Flow $flow */
+        $flow = $model;
 
-        $this->Metadata = $app->make('Metadata');
-    }
-
-    /**
-     * store flow
-     *
-     * @param array $data
-     *
-     * @return Flow
-     */
-    public function store(array $data): Flow
-    {
-        $flow = Flow::create($data);
-
-        event(new FlowTaskStoreEvent($flow));
-
-        $flowState = $flow->states()->create([
+        // Ensure one START node exists.
+        $flow->states()->create([
             'type' => FlowStateTypeEnum::START(),
             'config' => [
-                'color' => '#fff',
-                'position' => [
-                    'x' => 0,
-                    'y' => 0
-                ],
-            ]
+                'color' => '#ffffff',
+                'position' => ['x' => 0, 'y' => 0],
+            ],
+            // If your DB enforces status for START via CHECK, set it here or validate earlier.
+            // 'status' => $data['start_status'] ?? 'start',
         ]);
 
-        // todo: store translations for flow and start flow state
-
-        return $flow->load('states');
+        $this->forgetCache();
     }
 
     /**
-     * show flow
+     * Runs right after model is persisted (update).
      *
-     * @param int $flow_id
-     * @param array $with
-     *
-     * @return Flow
-     */
-    public function show(int $flow_id, array $with = []): Flow
-    {
-        return Flow::findOrFail($flow_id)->load($with);
-    }
-
-    /**
-     * update flow
-     *
-     * @param int $flow_id
+     * @param Model $model
      * @param array $data
      *
-     * @return Flow
-     * @throws FlowDriverAlreadyExistException
+     * @return void
      */
-    public function update(int $flow_id, array $data): Flow
+    protected function afterUpdate(Model $model, array &$data): void
     {
-        $check = Flow::query()->where('driver', $data['driver'])->where('id', '!=', $flow_id)->first();
-        if ($check) {
-            throw new FlowDriverAlreadyExistException($data['driver']);
-        }
-
-        $flow = Flow::findOrFail($flow_id);
-
-        $flow->update($data);
-
-        event(new FlowTaskUpdateEvent($flow, $data));
-
-        return $flow;
+        $this->forgetCache();
     }
 
     /**
-     * delete flow
+     * Runs right after deletion.
      *
-     * @param int $flow_id
+     * @param Model $model
      *
-     * @return Flow
+     * @return void
      */
-    public function delete(int $flow_id): Flow
+    protected function afterDestroy(Model $model): void
     {
-        // @todo: check exist states > 1
-
-        $flow = Flow::findOrFail($flow_id);
-
-        $flow->delete();
-
-        event(new FlowTaskDeleteEvent($flow));
-
-        return $flow;
+        $this->forgetCache();
     }
 
     /**
-     * restore flow
+     * Runs right after restore.
      *
-     * @param int $flow_id
+     * @param Model $model
      *
-     * @return Flow
+     * @return void
      */
-    public function restore(int $flow_id): Flow
+    protected function afterRestore(Model $model): void
     {
-        /** @var Flow $flow */
-        $flow = Flow::query()->withTrashed()->findOrFail($flow_id);
-
-        $flow->restore();
-
-        event(new FlowRestoreEvent($flow));
-
-        return $flow;
+        $this->forgetCache();
     }
 
     /**
-     * force delete flow
+     * Runs just before force delete.
      *
-     * @param int $flow_id
+     * @param Model $model
      *
-     * @return Flow
+     * @return void
      */
-    public function forceDelete(int $flow_id): Flow
+    protected function afterForceDelete(Model $model): void
     {
-        /** @var Flow $flow */
-        $flow = Flow::query()->withTrashed()->findOrFail($flow_id);
-
-        $flow->forceDelete();
-
-        event(new FlowTaskDeleteEvent($flow));
-
-        return $flow;
+        $this->forgetCache();
     }
 
     /**
-     * Resolve the given flow instance by name.
+     * Toggle the boolean 'status' field for a given Flow.
      *
-     * @param string $driver
+     * @param int $flowId
+     *
+     * @return Response
+     * @throws Throwable
+     */
+    public function toggleStatus(int $flowId): Response
+    {
+        return DB::transaction(function () use ($flowId) {
+            /** @var Flow $flow */
+            $flow = Flow::query()->findOrFail($flowId);
+
+            $flow->status = !$flow->status;
+            $flow->save();
+
+            $this->forgetCache();
+
+            return Response::make(true, trans('flow::base.messages.change_status'), FlowResource::make($flow));
+        });
+    }
+
+    /**
+     * Resolve and return the driver instance by studly driver name.
+     *
+     * @param string $driver Driver key (e.g., 'global' or custom).
      *
      * @return DriverContract
      */
@@ -183,9 +194,11 @@ class FlowManager
     {
         $driver = Str::studly($driver);
 
-        if ($driver == 'Global') {
+        if ($driver === 'Global') {
+            /** @var DriverContract $instance */
             $instance = resolve("\\JobMetric\\Flow\\Flows\\Global\\GlobalDriverFlow");
         } else {
+            /** @var DriverContract $instance */
             $instance = resolve("\\App\\Flows\\Drivers\\$driver\\{$driver}DriverFlow");
         }
 
@@ -193,9 +206,9 @@ class FlowManager
     }
 
     /**
-     * Get the status of the given flow instance by name.
+     * Ask a driver for its status payload.
      *
-     * @param string $driver
+     * @param string $driver Driver key.
      *
      * @return array
      */
@@ -205,20 +218,31 @@ class FlowManager
     }
 
     /**
-     * Get start state
+     * Get the START state of a Flow.
      *
-     * @param int $flow_id
+     * @param int $flowId
      *
      * @return FlowState|null
      */
-    public function getStartState(int $flow_id): FlowState|null
+    public function getStartState(int $flowId): ?FlowState
     {
-        /* @var FlowState $flow_state */
-        $flow_state = FlowState::query()->where([
-            'flow_id' => $flow_id,
-            'type' => FlowStateTypeEnum::START()
+        /** @var FlowState|null $flowState */
+        $flowState = FlowState::query()->where([
+            'flow_id' => $flowId,
+            'type' => FlowStateTypeEnum::START(),
         ])->first();
 
-        return $flow_state;
+        return $flowState;
+    }
+
+    /**
+     * Forget caches related to flow picking/registry (called after mutations).
+     *
+     * @return void
+     */
+    protected function forgetCache(): void
+    {
+        cache()->forget('flows');
+        cache()->forget('flow.pick');
     }
 }
