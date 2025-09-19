@@ -76,6 +76,7 @@ trait HasWorkflow
     {
         $builder
             ->subjectType(static::class)
+            ->subjectCollection($this->flowSubjectCollection())
             ->onlyActive(true)
             ->timeNow(Carbon::now('UTC'))
             ->orderByDefault()
@@ -84,6 +85,22 @@ trait HasWorkflow
                 $key = $model->getKey();
                 return $key === null ? null : (string)$key;
             });
+    }
+
+    /**
+     * Resolve subject_collection value for this model (override in your model if needed).
+     *
+     * Default implementation tries to use a "collection" attribute if present.
+     *
+     * @return string|null
+     */
+    protected function flowSubjectCollection(): ?string
+    {
+        // If your model stores the logical collection/type in another attribute,
+        // override this method and return that value.
+        $val = $this->getAttribute('collection');
+
+        return $val === null ? null : (string)$val;
     }
 
     /**

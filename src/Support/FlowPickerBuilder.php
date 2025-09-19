@@ -17,8 +17,9 @@ use Illuminate\Database\Eloquent\Model;
  * buildFlowPicker() to configure an instance of this builder.
  *
  * @example
- * $builder->subjectType(\App\Models\Order::class)
+ * $builder->subjectType(\App\Models\Board::class)
  *         ->subjectScope((string) $tenantId)
+ *         ->subjectCollection('epic')
  *         ->environment('prod')
  *         ->channel('api')
  *         ->onlyActive(true)
@@ -82,6 +83,13 @@ class FlowPickerBuilder
      * @var string|null
      */
     protected ?string $subjectScope = null;
+
+    /**
+     * Optional subject collection (e.g., epic/story/task) to further partition flows.
+     *
+     * @var string|null
+     */
+    protected ?string $subjectCollection = null;
 
     /**
      * Environment filter (e.g., prod/staging). Null means no environment filtering.
@@ -289,6 +297,20 @@ class FlowPickerBuilder
     public function subjectScope(?string $scope): self
     {
         $this->subjectScope = $scope;
+
+        return $this;
+    }
+
+    /**
+     * Set an optional subject collection (e.g., epic/story/task) to further partition flows.
+     *
+     * @param string|null $collection Collection identifier or null to clear.
+     *
+     * @return $this
+     */
+    public function subjectCollection(?string $collection): self
+    {
+        $this->subjectCollection = $collection;
 
         return $this;
     }
@@ -719,6 +741,16 @@ class FlowPickerBuilder
     public function getSubjectScope(): ?string
     {
         return $this->subjectScope;
+    }
+
+    /**
+     * Get the optional subject collection.
+     *
+     * @return string|null
+     */
+    public function getSubjectCollection(): ?string
+    {
+        return $this->subjectCollection;
     }
 
     /**

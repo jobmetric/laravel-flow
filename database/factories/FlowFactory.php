@@ -27,6 +27,7 @@ class FlowFactory extends Factory
         return [
             'subject_type' => null,
             'subject_scope' => null,
+            'subject_collection' => null,
 
             'version' => 1,
             'is_default' => $this->faker->boolean(20),
@@ -67,6 +68,20 @@ class FlowFactory extends Factory
     {
         return $this->state(fn(array $attributes) => [
             'subject_scope' => $subject_scope,
+        ]);
+    }
+
+    /**
+     * set subject_collection
+     *
+     * @param string|null $subject_collection
+     *
+     * @return static
+     */
+    public function setSubjectCollection(?string $subject_collection): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'subject_collection' => $subject_collection,
         ]);
     }
 

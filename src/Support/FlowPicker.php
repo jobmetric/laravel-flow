@@ -14,7 +14,7 @@ use JobMetric\Flow\Models\Flow;
  * Class FlowPicker
  *
  * Executes the selection process using a configured FlowPickerBuilder.
- * - Filters by subject type/scope, environment, channel.
+ * - Filters by subject type/scope/collection, environment, channel.
  * - Enforces active/time-window constraints (configurable).
  * - Applies rollout gates (configurable).
  * - Supports include/exclude/prefer lists and version constraints.
@@ -95,6 +95,9 @@ class FlowPicker
         }
         if ($builder->getSubjectScope() !== null) {
             $q->where("{$flowTable}.subject_scope", $builder->getSubjectScope());
+        }
+        if ($builder->getSubjectCollection() !== null) {
+            $q->where("{$flowTable}.subject_collection", $builder->getSubjectCollection());
         }
 
         // Environment/channel filters.
@@ -392,6 +395,7 @@ class FlowPicker
             'id=' . (string)$model->getKey(),
             'stype=' . ($builder->getSubjectType() ?? ''),
             'sscope=' . ($builder->getSubjectScope() ?? ''),
+            'scol=' . ($builder->getSubjectCollection() ?? ''),
             'env=' . ($builder->getEnvironment() ?? ''),
             'chan=' . ($builder->getChannel() ?? ''),
             'only=' . ($builder->isOnlyActive() ? '1' : '0'),

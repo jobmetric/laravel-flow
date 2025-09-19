@@ -30,6 +30,15 @@ return new class extends Migration {
              * validation: regex:/^[a-zA-Z0-9_\-]+$/
              */
 
+            $table->string('subject_collection')->nullable()->index();
+            /**
+             * optional collection name of subject
+             *
+             * e.g. for board model flow: "epic", "story", "task"
+             * if null, applies to all collections of the subject_type
+             * validation: regex:/^[a-zA-Z0-9_\-]+$/
+             */
+
             $table->unsignedInteger('version')->default(1)->index();
             /**
              * version of flow for subject
@@ -101,12 +110,14 @@ return new class extends Migration {
             $table->unique([
                 'subject_type',
                 'subject_scope',
+                'subject_collection',
                 'version'
             ], 'FLOW_UNIQUE');
 
             $table->index([
                 'subject_type',
                 'subject_scope',
+                'subject_collection',
                 'status',
                 'is_default',
                 'active_from',

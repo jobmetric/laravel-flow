@@ -11,6 +11,7 @@ use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Flow\Models\FlowTransition;
 use JobMetric\Flow\Models\FlowUse;
 use JobMetric\Translation\Http\Resources\TranslationCollectionResource;
+use mysql_xdevapi\Collection;
 
 /**
  * Class FlowResource
@@ -20,6 +21,7 @@ use JobMetric\Translation\Http\Resources\TranslationCollectionResource;
  * @property int $id
  * @property string $subject_type
  * @property string|null $subject_scope
+ * @property string|null $subject_collection
  * @property int $version
  * @property bool $is_default
  * @property bool $status
@@ -61,6 +63,7 @@ class FlowResource extends JsonResource
 
             'subject_type' => $this->subject_type,
             'subject_scope' => $this->subject_scope,
+            'subject_collection' => $this->subject_collection,
 
             'version' => $this->version,
             'is_default' => (bool)$this->is_default,
