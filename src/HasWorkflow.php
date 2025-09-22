@@ -2,14 +2,18 @@
 
 namespace JobMetric\Flow;
 
+use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowUse;
 use JobMetric\Flow\Support\FlowPicker;
 use JobMetric\Flow\Support\FlowPickerBuilder;
+use LogicException;
+use UnitEnum;
 
 /**
  * Trait HasWorkflow
@@ -35,14 +39,63 @@ use JobMetric\Flow\Support\FlowPickerBuilder;
 trait HasWorkflow
 {
     /**
-     * Cached flow id selected at "creating" time.
+     * Temporarily stores the selected flow id computed during creating event.
      *
      * @var int|null
      */
     protected ?int $selectedFlowIdForBinding = null;
 
     /**
-     * Polymorphic binding row.
+     * Boots the HasWorkflow trait lifecycle hooks for creating/created events.
+     *
+     * @return void
+     */
+    public static function bootHasWorkflow(): void
+    {
+        static::creating(function (Model $model): void {
+            /** @var self $model */
+            $model->ensureHasStatusColumn();
+
+            if (method_exists($model, 'flowUse') && $model->flowUse()->exists()) {
+                return;
+            }
+
+            if (!property_exists($model, 'selectedFlowIdForBinding')) {
+                $model->selectedFlowIdForBinding = null;
+            }
+
+            $flow = $model->pickFlow();
+            $model->selectedFlowIdForBinding = $flow?->getKey();
+        });
+
+        static::created(function (Model $model): void {
+            /** @var self $model */
+            $model->ensureHasStatusColumn();
+
+            if ($model->flowUse()->exists()) {
+                return;
+            }
+
+            $flowId = $model->selectedFlowIdForBinding;
+
+            if ($flowId === null) {
+                $flow = $model->pickFlow();
+                $flowId = $flow?->getKey();
+            }
+
+            if ($flowId === null) {
+                return;
+            }
+
+            $model->flowUse()->create([
+                'flow_id' => $flowId,
+                'used_at' => Carbon::now('UTC'),
+            ]);
+        });
+    }
+
+    /**
+     * Provides the one-to-one polymorphic binding from the model to Flow via flow_uses table.
      *
      * @return MorphOne<FlowUse>
      */
@@ -52,7 +105,7 @@ trait HasWorkflow
     }
 
     /**
-     * Convenience accessor to the bound Flow (not an Eloquent relation).
+     * Returns the currently bound Flow model (convenience accessor, not a relation).
      * Prefer eager-loading via with(['flowUse.flow']) for performance.
      *
      * @return Flow|null
@@ -67,9 +120,10 @@ trait HasWorkflow
     }
 
     /**
-     * Configure a FlowPickerBuilder for this model. Override to customize constraints.
+     * Configures the FlowPickerBuilder for this model; can be overridden by subject models.
      *
-     * @param FlowPickerBuilder $builder
+     * @param FlowPickerBuilder $builder The builder to tune.
+     *
      * @return void
      */
     protected function buildFlowPicker(FlowPickerBuilder $builder): void
@@ -88,23 +142,19 @@ trait HasWorkflow
     }
 
     /**
-     * Resolve subject_collection value for this model (override in your model if needed).
-     *
-     * Default implementation tries to use a "collection" attribute if present.
+     * Resolves the logical subject collection; override in subject models if needed.
      *
      * @return string|null
      */
     protected function flowSubjectCollection(): ?string
     {
-        // If your model stores the logical collection/type in another attribute,
-        // override this method and return that value.
         $val = $this->getAttribute('collection');
 
         return $val === null ? null : (string)$val;
     }
 
     /**
-     * Create and return a configured builder for advanced scenarios.
+     * Builds and returns a configured FlowPickerBuilder.
      *
      * @return FlowPickerBuilder
      */
@@ -117,7 +167,7 @@ trait HasWorkflow
     }
 
     /**
-     * Pick a Flow based on the current builder configuration.
+     * Picks a Flow using the configured builder.
      *
      * @return Flow|null
      */
@@ -127,10 +177,10 @@ trait HasWorkflow
     }
 
     /**
-     * Bind the given Flow to this model (create/update the FlowUse row).
+     * Binds the given Flow to this model by upserting the FlowUse row.
      *
-     * @param Flow $flow
-     * @param Carbon|null $usedAt
+     * @param Flow $flow The flow to bind.
+     * @param Carbon|null $usedAt Optional timestamp of binding.
      *
      * @return Model|MorphOne|FlowUse
      */
@@ -160,9 +210,10 @@ trait HasWorkflow
     }
 
     /**
-     * Re-pick using the builder and rebind to the chosen Flow if any.
+     * Re-picks a Flow and rebinds it if any is selected.
      *
      * @param callable(FlowPickerBuilder):void|null $tuner Optional builder mutator.
+     *
      * @return Flow|null
      */
     public function rebindFlow(?callable $tuner = null): ?Flow
@@ -181,7 +232,7 @@ trait HasWorkflow
     }
 
     /**
-     * Remove the binding row if present.
+     * Unbinds the Flow by deleting the FlowUse row if present.
      *
      * @return void
      */
@@ -192,9 +243,10 @@ trait HasWorkflow
     }
 
     /**
-     * Local scope to eager-load the bound Flow efficiently.
+     * Query scope to eager-load the bound Flow efficiently.
      *
-     * @param Builder $query
+     * @param Builder $query The Eloquent query builder.
+     *
      * @return Builder
      */
     public function scopeWithFlow(Builder $query): Builder
@@ -203,49 +255,78 @@ trait HasWorkflow
     }
 
     /**
-     * Boot the HasWorkflow trait lifecycle hooks.
+     * Provides the required status column name used by this trait; override per model if needed.
+     *
+     * @return string
+     */
+    protected function flowStatusColumn(): string
+    {
+        return 'status';
+    }
+
+    /**
+     * Ensures that the subject model's table has the required status column.
      *
      * @return void
      */
-    public static function bootHasWorkflow(): void
+    protected function ensureHasStatusColumn(): void
     {
-        static::creating(function (Model $model): void {
-            // Skip if already bound (defensive).
-            if (method_exists($model, 'flowUse') && $model->flowUse()->exists()) {
-                return;
-            }
+        $column = $this->flowStatusColumn();
+        $table = $this->getTable();
 
-            if (!property_exists($model, 'selectedFlowIdForBinding')) {
-                $model->selectedFlowIdForBinding = null;
-            }
+        if (!Schema::hasColumn($table, $column)) {
+            throw new LogicException(sprintf('Model %s must have a "%s" column in table "%s" when using HasWorkflow.', static::class, $column, $table));
+        }
+    }
 
-            /** @var self $model */
-            $flow = $model->pickFlow();
-            $model->selectedFlowIdForBinding = $flow?->getKey();
-        });
+    /**
+     * Detects the enum class used to cast the status column, if any.
+     * It inspects Eloquent $casts and returns the class-string if it is a PHP enum, otherwise null.
+     *
+     * @return class-string<UnitEnum>|null
+     */
+    public function flowStatusEnumClass(): ?string
+    {
+        $column = $this->flowStatusColumn();
+        $casts = method_exists($this, 'getCasts') ? $this->getCasts() : [];
 
-        static::created(function (Model $model): void {
-            /** @var self $model */
-            if ($model->flowUse()->exists()) {
-                return;
-            }
+        $cast = $casts[$column] ?? null;
 
-            $flowId = $model->selectedFlowIdForBinding;
+        if (is_string($cast) && class_exists($cast) && is_subclass_of($cast, UnitEnum::class)) {
+            /** @var class-string<UnitEnum> $cast */
+            return $cast;
+        }
 
-            // If nothing was selected at "creating", try again (id is now available).
-            if ($flowId === null) {
-                $flow = $model->pickFlow();
-                $flowId = $flow?->getKey();
-            }
+        return null;
+    }
 
-            if ($flowId === null) {
-                return;
-            }
+    /**
+     * Returns the allowed values of the status enum cast (if any).
+     * Priority:
+     *  1) If the enum class defines static values() (from your EnumMacros trait), call it.
+     *  2) If it's a Backed Enum, return the scalar values from cases().
+     *  3) Otherwise (pure enum), return the case names.
+     *
+     * @return array<int, string|int>|null
+     */
+    public function flowStatusEnumValues(): ?array
+    {
+        $enumClass = $this->flowStatusEnumClass();
+        if ($enumClass === null) {
+            return null;
+        }
 
-            $model->flowUse()->create([
-                'flow_id' => $flowId,
-                'used_at' => Carbon::now('UTC'),
-            ]);
-        });
+        if (method_exists($enumClass, 'values')) {
+            /** @phpstan-ignore-next-line */
+            return $enumClass::values();
+        }
+
+        $cases = $enumClass::cases();
+
+        if (is_subclass_of($enumClass, BackedEnum::class)) {
+            return array_map(static fn(BackedEnum $c) => $c->value, $cases);
+        }
+
+        return array_map(static fn(UnitEnum $c) => $c->name, $cases);
     }
 }
