@@ -15,6 +15,7 @@ use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
+use JobMetric\Language\Facades\Language;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
 use Throwable;
@@ -97,15 +98,31 @@ class FlowManager extends AbstractCrudService
         /** @var Flow $flow */
         $flow = $model;
 
+        // Get active languages
+        $languages = Language::all([
+            'status' => true
+        ]);
+
+        $translations = [];
+        foreach ($languages as $language) {
+            $translations[$language->locale] = [
+                'name' => trans('workflow::base.states.start.name', [], $language->locale),
+                'description' => trans('workflow::base.states.start.description', [], $language->locale)
+            ];
+        }
+
         // Ensure one START node exists.
         $flow->states()->create([
+            'translation' => $translations,
             'type' => FlowStateTypeEnum::START(),
             'config' => [
-                'color' => '#ffffff',
-                'position' => ['x' => 0, 'y' => 0],
+                'color' => config('flow.state.start.color', '#fff'),
+                'icon' => config('flow.state.start.icon', 'play'),
+                'position' => [
+                    'x' => config('flow.state.start.position.x', 0),
+                    'y' => config('flow.state.start.position.y', 0),
+                ],
             ],
-            // If your DB enforces status for START via CHECK, set it here or validate earlier.
-            // 'status' => $data['start_status'] ?? 'start',
         ]);
 
         $this->forgetCache();
@@ -179,30 +196,10 @@ class FlowManager extends AbstractCrudService
 
             $this->forgetCache();
 
-            return Response::make(true, trans('flow::base.messages.change_status'), FlowResource::make($flow));
+            return Response::make(true, trans('workflow::base.messages.toggle_status', [
+                'entity' => trans('workflow::base.entity_names.flow'),
+            ]), FlowResource::make($flow));
         });
-    }
-
-    /**
-     * Resolve and return the driver instance by studly driver name.
-     *
-     * @param string $driver Driver key (e.g., 'global' or custom).
-     *
-     * @return DriverContract
-     */
-    public function getDriver(string $driver): DriverContract
-    {
-        $driver = Str::studly($driver);
-
-        if ($driver === 'Global') {
-            /** @var DriverContract $instance */
-            $instance = resolve("\\JobMetric\\Flow\\Flows\\Global\\GlobalDriverFlow");
-        } else {
-            /** @var DriverContract $instance */
-            $instance = resolve("\\App\\Flows\\Drivers\\$driver\\{$driver}DriverFlow");
-        }
-
-        return $instance;
     }
 
     /**
