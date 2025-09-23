@@ -329,4 +329,16 @@ trait HasWorkflow
 
         return array_map(static fn(UnitEnum $c) => $c->name, $cases);
     }
+
+    /**
+     * get the current status value
+     *
+     * @return string|int|null
+     */
+    public function flowCurrentStatusValue(): int|string|null
+    {
+        $column = $this->flowStatusColumn();
+
+        return $this->getAttribute($column);
+    }
 }
