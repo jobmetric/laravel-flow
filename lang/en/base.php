@@ -20,13 +20,22 @@ return [
     ],
 
     "messages" => [
-        "toggle_status" => ":entity status has been successfully changed.",
+        "toggle_status" => ":entity status toggled successfully.",
+        "set_default" => ":entity set as default successfully.",
+        "invalid_active_window" => "Invalid active window: 'from' must be before or equal to 'to'.",
+        "set_active_window" => "Active window updated successfully for :entity.",
+        "invalid_rollout" => "Invalid rollout percentage. It must be between 0 and 100.",
+        "set_rollout" => "Rollout percentage updated successfully for :entity.",
+        "reordered" => ":entity reordered successfully.",
+        "duplicated" => ":entity duplicated successfully.",
+        "flow_invalid" => ":entity is invalid.",
+        "flow_valid" => ":entity is valid.",
     ],
 
     "states" => [
         "start" => [
             "name" => "Start",
-            "description" => "The starting state of the flow",
+            "description" => "Entry point of the flow.",
         ]
     ],
 

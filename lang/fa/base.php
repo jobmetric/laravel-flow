@@ -21,12 +21,21 @@ return [
 
     "messages" => [
         "toggle_status" => "وضعیت :entity با موفقیت تغییر کرد.",
+        "set_default" => ":entity با موفقیت به‌عنوان پیش‌فرض تنظیم شد.",
+        "invalid_active_window" => "بازهٔ فعال نامعتبر است: مقدار «از» باید قبل یا برابر با «تا» باشد.",
+        "set_active_window" => "بازهٔ فعال برای :entity با موفقیت به‌روزرسانی شد.",
+        "invalid_rollout" => "درصد رول‌اوت نامعتبر است. عدد باید بین ۰ تا ۱۰۰ باشد.",
+        "set_rollout" => "درصد رول‌اوت برای :entity با موفقیت به‌روزرسانی شد.",
+        "reordered" => ":entity با موفقیت بازچینی شد.",
+        "duplicated" => ":entity با موفقیت تکثیر شد.",
+        "flow_invalid" => "تعریف :entity نامعتبر است.",
+        "flow_valid" => ":entity معتبر است.",
     ],
 
     "states" => [
         "start" => [
             "name" => "شروع",
-            "description" => "حالت شروع جریان",
+            "description" => "نقطهٔ ورود فلو.",
         ]
     ],
 
