@@ -22,7 +22,7 @@ return [
     "messages" => [
         "toggle_status" => ":entity status toggled successfully.",
         "set_default" => ":entity set as default successfully.",
-        "invalid_active_window" => "Invalid active window: 'from' must be before or equal to 'to'.",
+        "invalid_active_window" => "Invalid active window: `from` must be before or equal to `to`.",
         "set_active_window" => "Active window updated successfully for :entity.",
         "invalid_rollout" => "Invalid rollout percentage. It must be between 0 and 100.",
         "set_rollout" => "Rollout percentage updated successfully for :entity.",
@@ -73,6 +73,9 @@ return [
     ],
 
     "validation" => [
+        "start_required" => "Flow must have exactly one START state.",
+        "start_must_not_have_incoming" => "START state must not have incoming transitions.",
+
         "check_status_in_driver" => "The selected status is invalid, you must select from (:status) items.",
         "check_driver_exists" => "The selected driver :driver does not exists",
     ],

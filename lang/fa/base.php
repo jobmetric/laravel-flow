@@ -73,6 +73,9 @@ return [
     ],
 
     "validation" => [
+        'start_required' => 'گردش‌کار باید دقیقاً یک وضعیت شروع داشته باشد.',
+        'start_must_not_have_incoming' => 'وضعیت شروع نباید هیچ ترنزیشن ورودی داشته باشد.',
+
         "check_status_in_driver" => "وضعیت انتخاب شده نامعتبر است، باید از موارد (:status) انتخاب کنید.",
         "check_driver_exists" => "درایور انتخاب شده :driver وجود ندارد",
     ],

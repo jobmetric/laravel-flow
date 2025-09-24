@@ -15,6 +15,7 @@ use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow;
 use JobMetric\Flow\Models\FlowState;
+use JobMetric\Flow\Models\FlowTransition;
 use JobMetric\Flow\Support\FlowPicker;
 use JobMetric\Flow\Support\FlowPickerBuilder;
 use JobMetric\Language\Facades\Language;
@@ -251,16 +252,16 @@ class FlowManager extends AbstractCrudService
             /** @var Flow $flow */
             $flow = Flow::query()->findOrFail($flowId);
 
-            $q = Flow::query()->where('subject_type', $flow->subject_type)
+            $query = Flow::query()->where('subject_type', $flow->subject_type)
                 ->where('version', $flow->version);
 
             if (is_null($flow->subject_scope)) {
-                $q->whereNull('subject_scope');
+                $query->whereNull('subject_scope');
             } else {
-                $q->where('subject_scope', $flow->subject_scope);
+                $query->where('subject_scope', $flow->subject_scope);
             }
 
-            $q->update(['is_default' => false]);
+            $query->update(['is_default' => false]);
 
             $flow->is_default = true;
             $flow->save();
@@ -418,11 +419,11 @@ class FlowManager extends AbstractCrudService
 
                 // Copy transitions (columns: from, to, slug)
                 if (method_exists($flow, 'transitions')) {
-                    foreach ($flow->transitions as $t) {
+                    foreach ($flow->transitions as $transition) {
                         $copy->transitions()->create([
-                            'from' => $t->from ? ($mapStateId[$t->from] ?? null) : null,
-                            'to' => $t->to ? ($mapStateId[$t->to] ?? null) : null,
-                            'slug' => $t->slug,
+                            'from' => $transition->from ? ($mapStateId[$transition->from] ?? null) : null,
+                            'to' => $transition->to ? ($mapStateId[$transition->to] ?? null) : null,
+                            'slug' => $transition->slug,
                         ]);
                     }
                 }
@@ -461,10 +462,14 @@ class FlowManager extends AbstractCrudService
     }
 
     /**
-     * Validate graph consistency of a flow definition.
-     * Ensures exactly one START, at most one END, and no duplicate status across states.
+     * Validate structural consistency of a flow definition.
      *
-     * @param int $flowId
+     * Rules:
+     * - Exactly one START state must exist.
+     * - START state must not have any incoming transitions.
+     * - State "status" values may repeat (no uniqueness check).
+     *
+     * @param int $flowId The target flow identifier to validate.
      *
      * @return Response
      */
@@ -472,21 +477,34 @@ class FlowManager extends AbstractCrudService
     {
         $errors = [];
 
+        // Load states for the flow
         $states = FlowState::query()->where('flow_id', $flowId)->get();
-        $start = $states->where('type', FlowStateTypeEnum::START())->count();
-        $end = $states->where('type', FlowStateTypeEnum::END())->count();
 
-        if ($start !== 1) {
-            $errors[] = 'Flow must have exactly one START state.';
+        // Exactly one START
+        $startStates = $states->where('type', FlowStateTypeEnum::START());
+        if ($startStates->count() !== 1) {
+            $errors[] = trans('workflow::base.validation.start_required');
         }
 
-        if ($end > 1) {
-            $errors[] = 'Flow must have at most one END state.';
-        }
+        // START must not have incoming transitions
+        if ($startStates->count() === 1) {
+            $startId = $startStates->first()->id;
 
-        $nonNullStatuses = $states->whereNotNull('status')->pluck('status');
-        if ($nonNullStatuses->count() !== $nonNullStatuses->unique()->count()) {
-            $errors[] = 'Duplicate status values detected across states.';
+            // Prefer relation if it exists
+            $flow = Flow::query()->find($flowId);
+
+            if ($flow && method_exists($flow, 'transitions')) {
+                $incomingCount = (int)$flow->transitions()->where('to', $startId)->count();
+            } else {
+                $incomingCount = (int)FlowTransition::query()
+                    ->where('flow_id', $flowId)
+                    ->where('to', $startId)
+                    ->count();
+            }
+
+            if ($incomingCount > 0) {
+                $errors[] = trans('workflow::base.validation.start_must_not_have_incoming');
+            }
         }
 
         return $errors
@@ -582,12 +600,12 @@ class FlowManager extends AbstractCrudService
             $flow = Flow::query()->create($flowData);
 
             $stateIdMap = [];
-            foreach ($payload['states'] ?? [] as $s) {
-                $oldId = $s['id'] ?? null;
+            foreach ($payload['states'] ?? [] as $state) {
+                $oldId = $state['id'] ?? null;
 
-                unset($s['id'], $s['flow_id'], $s['created_at'], $s['updated_at']);
+                unset($state['id'], $state['flow_id'], $state['created_at'], $state['updated_at']);
 
-                $new = $flow->states()->create($s);
+                $new = $flow->states()->create($state);
 
                 if ($oldId) {
                     $stateIdMap[$oldId] = $new->id;
@@ -595,19 +613,19 @@ class FlowManager extends AbstractCrudService
             }
 
             if (!empty($payload['transitions']) && method_exists($flow, 'transitions')) {
-                foreach ($payload['transitions'] as $t) {
-                    unset($t['id'], $t['flow_id'], $t['created_at'], $t['updated_at']);
+                foreach ($payload['transitions'] as $transition) {
+                    unset($transition['id'], $transition['flow_id'], $transition['created_at'], $transition['updated_at']);
 
-                    if (array_key_exists('from', $t)) {
-                        $t['from'] = $t['from'] ? ($stateIdMap[$t['from']] ?? null) : null;
+                    if (array_key_exists('from', $transition)) {
+                        $transition['from'] = $transition['from'] ? ($stateIdMap[$transition['from']] ?? null) : null;
                     }
 
-                    if (array_key_exists('to', $t)) {
-                        $t['to'] = $t['to'] ? ($stateIdMap[$t['to']] ?? null) : null;
+                    if (array_key_exists('to', $transition)) {
+                        $transition['to'] = $transition['to'] ? ($stateIdMap[$transition['to']] ?? null) : null;
                     }
 
                     // keep only columns that exist on flow_transition
-                    $payloadTransition = collect($t)->only(['from', 'to', 'slug'])->all();
+                    $payloadTransition = collect($transition)->only(['from', 'to', 'slug'])->all();
 
                     $flow->transitions()->create($payloadTransition);
                 }
