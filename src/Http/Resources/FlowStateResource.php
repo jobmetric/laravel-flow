@@ -19,7 +19,7 @@ use JobMetric\Translation\Http\Resources\TranslationCollectionResource;
  * @property int $flow_id
  * @property mixed $type
  * @property string|null $status
- * @property array|null $config
+ * @property object|null $config
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
@@ -59,7 +59,7 @@ class FlowStateResource extends JsonResource
             'config' => $this->config,
 
             'is_start' => (bool)($this->is_start ?? ($type === 'start')),
-            'is_end' => (bool)($this->is_end ?? ($type === 'end')),
+            'is_end' => (bool)($this->is_end ?? ($this->config?->is_terminal === true)),
 
             // ISO 8601 timestamps for interoperability across clients
             'created_at' => $this->created_at?->toISOString(),

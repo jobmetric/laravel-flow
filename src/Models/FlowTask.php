@@ -3,6 +3,7 @@
 namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -71,7 +72,7 @@ class FlowTask extends Model
     protected $casts = [
         'flow_transition_id' => 'integer',
         'driver' => 'string',
-        'config' => 'array',
+        'config' => AsArrayObject::class,
         'ordering' => 'integer',
         'status' => 'boolean',
     ];

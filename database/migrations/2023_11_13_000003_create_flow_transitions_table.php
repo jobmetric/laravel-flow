@@ -38,7 +38,7 @@ return new class extends Migration {
             $table->unique(['flow_id', 'slug'], 'FLOW_TRANSITION_SLUG_UNIQUE');
         });
 
-        // CHECK constraints + cross-dialect uniqueness for start/end edges (single path)
+        // CHECK constraints + cross-dialect uniqueness for start edges (single path)
         try {
             $conn = Schema::getConnection();
             $gram = $conn->getQueryGrammar();
@@ -54,10 +54,9 @@ return new class extends Migration {
             DB::statement("ALTER TABLE {$wrappedTable} ADD CONSTRAINT flow_transition_not_both_null_chk CHECK (({$colFrom} IS NOT NULL) OR ({$colTo} IS NOT NULL))");
             DB::statement("ALTER TABLE {$wrappedTable} ADD CONSTRAINT flow_transition_not_same_chk CHECK (({$colFrom} IS NULL OR {$colTo} IS NULL OR {$colFrom} <> {$colTo}))");
 
-            // One start-edge and one end-edge per flow, via functional unique indexes (works on PG & MySQL 8+)
+            // One start-edge per flow, via functional unique indexes (works on PG & MySQL 8+)
             DB::statement("CREATE UNIQUE INDEX flow_transition_one_start ON {$wrappedTable} ((CASE WHEN {$colFrom} IS NULL THEN {$colFlow} ELSE NULL END))");
-            DB::statement("CREATE UNIQUE INDEX flow_transition_one_end ON {$wrappedTable} ((CASE WHEN {$colTo} IS NULL THEN {$colFlow} ELSE NULL END))");
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // If CHECK/functional indexes are unsupported on this engine/version, enforce in application layer.
         }
     }

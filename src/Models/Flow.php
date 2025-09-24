@@ -185,10 +185,12 @@ class Flow extends Model
     /**
      * End state of this flow (single).
      *
-     * @return HasOne
+     * @return HasMany
      */
-    public function endState(): HasOne
+    public function endState(): HasMany
     {
-        return $this->hasOne(FlowState::class, 'flow_id')->where('type', FlowStateTypeEnum::END());
+        return $this->hasMany(FlowState::class, 'flow_id')
+            ->where('type', FlowStateTypeEnum::STATE())
+            ->whereJsonContains('config->is_terminal', true);
     }
 }

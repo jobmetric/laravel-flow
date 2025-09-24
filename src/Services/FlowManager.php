@@ -119,6 +119,7 @@ class FlowManager extends AbstractCrudService
             'translation' => $translations,
             'type' => FlowStateTypeEnum::START(),
             'config' => [
+                'is_terminal' => false,
                 'color' => config('flow.state.start.color', '#fff'),
                 'icon' => config('flow.state.start.icon', 'play'),
                 'position' => [

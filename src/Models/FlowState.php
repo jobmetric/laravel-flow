@@ -3,6 +3,7 @@
 namespace JobMetric\Flow\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,14 +18,14 @@ use JobMetric\Translation\HasTranslation;
  *
  * Represents a state (node) inside a workflow definition. The "type" field
  * indicates whether the state is a starting node, a normal state, or an ending node.
- * Expected values for "type": start | state | end.
+ * Expected values for "type": start | state.
  *
  * @package JobMetric\Flow
  *
  * @property int $id The primary identifier of the flow state row.
  * @property int $flow_id The owning flow identifier.
- * @property FlowStateTypeEnum|string $type The state type: start | state | end.
- * @property array|null $config Optional UI/behavior configuration (JSON).
+ * @property FlowStateTypeEnum|string $type The state type: start | state.
+ * @property object|null $config Optional UI/behavior configuration (JSON).
  * @property string|null $status Optional domain status key mapped to the subject model.
  * @property Carbon $created_at The timestamp when this state was created.
  * @property Carbon $updated_at The timestamp when this state was last updated.
@@ -75,7 +76,7 @@ class FlowState extends Model
     protected $casts = [
         'flow_id' => 'integer',
         'type' => FlowStateTypeEnum::class,
-        'config' => 'array',
+        'config' => AsArrayObject::class,
         'status' => 'string',
     ];
 
@@ -153,7 +154,7 @@ class FlowState extends Model
      */
     public function getIsEndAttribute(): bool
     {
-        return ($this->type instanceof FlowStateTypeEnum ? $this->type->value : $this->type) === 'end';
+        return (bool)$this->config?->is_terminal === true;
     }
 
     /**
@@ -186,10 +187,10 @@ class FlowState extends Model
      *
      * @param Builder $query
      *
-     * @return Builder
+     * @return Builder|FlowState
      */
-    public function scopeEnd(Builder $query): Builder
+    public function scopeEnd(Builder $query): FlowState|Builder
     {
-        return $this->scopeOfType($query, 'end');
+        return $this->whereJsonContains('config->is_terminal', true);
     }
 }
