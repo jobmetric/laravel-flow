@@ -45,7 +45,7 @@ class FlowTransitionResource extends JsonResource
         return [
             'id' => $this->id,
 
-            'translations' => $this->whenLoaded('translations', function(){
+            'translations' => $this->whenLoaded('translations', function () {
                 return TranslationCollectionResource::make($this)
                     ->withLocale(app()->getLocale());
             }),
