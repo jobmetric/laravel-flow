@@ -1,15 +1,15 @@
 <?php
 
-namespace JobMetric\Flow\Exceptions;
+namespace JobMetric\Flow\Exceptions\Old;
 
 use Exception;
 use Throwable;
 
-class FlowStateStartTypeIsExistException extends Exception
+class FlowInactiveException extends Exception
 {
     public function __construct(string $driver, int $code = 400, ?Throwable $previous = null)
     {
-        $message = __('flow::base.flow_state.start_type_is_exist', ['driver' => $driver]);
+        $message = __('flow::base.flow.inactive', ['driver' => $driver]);
 
         parent::__construct($message, $code, $previous);
     }

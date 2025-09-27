@@ -4,19 +4,19 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Builder;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
-use JobMetric\Flow\Exceptions\FlowInactiveException;
-use JobMetric\Flow\Exceptions\FlowTransitionExistException;
-use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
-use JobMetric\Flow\Exceptions\FlowTransitionFromStateStartNotMoveException;
-use JobMetric\Flow\Exceptions\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
-use JobMetric\Flow\Exceptions\FlowTransitionInvalidException;
-use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstStateException;
 use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstTransitionException;
-use JobMetric\Flow\Exceptions\FlowTransitionSlugExistException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateDriverFromAndToNotEqualException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateEndNotInFromException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateStartNotInToException;
-use JobMetric\Flow\Exceptions\FlowTransitionToNotSetException;
+use JobMetric\Flow\Exceptions\Old\FlowInactiveException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionExistException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionFromNotSetException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionNotStoreBeforeFirstStateException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateDriverFromAndToNotEqualException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateEndNotInFromException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionToNotSetException;
 use JobMetric\Flow\Facades\Flow as FlowFacade;
 use JobMetric\Flow\Facades\FlowState as FlowStateFacade;
 use JobMetric\Flow\Models\Flow;
@@ -30,7 +30,7 @@ trait ExceptionTrait
      * @param Flow $flow
      *
      * @return void
-     * @throws FlowInactiveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
      */
     private function checkFlowInactive(Flow $flow): void
     {
@@ -107,7 +107,7 @@ trait ExceptionTrait
      * @param array $data
      *
      * @return void
-     * @throws FlowTransitionInvalidException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException
      */
     private function checkFromAndToExist(array $data): void
     {
@@ -137,7 +137,7 @@ trait ExceptionTrait
      * @param array $data
      *
      * @return void
-     * @throws FlowTransitionStateEndNotInFromException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionStateEndNotInFromException
      */
     private function checkStateEndNotInFrom(array $data): void
     {
@@ -156,7 +156,7 @@ trait ExceptionTrait
      * @param array $data
      *
      * @return void
-     * @throws FlowTransitionStateStartNotInToException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException
      */
     private function checkStateStartNotInTo(array $data): void
     {
@@ -198,7 +198,7 @@ trait ExceptionTrait
      * @param int|null $updated_flow_transition_id
      *
      * @return void
-     * @throws FlowTransitionExistException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionExistException
      */
     private function checkTransitionExist(array $data, int|null $updated_flow_transition_id = null): void
     {
@@ -222,7 +222,7 @@ trait ExceptionTrait
      * @param array $data
      *
      * @return void
-     * @throws FlowTransitionFromStateStartNotMoveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException
      */
     private function checkFromStateStartNotMove(FlowTransition $flowTransition, array $data): void
     {
@@ -259,7 +259,7 @@ trait ExceptionTrait
      * @param FlowTransition $flowTransition
      *
      * @return void
-     * @throws FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
      */
     private function checkTransitionHaveAtLeastOneTransitionFromTheStartBeginning(FlowTransition $flowTransition): void
     {
