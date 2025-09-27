@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \JobMetric\Flow\Models\FlowTransition update(int $flow_transition_id, array $data = [])
  * @method static \JobMetric\Flow\Models\FlowTransition delete(int $flow_transition_id)
  *
- * @see \JobMetric\Flow\Services\FlowTransitionManager
+ * @see \JobMetric\Flow\Services\FlowTransition
  */
 class FlowTransition extends Facade
 {
@@ -21,6 +21,6 @@ class FlowTransition extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \JobMetric\Flow\Services\FlowTransitionManager::class;
+        return \JobMetric\Flow\Services\FlowTransition::class;
     }
 }

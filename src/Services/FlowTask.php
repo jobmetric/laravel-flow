@@ -13,7 +13,7 @@ use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Metadata\Metadata;
 use Str;
 
-class FlowTaskManager
+class FlowTask
 {
     /**
      * The application instance.

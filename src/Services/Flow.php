@@ -6,14 +6,17 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\Flow\FlowDeleteEvent;
 use JobMetric\Flow\Events\Flow\FlowForceDeleteEvent;
 use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
 use JobMetric\Flow\Events\Flow\FlowStoreEvent;
 use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
+use JobMetric\Flow\Exceptions\InvalidActiveWindowException;
+use JobMetric\Flow\Exceptions\InvalidRolloutException;
 use JobMetric\Flow\Http\Resources\FlowResource;
-use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\Flow as FlowModel;
 use JobMetric\Flow\Models\FlowState;
 use JobMetric\Flow\Models\FlowTransition;
 use JobMetric\Flow\Support\FlowPicker;
@@ -24,7 +27,7 @@ use JobMetric\PackageCore\Services\AbstractCrudService;
 use Throwable;
 
 /**
- * Class FlowManager
+ * Class Flow
  *
  * Flow CRUD service built on top of AbstractCrudService.
  * - Uses Laravel API Resources (FlowResource) for output
@@ -34,7 +37,7 @@ use Throwable;
  * - Adds a toggleStatus() helper
  * - Provides driver resolution helpers
  */
-class FlowManager extends AbstractCrudService
+class Flow extends AbstractCrudService
 {
     /**
      * Enable soft-deletes + restore/forceDelete APIs.
@@ -55,7 +58,7 @@ class FlowManager extends AbstractCrudService
      *
      * @var class-string
      */
-    protected static string $modelClass = Flow::class;
+    protected static string $modelClass = FlowModel::class;
     protected static string $resourceClass = FlowResource::class;
 
     /**
@@ -98,7 +101,7 @@ class FlowManager extends AbstractCrudService
      */
     protected function afterStore(Model $model, array &$data): void
     {
-        /** @var Flow $flow */
+        /** @var FlowModel $flow */
         $flow = $model;
 
         // Get active languages
@@ -193,8 +196,8 @@ class FlowManager extends AbstractCrudService
     public function toggleStatus(int $flowId, array $with = []): Response
     {
         return DB::transaction(function () use ($flowId, $with) {
-            /** @var Flow $flow */
-            $flow = Flow::query()->findOrFail($flowId);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->findOrFail($flowId);
 
             $flow->status = !$flow->status;
             $flow->save();
@@ -250,10 +253,10 @@ class FlowManager extends AbstractCrudService
     public function setDefault(int $flowId, array $with = []): Response
     {
         return DB::transaction(function () use ($flowId, $with) {
-            /** @var Flow $flow */
-            $flow = Flow::query()->findOrFail($flowId);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->findOrFail($flowId);
 
-            $query = Flow::query()->where('subject_type', $flow->subject_type)
+            $query = FlowModel::query()->where('subject_type', $flow->subject_type)
                 ->where('version', $flow->version);
 
             if (is_null($flow->subject_scope)) {
@@ -289,11 +292,11 @@ class FlowManager extends AbstractCrudService
     public function setActiveWindow(int $flowId, ?Carbon $from, ?Carbon $to, array $with = []): Response
     {
         return DB::transaction(function () use ($flowId, $from, $to, $with) {
-            /** @var Flow $flow */
-            $flow = Flow::query()->findOrFail($flowId);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->findOrFail($flowId);
 
             if ($from && $to && $from->greaterThan($to)) {
-                return Response::make(false, trans('workflow::base.messages.invalid_active_window'));
+                throw new InvalidActiveWindowException;
             }
 
             $flow->active_from = $from;
@@ -320,13 +323,13 @@ class FlowManager extends AbstractCrudService
      */
     public function setRollout(int $flowId, ?int $pct, array $with = []): Response
     {
-        return DB::transaction(function () use ($flowId, $pct, $with) {
+        return DB::transaction(callback: function () use ($flowId, $pct, $with) {
             if (!is_null($pct) && ($pct < 0 || $pct > 100)) {
-                return Response::make(false, trans('workflow::base.messages.invalid_rollout'));
+                throw new InvalidRolloutException;
             }
 
-            /** @var Flow $flow */
-            $flow = Flow::query()->findOrFail($flowId);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->findOrFail($flowId);
             $flow->rollout_pct = $pct;
             $flow->save();
 
@@ -351,7 +354,7 @@ class FlowManager extends AbstractCrudService
         return DB::transaction(function () use ($orderedIds) {
             $position = 1;
             foreach ($orderedIds as $id) {
-                Flow::query()->whereKey($id)->update(['ordering' => $position++]);
+                FlowModel::query()->whereKey($id)->update(['ordering' => $position++]);
             }
 
             $this->forgetCache();
@@ -377,8 +380,8 @@ class FlowManager extends AbstractCrudService
     public function duplicate(int $flowId, array $overrides = [], bool $withGraph = true, array $with = []): Response
     {
         return DB::transaction(function () use ($flowId, $overrides, $withGraph, $with) {
-            /** @var Flow $flow */
-            $flow = Flow::query()->with(['states', 'transitions'])->findOrFail($flowId);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->with(['states', 'transitions'])->findOrFail($flowId);
 
             $data = array_merge($flow->toArray(), $overrides, [
                 'id' => null,
@@ -387,8 +390,8 @@ class FlowManager extends AbstractCrudService
                 'version' => ($flow->version ?? 1) + 1,
             ]);
 
-            /** @var Flow $copy */
-            $copy = Flow::query()->create(collect($data)->only([
+            /** @var FlowModel $copy */
+            $copy = FlowModel::query()->create(collect($data)->only([
                 'subject_type',
                 'subject_scope',
                 'subject_collection',
@@ -473,6 +476,7 @@ class FlowManager extends AbstractCrudService
      * @param int $flowId The target flow identifier to validate.
      *
      * @return Response
+     * @throws Throwable
      */
     public function validateConsistency(int $flowId): Response
     {
@@ -484,7 +488,7 @@ class FlowManager extends AbstractCrudService
         // Exactly one START
         $startStates = $states->where('type', FlowStateTypeEnum::START());
         if ($startStates->count() !== 1) {
-            $errors[] = trans('workflow::base.validation.start_required');
+            $errors['flow'][] = trans('workflow::base.validation.start_required');
         }
 
         // START must not have incoming transitions
@@ -492,7 +496,7 @@ class FlowManager extends AbstractCrudService
             $startId = $startStates->first()->id;
 
             // Prefer relation if it exists
-            $flow = Flow::query()->find($flowId);
+            $flow = FlowModel::query()->find($flowId);
 
             if ($flow && method_exists($flow, 'transitions')) {
                 $incomingCount = (int)$flow->transitions()->where('to', $startId)->count();
@@ -504,13 +508,15 @@ class FlowManager extends AbstractCrudService
             }
 
             if ($incomingCount > 0) {
-                $errors[] = trans('workflow::base.validation.start_must_not_have_incoming');
+                $errors['flow'][] = trans('workflow::base.validation.start_must_not_have_incoming');
             }
         }
 
-        return $errors
-            ? Response::make(false, trans('workflow::base.messages.flow_invalid'), ['errors' => $errors])
-            : Response::make(true, trans('workflow::base.messages.flow_valid'));
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return Response::make(true, trans('workflow::base.messages.flow_valid'));
     }
 
     /**
@@ -519,9 +525,9 @@ class FlowManager extends AbstractCrudService
      * @param Model $subject
      * @param callable(FlowPickerBuilder):void|null $tuner
      *
-     * @return Flow|null
+     * @return FlowModel|null
      */
-    public function previewPick(Model $subject, ?callable $tuner = null): ?Flow
+    public function previewPick(Model $subject, ?callable $tuner = null): ?FlowModel
     {
         $builder = new FlowPickerBuilder();
 
@@ -554,8 +560,8 @@ class FlowManager extends AbstractCrudService
      */
     public function export(int $flowId, bool $withGraph = true): array
     {
-        /** @var Flow $flow */
-        $flow = Flow::query()
+        /** @var FlowModel $flow */
+        $flow = FlowModel::query()
             ->when($withGraph, fn($q) => $q->with(['states', 'transitions']))
             ->findOrFail($flowId);
 
@@ -586,10 +592,10 @@ class FlowManager extends AbstractCrudService
      * @param array $payload
      * @param array $overrides
      *
-     * @return Flow
+     * @return FlowModel
      * @throws Throwable
      */
-    public function import(array $payload, array $overrides = []): Flow
+    public function import(array $payload, array $overrides = []): FlowModel
     {
         return DB::transaction(function () use ($payload, $overrides) {
             $flowData = array_merge($payload['flow'] ?? [], $overrides, [
@@ -597,8 +603,8 @@ class FlowManager extends AbstractCrudService
                 'status' => $overrides['status'] ?? false,
             ]);
 
-            /** @var Flow $flow */
-            $flow = Flow::query()->create($flowData);
+            /** @var FlowModel $flow */
+            $flow = FlowModel::query()->create($flowData);
 
             $stateIdMap = [];
             foreach ($payload['states'] ?? [] as $state) {

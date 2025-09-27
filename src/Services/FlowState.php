@@ -2,64 +2,33 @@
 
 namespace JobMetric\Flow\Services;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowState\FlowStateDeleteEvent;
 use JobMetric\Flow\Events\FlowState\FlowStateStoreEvent;
 use JobMetric\Flow\Events\FlowState\FlowStateUpdateEvent;
-use JobMetric\Flow\Exceptions\FlowInactiveException;
-use JobMetric\Flow\Exceptions\FlowStateInvalidTypeException;
-use JobMetric\Flow\Exceptions\FlowStateStartTypeIsExistException;
-use JobMetric\Flow\Exceptions\FlowStateStartTypeIsNotChangeException;
-use JobMetric\Flow\Exceptions\FlowStateStartTypeIsNotDeleteException;
-use JobMetric\Flow\Exceptions\FlowStatusInvalidException;
+use JobMetric\Flow\Exceptions\Old\FlowInactiveException;
+use JobMetric\Flow\Exceptions\Old\FlowStateInvalidTypeException;
+use JobMetric\Flow\Exceptions\Old\FlowStateStartTypeIsExistException;
+use JobMetric\Flow\Exceptions\Old\FlowStateStartTypeIsNotChangeException;
+use JobMetric\Flow\Exceptions\Old\FlowStateStartTypeIsNotDeleteException;
+use JobMetric\Flow\Exceptions\Old\FlowStatusInvalidException;
 use JobMetric\Flow\Facades\Flow;
-use JobMetric\Flow\Models\FlowState;
+use JobMetric\Flow\Models\FlowState as FlowStateModel;
 use JobMetric\Metadata\Metadata;
 
-class FlowStateManager
+class FlowState
 {
-    /**
-     * The application instance.
-     *
-     * @var Application
-     */
-    protected Application $app;
-
-    /**
-     * The metadata instance.
-     *
-     * @var Metadata
-     */
-    protected Metadata $metadata;
-
-    /**
-     * Create a new Translation instance.
-     *
-     * @param Application $app
-     *
-     * @return void
-     * @throws BindingResolutionException
-     */
-    public function __construct(Application $app)
-    {
-        $this->app = $app;
-
-        $this->Metadata = $app->make('Metadata');
-    }
-
     /**
      * store flow state
      *
      * @param int $flow_id
      * @param array $data
      *
-     * @return FlowState
-     * @throws FlowInactiveException
-     * @throws FlowStateStartTypeIsExistException
+     * @return FlowStateModel
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowStateStartTypeIsExistException
      */
-    public function store(int $flow_id, array $data): FlowState
+    public function store(int $flow_id, array $data): FlowStateModel
     {
         $flow = Flow::show($flow_id);
 
@@ -91,15 +60,15 @@ class FlowStateManager
      * @param int|null $flow_state_id
      * @param array $with
      *
-     * @return ?FlowState
+     * @return ?FlowStateModel
      */
-    public function show(int|null $flow_state_id, array $with = []): ?FlowState
+    public function show(int|null $flow_state_id, array $with = []): ?FlowStateModel
     {
         if(is_null($flow_state_id)) {
             return null;
         }
 
-        return FlowState::findOrFail($flow_state_id)->load($with);
+        return FlowStateModel::findOrFail($flow_state_id)->load($with);
     }
 
     /**
@@ -108,12 +77,12 @@ class FlowStateManager
      * @param int $flow_state_id
      * @param array $data
      *
-     * @return FlowState
-     * @throws FlowStateInvalidTypeException
-     * @throws FlowStatusInvalidException
-     * @throws FlowStateStartTypeIsNotChangeException
+     * @return FlowStateModel
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowStateInvalidTypeException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowStatusInvalidException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowStateStartTypeIsNotChangeException
      */
-    public function update(int $flow_state_id, array $data = []): FlowState
+    public function update(int $flow_state_id, array $data = []): FlowStateModel
     {
         $flowState = $this->show($flow_state_id);
 
@@ -161,10 +130,10 @@ class FlowStateManager
      *
      * @param int $flow_state_id
      *
-     * @return FlowState
+     * @return FlowStateModel
      * @throws FlowStateStartTypeIsNotDeleteException
      */
-    public function delete(int $flow_state_id): FlowState
+    public function delete(int $flow_state_id): FlowStateModel
     {
         // todo: check dependencies
 

@@ -7,23 +7,23 @@ use Illuminate\Contracts\Foundation\Application;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
-use JobMetric\Flow\Exceptions\FlowInactiveException;
-use JobMetric\Flow\Exceptions\FlowTransitionExistException;
-use JobMetric\Flow\Exceptions\FlowTransitionFromNotSetException;
-use JobMetric\Flow\Exceptions\FlowTransitionFromStateStartNotMoveException;
-use JobMetric\Flow\Exceptions\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
-use JobMetric\Flow\Exceptions\FlowTransitionInvalidException;
-use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstStateException;
-use JobMetric\Flow\Exceptions\FlowTransitionSlugExistException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateDriverFromAndToNotEqualException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateEndNotInFromException;
-use JobMetric\Flow\Exceptions\FlowTransitionStateStartNotInToException;
-use JobMetric\Flow\Exceptions\FlowTransitionToNotSetException;
+use JobMetric\Flow\Exceptions\Old\FlowInactiveException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionExistException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionFromNotSetException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionNotStoreBeforeFirstStateException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateDriverFromAndToNotEqualException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateEndNotInFromException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException;
+use JobMetric\Flow\Exceptions\Old\FlowTransitionToNotSetException;
 use JobMetric\Flow\Facades\Flow;
 use JobMetric\Flow\Models\FlowTransition;
 use JobMetric\Metadata\Metadata;
 
-class FlowTransitionManager
+class FlowTransition
 {
     use ExceptionTrait;
 
@@ -63,16 +63,16 @@ class FlowTransitionManager
      * @param array $data
      *
      * @return FlowTransition
-     * @throws FlowInactiveException
-     * @throws FlowTransitionSlugExistException
-     * @throws FlowTransitionInvalidException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException
      * @throws FlowTransitionStateEndNotInFromException
      * @throws FlowTransitionFromNotSetException
      * @throws FlowTransitionToNotSetException
-     * @throws FlowTransitionStateStartNotInToException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException
      * @throws FlowTransitionStateDriverFromAndToNotEqualException
      * @throws FlowTransitionExistException
-     * @throws FlowTransitionNotStoreBeforeFirstStateException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionNotStoreBeforeFirstStateException
      */
     public function store(int $flow_id, array $data): FlowTransition
     {
@@ -122,14 +122,14 @@ class FlowTransitionManager
      * @param array $data
      *
      * @return FlowTransition
-     * @throws FlowInactiveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
      * @throws FlowTransitionInvalidException
      * @throws FlowTransitionStateEndNotInFromException
      * @throws FlowTransitionStateStartNotInToException
      * @throws FlowTransitionStateDriverFromAndToNotEqualException
-     * @throws FlowTransitionExistException
-     * @throws FlowTransitionSlugExistException
-     * @throws FlowTransitionFromStateStartNotMoveException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionExistException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException
      */
     public function update(int $flow_transition_id, array $data = []): FlowTransition
     {
@@ -177,7 +177,7 @@ class FlowTransitionManager
      * @param int $flow_transition_id
      *
      * @return FlowTransition
-     * @throws FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
+     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
      */
     public function delete(int $flow_transition_id): FlowTransition
     {
