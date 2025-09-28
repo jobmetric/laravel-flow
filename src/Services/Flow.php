@@ -24,6 +24,7 @@ use JobMetric\Flow\Support\FlowPickerBuilder;
 use JobMetric\Language\Facades\Language;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
+use JobMetric\Translation\Rules\TranslationFieldExistRule;
 use Throwable;
 
 /**
@@ -39,6 +40,8 @@ use Throwable;
  */
 class Flow extends AbstractCrudService
 {
+    use InvalidatesFlowCache;
+
     /**
      * Enable soft-deletes + restore/forceDelete APIs.
      *
@@ -92,6 +95,119 @@ class Flow extends AbstractCrudService
     protected static ?string $forceDeleteEventClass = FlowForceDeleteEvent::class;
 
     /**
+     * Mutate/normalize payload before create.
+     *
+     * @param array $data
+     *
+     * @return void
+     * @throws Throwable
+     */
+    protected function changeFieldStore(array &$data): void
+    {
+        if (empty($data['translation']) || !is_array($data['translation'])) {
+            throw ValidationException::withMessages([
+                'translation' => [trans('workflow::base.validation.flow.translation_name_required')],
+            ]);
+        }
+
+        $locales = Language::all([
+            'status' => true
+        ])->pluck('locale')->all();
+
+        $normalized = [];
+        foreach ($locales as $locale) {
+            $fields = (array)($data['translation'][$locale] ?? []);
+            $name = trim((string)($fields['name'] ?? ''));
+
+            if ($name === '') {
+                throw ValidationException::withMessages([
+                    'translation' => [trans('workflow::base.validation.flow.translation_name_required')],
+                ]);
+            }
+
+            $uniqueRule = new TranslationFieldExistRule(
+                FlowModel::class,
+                'name',
+                $locale,
+                null,
+                -1,
+                [],
+                'workflow::base.fields.name'
+            );
+            if (!$uniqueRule->passes("translation.$locale.name", $name)) {
+                throw ValidationException::withMessages([
+                    "translation.$locale.name" => [$uniqueRule->message()],
+                ]);
+            }
+
+            $normalized[$locale] = [
+                'name' => $name,
+                'description' => $fields['description'] ?? null,
+            ];
+        }
+
+        $data['translation'] = $normalized;
+    }
+
+    /**
+     * Mutate/normalize payload before update.
+     *
+     * @param Model $model
+     * @param array $data
+     *
+     * @return void
+     * @throws Throwable
+     */
+    protected function changeFieldUpdate(Model $model, array &$data): void
+    {
+        /** @var FlowModel $flow */
+        $flow = $model;
+
+        if (array_key_exists('translation', $data) && is_array($data['translation'])) {
+            $incoming = $data['translation'];
+            $locales = Language::all(['status' => true])->pluck('locale')->all();
+
+            $normalized = [];
+            foreach ($locales as $locale) {
+                if (!array_key_exists($locale, $incoming)) {
+                    continue;
+                }
+
+                $fields = (array)$incoming[$locale];
+                $name = trim((string)($fields['name'] ?? ''));
+
+                if ($name === '') {
+                    throw ValidationException::withMessages([
+                        'translation' => [trans('workflow::base.validation.flow_state.translation_name_required')],
+                    ]);
+                }
+
+                $uniqueRule = new TranslationFieldExistRule(
+                    FlowModel::class,
+                    'name',
+                    $locale,
+                    $flow->id,
+                    -1,
+                    [],
+                    'workflow::base.fields.name'
+                );
+                if (!$uniqueRule->passes("translation.$locale.name", $name)) {
+                    throw ValidationException::withMessages([
+                        "translation.$locale.name" => [$uniqueRule->message()],
+                    ]);
+                }
+
+                $normalized[$locale] = [
+                    'name' => $name,
+                    'description' => $fields['description'] ?? null,
+                ];
+            }
+
+            $data['translation'] = $normalized;
+        }
+    }
+
+    /**
      * Runs right after model is persisted (create).
      *
      * @param Model $model
@@ -105,15 +221,15 @@ class Flow extends AbstractCrudService
         $flow = $model;
 
         // Get active languages
-        $languages = Language::all([
+        $locales = Language::all([
             'status' => true
-        ]);
+        ])->pluck('locale')->all();
 
         $translations = [];
-        foreach ($languages as $language) {
-            $translations[$language->locale] = [
-                'name' => trans('workflow::base.states.start.name', [], $language->locale),
-                'description' => trans('workflow::base.states.start.description', [], $language->locale)
+        foreach ($locales as $locale) {
+            $translations[$locale] = [
+                'name' => trans('workflow::base.states.start.name', [], $locale),
+                'description' => trans('workflow::base.states.start.description', [], $locale)
             ];
         }
 
@@ -642,16 +758,5 @@ class Flow extends AbstractCrudService
 
             return $flow;
         });
-    }
-
-    /**
-     * Forget caches related to flow picking/registry (called after mutations).
-     *
-     * @return void
-     */
-    protected function forgetCache(): void
-    {
-        cache()->forget('flows');
-        cache()->forget('flow.pick');
     }
 }
