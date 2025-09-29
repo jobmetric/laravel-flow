@@ -2,195 +2,155 @@
 
 namespace JobMetric\Flow\Services;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Foundation\Application;
-use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
-use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
-use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
-use JobMetric\Flow\Exceptions\Old\FlowInactiveException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionExistException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionFromNotSetException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionNotStoreBeforeFirstStateException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionStateDriverFromAndToNotEqualException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionStateEndNotInFromException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException;
-use JobMetric\Flow\Exceptions\Old\FlowTransitionToNotSetException;
-use JobMetric\Flow\Facades\Flow;
-use JobMetric\Flow\Models\FlowTransition;
-use JobMetric\Metadata\Metadata;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use JobMetric\Flow\Http\Resources\FlowTransitionResource;
+use JobMetric\Flow\Models\FlowTransition as FlowTransitionModel;
+use JobMetric\PackageCore\Output\Response;
+use JobMetric\PackageCore\Services\AbstractCrudService;
+use Throwable;
 
-class FlowTransition
+class FlowTransition extends AbstractCrudService
 {
-    use ExceptionTrait;
+    use InvalidatesFlowCache;
 
     /**
-     * The application instance.
+     * Translation key for entity name used in responses.
      *
-     * @var Application
+     * @var string
      */
-    protected Application $app;
+    protected string $entityName = 'workflow::base.entity_names.flow_transition';
 
     /**
-     * The metadata instance.
+     * Bound Eloquent model.
      *
-     * @var Metadata
+     * @var class-string
      */
-    protected Metadata $metadata;
+    protected static string $modelClass = FlowTransitionModel::class;
 
     /**
-     * Create a new Translation instance.
+     * Bound API Resource.
      *
-     * @param Application $app
-     *
-     * @return void
-     * @throws BindingResolutionException
+     * @var class-string
      */
-    public function __construct(Application $app)
-    {
-        $this->app = $app;
-
-        $this->Metadata = $app->make('Metadata');
-    }
+    protected static string $resourceClass = FlowTransitionResource::class;
 
     /**
-     * store flow transition
+     * Allowed fields for query builder (select/filter/sort).
      *
-     * @param int $flow_id
+     * @var string[]
+     */
+    protected static array $fields = [
+        'id',
+        'flow_id',
+        'from',
+        'to',
+        'slug',
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Create a new transition after enforcing invariants.
+     *
      * @param array $data
-     *
-     * @return FlowTransition
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionInvalidException
-     * @throws FlowTransitionStateEndNotInFromException
-     * @throws FlowTransitionFromNotSetException
-     * @throws FlowTransitionToNotSetException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionStateStartNotInToException
-     * @throws FlowTransitionStateDriverFromAndToNotEqualException
-     * @throws FlowTransitionExistException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionNotStoreBeforeFirstStateException
-     */
-    public function store(int $flow_id, array $data): FlowTransition
-    {
-        $flow = Flow::show($flow_id);
-
-        // add checker
-        $this->checkFlowInactive($flow);
-        $this->checkSlugExist($flow, $data);
-        $this->checkFromExist($data);
-        $this->checkToExist($data);
-        $this->checkFromAndToExist($data);
-        $this->checkFromAndToIsEqual($data);
-        $this->checkStateEndNotInFrom($data);
-        $this->checkStateStartNotInTo($data);
-        $this->checkStateDriverFromAndToNotEqual($data);
-        $this->checkTransitionExist($data);
-        $this->checkNotStoreBeforeFirstTransition($flow, $data);
-
-        $flowTransition = $flow->transitions()->create([
-            'from' => $data['from'],
-            'to' => $data['to'],
-            'slug' => $data['slug'] ?? null,
-        ]);
-
-        event(new FlowTransitionStoreEvent($flowTransition));
-
-        return $flowTransition;
-    }
-
-    /**
-     * show flow transition
-     *
-     * @param int $flow_transition_id
      * @param array $with
      *
-     * @return FlowTransition
+     * @return Response
+     * @throws Throwable
      */
-    public function show(int $flow_transition_id, array $with = []): FlowTransition
+    public function doStore(array $data, array $with = []): Response
     {
-        return FlowTransition::findOrFail($flow_transition_id)->load($with);
+        $normalized = DB::transaction(function () use ($data) {
+            return app(Pipeline::class)
+                ->send($data)
+                ->through([
+
+                ])
+                ->thenReturn();
+        });
+
+        return parent::store($normalized, $with);
     }
 
     /**
-     * update flow transition
+     * Update a transition after enforcing invariants.
      *
-     * @param int $flow_transition_id
+     * @param int $id
+     * @param array $data
+     * @param array $with
+     *
+     * @return Response
+     * @throws Throwable
+     */
+    public function doUpdate(int $id, array $data, array $with = []): Response
+    {
+        $normalized = DB::transaction(function () use ($id, $data) {
+            return app(Pipeline::class)
+                ->send([
+                    'id' => $id,
+                    ...Arr::except($data, ['id']),
+                ])
+                ->through([
+
+                ])
+                ->thenReturn();
+        });
+
+        return parent::update($id, $normalized, $with);
+    }
+
+    /**
+     * Delete a transition after enforcing invariants.
+     *
+     * @param int $id
+     * @param array $with
+     *
+     * @return Response
+     * @throws Throwable
+     */
+    public function doDestroy(int $id, array $with = []): Response
+    {
+        return parent::destroy($id, $with);
+    }
+
+    /**
+     * Runs right after model is persisted (create).
+     *
+     * @param Model $model
      * @param array $data
      *
-     * @return FlowTransition
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
-     * @throws FlowTransitionInvalidException
-     * @throws FlowTransitionStateEndNotInFromException
-     * @throws FlowTransitionStateStartNotInToException
-     * @throws FlowTransitionStateDriverFromAndToNotEqualException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionExistException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionSlugExistException
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException
+     * @return void
      */
-    public function update(int $flow_transition_id, array $data = []): FlowTransition
+    protected function afterStore(Model $model, array &$data): void
     {
-        $flowTransition = $this->show($flow_transition_id, ['flow']);
-
-        $this->checkFlowInactive($flowTransition->flow);
-
-        if (array_key_exists('from', $data)) {
-            $this->checkStateEndNotInFrom($data);
-            $this->checkFromStateStartNotMove($flowTransition, $data);
-
-            $flowTransition->from = $data['from'];
-        }
-
-        if (array_key_exists('to', $data)) {
-            $this->checkStateStartNotInTo($data);
-
-            $flowTransition->to = $data['to'];
-        }
-
-        $this->checkFromAndToIsEqual($data);
-        $this->checkStateDriverFromAndToNotEqual($data);
-        $this->checkTransitionExist($data, $flow_transition_id);
-
-        if (isset($data['slug'])) {
-            $this->checkSlugExist($flowTransition->flow, $data, $flow_transition_id);
-
-            $flowTransition->slug = $data['slug'];
-        }
-
-        if (isset($data['role_id'])) {
-            $flowTransition->role_id = $data['role_id'];
-        }
-
-        $flowTransition->save();
-
-        event(new FlowTransitionUpdateEvent($flowTransition, $data));
-
-        return $flowTransition;
+        $this->forgetCache();
     }
 
     /**
-     * delete flow transition
+     * Runs right after model is persisted (update).
      *
-     * @param int $flow_transition_id
+     * @param Model $model
+     * @param array $data
      *
-     * @return FlowTransition
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowTransitionHaveAtLeastOneTransitionFromTheStartBeginningException
+     * @return void
      */
-    public function delete(int $flow_transition_id): FlowTransition
+    protected function afterUpdate(Model $model, array &$data): void
     {
-        $flow_transition = $this->show($flow_transition_id);
+        $this->forgetCache();
+    }
 
-        $this->checkTransitionHaveAtLeastOneTransitionFromTheStartBeginning($flow_transition);
-
-        // @todo: before delete remove tasks
-
-        $flow_transition->delete();
-
-        event(new FlowTransitionDeleteEvent($flow_transition));
-
-        return $flow_transition;
+    /**
+     * Runs right after deletion.
+     *
+     * @param Model $model
+     *
+     * @return void
+     */
+    protected function afterDestroy(Model $model): void
+    {
+        $this->forgetCache();
     }
 }
