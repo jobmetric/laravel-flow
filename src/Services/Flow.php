@@ -14,7 +14,10 @@ use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
 use JobMetric\Flow\Events\Flow\FlowStoreEvent;
 use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
 use JobMetric\Flow\Exceptions\InvalidActiveWindowException;
-use JobMetric\Flow\Exceptions\InvalidRolloutException;
+use JobMetric\Flow\Http\Requests\Flow\ReorderFlowRequest;
+use JobMetric\Flow\Http\Requests\Flow\SetRolloutRequest;
+use JobMetric\Flow\Http\Requests\Flow\StoreFlowRequest;
+use JobMetric\Flow\Http\Requests\Flow\UpdateFlowRequest;
 use JobMetric\Flow\Http\Resources\FlowResource;
 use JobMetric\Flow\Models\Flow as FlowModel;
 use JobMetric\Flow\Models\FlowState;
@@ -24,7 +27,6 @@ use JobMetric\Flow\Support\FlowPickerBuilder;
 use JobMetric\Language\Facades\Language;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
-use JobMetric\Translation\Rules\TranslationFieldExistRule;
 use Throwable;
 
 /**
@@ -104,49 +106,7 @@ class Flow extends AbstractCrudService
      */
     protected function changeFieldStore(array &$data): void
     {
-        if (empty($data['translation']) || !is_array($data['translation'])) {
-            throw ValidationException::withMessages([
-                'translation' => [trans('workflow::base.validation.flow.translation_name_required')],
-            ]);
-        }
-
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
-
-        $normalized = [];
-        foreach ($locales as $locale) {
-            $fields = (array)($data['translation'][$locale] ?? []);
-            $name = trim((string)($fields['name'] ?? ''));
-
-            if ($name === '') {
-                throw ValidationException::withMessages([
-                    'translation' => [trans('workflow::base.validation.flow.translation_name_required')],
-                ]);
-            }
-
-            $uniqueRule = new TranslationFieldExistRule(
-                FlowModel::class,
-                'name',
-                $locale,
-                null,
-                -1,
-                [],
-                'workflow::base.fields.name'
-            );
-            if (!$uniqueRule->passes("translation.$locale.name", $name)) {
-                throw ValidationException::withMessages([
-                    "translation.$locale.name" => [$uniqueRule->message()],
-                ]);
-            }
-
-            $normalized[$locale] = [
-                'name' => $name,
-                'description' => $fields['description'] ?? null,
-            ];
-        }
-
-        $data['translation'] = $normalized;
+        $data = dto($data, StoreFlowRequest::class);
     }
 
     /**
@@ -163,48 +123,9 @@ class Flow extends AbstractCrudService
         /** @var FlowModel $flow */
         $flow = $model;
 
-        if (array_key_exists('translation', $data) && is_array($data['translation'])) {
-            $incoming = $data['translation'];
-            $locales = Language::all(['status' => true])->pluck('locale')->all();
-
-            $normalized = [];
-            foreach ($locales as $locale) {
-                if (!array_key_exists($locale, $incoming)) {
-                    continue;
-                }
-
-                $fields = (array)$incoming[$locale];
-                $name = trim((string)($fields['name'] ?? ''));
-
-                if ($name === '') {
-                    throw ValidationException::withMessages([
-                        'translation' => [trans('workflow::base.validation.flow_state.translation_name_required')],
-                    ]);
-                }
-
-                $uniqueRule = new TranslationFieldExistRule(
-                    FlowModel::class,
-                    'name',
-                    $locale,
-                    $flow->id,
-                    -1,
-                    [],
-                    'workflow::base.fields.name'
-                );
-                if (!$uniqueRule->passes("translation.$locale.name", $name)) {
-                    throw ValidationException::withMessages([
-                        "translation.$locale.name" => [$uniqueRule->message()],
-                    ]);
-                }
-
-                $normalized[$locale] = [
-                    'name' => $name,
-                    'description' => $fields['description'] ?? null,
-                ];
-            }
-
-            $data['translation'] = $normalized;
-        }
+        $data = dto($data, UpdateFlowRequest::class, [
+            'flow_id' => $flow->id
+        ]);
     }
 
     /**
@@ -439,11 +360,13 @@ class Flow extends AbstractCrudService
      */
     public function setRollout(int $flowId, ?int $pct, array $with = []): Response
     {
-        return DB::transaction(callback: function () use ($flowId, $pct, $with) {
-            if (!is_null($pct) && ($pct < 0 || $pct > 100)) {
-                throw new InvalidRolloutException;
-            }
+        $validated = dto([
+            'rollout_pct' => $pct
+        ], SetRolloutRequest::class);
 
+        $pct = $validated['rollout_pct'] ?? null;
+
+        return DB::transaction(callback: function () use ($flowId, $pct, $with) {
             /** @var FlowModel $flow */
             $flow = FlowModel::query()->findOrFail($flowId);
             $flow->rollout_pct = $pct;
@@ -467,6 +390,12 @@ class Flow extends AbstractCrudService
      */
     public function reorder(array $orderedIds): Response
     {
+        $validated = dto([
+            'ordered_ids' => $orderedIds
+        ], ReorderFlowRequest::class);
+
+        $orderedIds = $validated['ordered_ids'];
+
         return DB::transaction(function () use ($orderedIds) {
             $position = 1;
             foreach ($orderedIds as $id) {
