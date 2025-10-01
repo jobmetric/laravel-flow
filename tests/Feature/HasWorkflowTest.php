@@ -486,14 +486,14 @@ class HasWorkflowTest extends BaseTestCase
 
         // Try to force inactive -> should NOT bind due to onlyActive(true) default
         $picked1 = $order->rebindFlow(function ($b) use ($inactive) {
-            $b->forceFlowIdResolver(fn () => $inactive->id);
+            $b->forceFlowIdResolver(fn() => $inactive->id);
         });
         $this->assertNotNull($picked1); // fallback picked active/default one
         $this->assertEquals($active->id, $picked1->id);
 
         // Force active -> should bind to forced id
         $picked2 = $order->rebindFlow(function ($b) use ($active) {
-            $b->forceFlowIdResolver(fn () => $active->id);
+            $b->forceFlowIdResolver(fn() => $active->id);
         });
         $this->assertNotNull($picked2);
         $this->assertEquals($active->id, $picked2->id);
