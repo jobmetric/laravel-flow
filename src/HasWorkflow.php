@@ -333,12 +333,27 @@ trait HasWorkflow
     /**
      * get the current status value
      *
+     * Returns the current status as a scalar:
+     * - If the attribute is a Backed Enum, returns its scalar value.
+     * - If the attribute is a pure Enum, returns its case name.
+     * - Otherwise returns the raw attribute (string|int|null).
+     *
      * @return string|int|null
      */
     public function flowCurrentStatusValue(): int|string|null
     {
         $column = $this->flowStatusColumn();
 
-        return $this->getAttribute($column);
+        $current = $this->getAttribute($column);
+
+        if ($current instanceof UnitEnum) {
+            if ($current instanceof BackedEnum) {
+                return $current->value;
+            }
+
+            return $current->name;
+        }
+
+        return $current;
     }
 }
