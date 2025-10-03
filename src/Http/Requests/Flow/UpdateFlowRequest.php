@@ -44,7 +44,7 @@ class UpdateFlowRequest extends FormRequest
             'active_to' => 'sometimes|nullable|date',
 
             'channel' => 'sometimes|nullable|string|max:64',
-            'ordering' => 'sometimes|integer|min:1',
+            'ordering' => 'sometimes|integer|min:0',
             'rollout_pct' => 'sometimes|nullable|integer|between:0,100',
             'environment' => 'sometimes|nullable|string|max:64',
         ];
@@ -60,7 +60,8 @@ class UpdateFlowRequest extends FormRequest
 
                 $rules["translation.$locale"] = 'sometimes|array';
                 $rules["translation.$locale.name"] = [
-                    'required|string',
+                    'required',
+                    'string',
                     function ($attribute, $value, $fail) use ($locale) {
                         $name = trim((string)$value);
 
@@ -129,5 +130,10 @@ class UpdateFlowRequest extends FormRequest
             'rollout_pct' => trans('workflow::base.fields.rollout_pct'),
             'environment' => trans('workflow::base.fields.environment'),
         ];
+    }
+
+    public function authorize(): bool
+    {
+        return true;
     }
 }

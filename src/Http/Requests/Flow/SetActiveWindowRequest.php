@@ -50,4 +50,9 @@ class SetActiveWindowRequest extends FormRequest
             'active_to'   => trans('workflow::base.fields.active_to'),
         ];
     }
+
+    public function authorize(): bool
+    {
+        return true;
+    }
 }

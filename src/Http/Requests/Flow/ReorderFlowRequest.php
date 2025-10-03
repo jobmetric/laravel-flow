@@ -30,4 +30,9 @@ class ReorderFlowRequest extends FormRequest
             'ordered_ids' => trans('workflow::base.fields.ordered_ids'),
         ];
     }
+
+    public function authorize(): bool
+    {
+        return true;
+    }
 }

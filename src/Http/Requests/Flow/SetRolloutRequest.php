@@ -29,4 +29,9 @@ class SetRolloutRequest extends FormRequest
             'rollout_pct' => trans('workflow::base.fields.rollout_pct'),
         ];
     }
+
+    public function authorize(): bool
+    {
+        return true;
+    }
 }

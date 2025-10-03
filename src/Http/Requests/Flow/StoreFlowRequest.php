@@ -32,7 +32,7 @@ class StoreFlowRequest extends FormRequest
             'active_to' => 'nullable|date',
 
             'channel' => 'nullable|string|max:64',
-            'ordering' => 'sometimes|integer|min:1',
+            'ordering' => 'sometimes|integer|min:0',
             'rollout_pct' => 'nullable|integer|between:0,100',
             'environment' => 'nullable|string|max:64',
         ];
@@ -45,7 +45,8 @@ class StoreFlowRequest extends FormRequest
         foreach ($locales as $locale) {
             $rules["translation.$locale"] = 'required|array';
             $rules["translation.$locale.name"] = [
-                'required|string',
+                'required',
+                'string',
                 function ($attribute, $value, $fail) use ($locale) {
                     $name = trim((string)$value);
 
@@ -111,5 +112,10 @@ class StoreFlowRequest extends FormRequest
             'rollout_pct' => trans('workflow::base.fields.rollout_pct'),
             'environment' => trans('workflow::base.fields.environment'),
         ];
+    }
+
+    public function authorize(): bool
+    {
+        return true;
     }
 }
