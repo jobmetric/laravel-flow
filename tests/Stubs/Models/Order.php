@@ -43,7 +43,7 @@ class Order extends Model
      * - We use user_id as subject scope and rollout key to make selection deterministic.
      * - We prefer test/web to make ordering deterministic in tests.
      */
-    protected function buildFlowPicker(FlowPickerBuilder $builder): void
+    public function buildFlowPicker(FlowPickerBuilder $builder): void
     {
         $this->traitBuildFlowPicker($builder);
 
