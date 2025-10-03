@@ -291,23 +291,24 @@ class Flow extends AbstractCrudService
     {
         return DB::transaction(function () use ($flowId, $with) {
             /** @var FlowModel $flow */
-            $flow = FlowModel::query()->findOrFail($flowId);
+            $flow = FlowModel::query()->lockForUpdate()->findOrFail($flowId);
 
-            $query = FlowModel::query()->where('subject_type', $flow->subject_type)
-                ->where('version', $flow->version);
+            $scopeQuery = FlowModel::query()
+                ->where('subject_type', $flow->subject_type)
+                ->where('version', $flow->version)
+                ->when(
+                    is_null($flow->subject_scope),
+                    fn($q) => $q->whereNull('subject_scope'),
+                    fn($q) => $q->where('subject_scope', $flow->subject_scope)
+                );
 
-            if (is_null($flow->subject_scope)) {
-                $query->whereNull('subject_scope');
-            } else {
-                $query->where('subject_scope', $flow->subject_scope);
-            }
+            $scopeQuery->whereKeyNot($flow->getKey())->update(['is_default' => false]);
 
-            $query->update(['is_default' => false]);
-
-            $flow->is_default = true;
-            $flow->save();
+            FlowModel::query()->whereKey($flow->getKey())->update(['is_default' => true]);
 
             $this->forgetCache();
+
+            $flow->refresh();
 
             return Response::make(true, trans('workflow::base.messages.set_default', [
                 'entity' => trans('workflow::base.entity_names.flow'),
@@ -457,7 +458,7 @@ class Flow extends AbstractCrudService
                 foreach ($flow->states as $state) {
                     /** @var FlowState $newState */
                     $newState = $copy->states()->create([
-                        'translation' => $state->translation,
+                        'translation' => $state->getTranslations(),
                         'type' => $state->type,
                         'config' => $state->config,
                         'status' => $state->status,
@@ -531,7 +532,7 @@ class Flow extends AbstractCrudService
         $states = FlowState::query()->where('flow_id', $flowId)->get();
 
         // Exactly one START
-        $startStates = $states->where('type', FlowStateTypeEnum::START());
+        $startStates = $states->where('type', FlowStateTypeEnum::START);
         if ($startStates->count() !== 1) {
             $errors['flow'][] = trans('workflow::base.validation.start_required');
         }
