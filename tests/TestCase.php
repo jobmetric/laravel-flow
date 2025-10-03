@@ -4,6 +4,9 @@ namespace JobMetric\Flow\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use JobMetric\Flow\FlowServiceProvider;
+use JobMetric\Language\LanguageServiceProvider;
+use JobMetric\Language\Models\Language;
+use JobMetric\Translation\TranslationServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -13,6 +16,8 @@ class TestCase extends BaseTestCase
     protected function getPackageProviders($app): array
     {
         return [
+            LanguageServiceProvider::class,
+            TranslationServiceProvider::class,
             FlowServiceProvider::class,
         ];
     }
@@ -32,5 +37,9 @@ class TestCase extends BaseTestCase
         parent::setUp();
 
         loadMigrationPath(__DIR__ . '/database/migrations');
+
+        if (!Language::query()->exists()) {
+            Language::factory()->english()->create();
+        }
     }
 }
