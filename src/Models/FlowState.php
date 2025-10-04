@@ -179,7 +179,7 @@ class FlowState extends Model
      */
     public function scopeStart(Builder $query): Builder
     {
-        return $this->scopeOfType($query, 'start');
+        return $this->scopeOfType($query, FlowStateTypeEnum::START());
     }
 
     /**
