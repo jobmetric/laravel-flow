@@ -77,8 +77,14 @@ return [
     "validation" => [
         'start_required' => 'گردش‌کار باید دقیقاً یک وضعیت شروع داشته باشد.',
         'start_must_not_have_incoming' => 'وضعیت شروع نباید هیچ ترنزیشن ورودی داشته باشد.',
+        'flow_not_found' => 'فلو انتخاب‌شده پیدا نشد.',
+        'subject_model_invalid' => 'نوع مدل موضوع (subject_type) برای این فلو معتبر نیست.',
+        'model_must_use_has_workflow' => 'مدل :model باید از HasWorkflow استفاده کند.',
+        'status_column_missing' => 'ستون وضعیت (status) در جدول مدل موضوع وجود ندارد.',
+        'status_enum_error' => 'امکان تشخیص enum وضعیت برای مدل موضوع وجود ندارد.',
+        'status_enum_missing' => 'هیچ مقدار مجازِ وضعیت برای مدل موضوع یافت نشد.',
+        'check_status_in_driver' => 'وضعیت نامعتبر است. مقادیر مجاز: :status',
 
-        "check_status_in_driver" => "وضعیت انتخاب شده نامعتبر است، باید از موارد (:status) انتخاب کنید.",
         "check_driver_exists" => "درایور انتخاب شده :driver وجود ندارد",
     ],
 ];

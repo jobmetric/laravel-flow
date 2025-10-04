@@ -77,8 +77,14 @@ return [
     "validation" => [
         "start_required" => "Flow must have exactly one START state.",
         "start_must_not_have_incoming" => "START state must not have incoming transitions.",
+        'flow_not_found' => 'The selected flow was not found.',
+        'subject_model_invalid' => 'The subject model type defined for this flow is invalid.',
+        'model_must_use_has_workflow' => 'Model :model must use the HasWorkflow trait.',
+        'status_column_missing' => 'The required status column is missing on the subject model table.',
+        'status_enum_error' => 'Could not resolve the status enum for the subject model.',
+        'status_enum_missing' => 'No allowed status values were found for the subject model.',
+        'check_status_in_driver' => 'Invalid status. Allowed values: :status',
 
-        "check_status_in_driver" => "The selected status is invalid, you must select from (:status) items.",
         "check_driver_exists" => "The selected driver :driver does not exists",
     ],
 ];
