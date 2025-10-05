@@ -421,13 +421,13 @@ class FlowServiceTest extends BaseTestCase
         $ok = $flowService->validateConsistency($flowId);
         $this->assertTrue($ok->ok);
 
-        $middleRes = $stateService->doStore([
+        $middleRes = $stateService->store([
             'flow_id' => $flowId,
             'translation' => [
                 'en' => ['name' => 'Middle', 'description' => 'Mid'],
             ],
             'is_terminal' => false,
-            'status' => 'middle',
+            'status' => 'pending',
         ]);
         $this->assertTrue($middleRes->ok);
 

@@ -6,48 +6,44 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
+use JobMetric\Flow\Events\FlowState\FlowStateDeleteEvent;
+use JobMetric\Flow\Events\FlowState\FlowStateStoreEvent;
+use JobMetric\Flow\Events\FlowState\FlowStateUpdateEvent;
+use JobMetric\Flow\Http\Requests\FlowState\StoreFlowStateRequest;
+use JobMetric\Flow\Http\Requests\FlowState\UpdateFlowStateRequest;
 use JobMetric\Flow\Http\Resources\FlowStateResource;
 use JobMetric\Flow\Models\FlowState as FlowStateModel;
-use JobMetric\Flow\Models\FlowTransition;
-use JobMetric\Language\Facades\Language;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
-use JobMetric\Translation\Rules\TranslationFieldExistRule;
 use Throwable;
 
 /**
  * Class FlowState
  *
- * Minimal CRUD service for FlowState with all business rules enforced inside
- * doStore, doUpdate, and doDestroy.
+ * CRUD service for FlowState. Uses changeFieldStore/changeFieldUpdate with dto()
+ * just like Flow service. Business rules remain minimal and localized.
  */
 class FlowState extends AbstractCrudService
 {
     use InvalidatesFlowCache;
 
     /**
-     * Translation key for entity name used in responses.
+     * Human-readable entity name key used in response messages.
      *
      * @var string
      */
     protected string $entityName = 'workflow::base.entity_names.flow_state';
 
     /**
-     * Bound Eloquent model.
+     * Bound model/resource classes for the base CRUD.
      *
      * @var class-string
      */
     protected static string $modelClass = FlowStateModel::class;
-
-    /**
-     * Bound API Resource.
-     *
-     * @var class-string
-     */
     protected static string $resourceClass = FlowStateResource::class;
 
     /**
-     * Allowed fields for query builder (select/filter/sort).
+     * Allowed fields for selection/filter/sort in QueryBuilder.
      *
      * @var string[]
      */
@@ -62,196 +58,93 @@ class FlowState extends AbstractCrudService
     ];
 
     /**
-     * Create a state with validations and config normalization.
+     * Domain events mapping for CRUD lifecycle.
      *
-     * @param array $data
-     * @param array $with
+     * @var class-string|null
+     */
+    protected static ?string $storeEventClass = FlowStateStoreEvent::class;
+    protected static ?string $updateEventClass = FlowStateUpdateEvent::class;
+    protected static ?string $deleteEventClass = FlowStateDeleteEvent::class;
+
+    /**
+     * Validate & normalize payload before create.
      *
-     * @return Response
+     * Role: ensures a clean, validated input for store().
+     *
+     * @param array<string,mixed> $data
+     *
+     * @return void
      * @throws Throwable
      */
-    public function doStore(array $data, array $with = []): Response
+    protected function changeFieldStore(array &$data): void
     {
-        if (empty($data['flow_id'])) {
-            throw ValidationException::withMessages([
-                'flow_id' => [
-                    trans('workflow::base.validation.flow_state.flow_id_required')
-                ],
-            ]);
-        }
+        $data = dto($data, StoreFlowStateRequest::class, [
+            'flow_id' => $data['flow_id'] ?? null,
+        ]);
 
-        if (empty($data['translation']) || !is_array($data['translation'])) {
-            throw ValidationException::withMessages([
-                'translation' => [
-                    trans('workflow::base.validation.flow_state.translation_name_required')
-                ],
-            ]);
-        }
-
+        // Force STATE type on store (type is not user-provided).
         $data['type'] = FlowStateTypeEnum::STATE();
 
-        // Get active languages
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
-
-        $normalized = [];
-        foreach ($locales as $locale) {
-            $fields = (array)($data['translation'][$locale] ?? []);
-
-            $name = trim((string)($fields['name'] ?? ''));
-            if ($name === '') {
-                throw ValidationException::withMessages([
-                    'translation' => [
-                        trans('workflow::base.validation.flow_state.translation_name_required')
-                    ],
-                ]);
-            }
-
-            // Unique per flow_id + locale on "name"
-            $uniqueRule = new TranslationFieldExistRule(
-                FlowStateModel::class,
-                'name',
-                $locale,
-                null,
-                -1,
-                ['flow_id' => (int)$data['flow_id']],
-                'workflow::base.fields.name'
-            );
-            if (!$uniqueRule->passes("translation.$locale.name", $name)) {
-                throw ValidationException::withMessages([
-                    "translation.$locale.name" => [$uniqueRule->message()],
-                ]);
-            }
-
-            $normalized[$locale] = [
-                'name' => $name,
-                'description' => $fields['description'] ?? null,
-            ];
-        }
-
-        $data['translation'] = $normalized;
-
-        // Pull is_terminal from request and ensure it's always present in config
         $isTerminal = (bool)($data['is_terminal'] ?? false);
         unset($data['is_terminal']);
 
         $defaults = [
             'is_terminal' => false,
-            'color' => config('flow.state.default.color', '#fff'),
-            'icon' => config('flow.state.default.icon', 'circle'),
+            'color' => config('workflow.state.middle.color'),
+            'icon' => config('workflow.state.middle.icon'),
             'position' => [
-                'x' => 0,
-                'y' => 0
+                'x' => config('workflow.state.middle.position.x'),
+                'y' => config('workflow.state.middle.position.y'),
             ],
         ];
 
         $config = is_array($data['config'] ?? null) ? $data['config'] : [];
+
         Arr::set($config, 'is_terminal', $isTerminal);
+        Arr::set($config, 'color', $data['color'] ?? ($config['color'] ?? $defaults['color']));
+        Arr::set($config, 'icon', $data['icon'] ?? ($config['icon'] ?? $defaults['icon']));
+        Arr::set($config, 'position.x', data_get($data, 'position.x', data_get($config, 'position.x', $defaults['position']['x'])));
+        Arr::set($config, 'position.y', data_get($data, 'position.y', data_get($config, 'position.y', $defaults['position']['y'])));
 
         $data['config'] = array_replace_recursive($defaults, $config);
-
-        if (!array_key_exists('is_terminal', $data['config'])) {
-            $data['config']['is_terminal'] = false;
-        }
-
-        return parent::store($data, $with);
     }
 
     /**
-     * Update a state with validations and config normalization.
+     * Validate & normalize payload before update.
      *
-     * @param int $id
-     * @param array $data
-     * @param array $with
+     * Role: aligns input with update rules for the specific FlowState.
      *
-     * @return Response
+     * @param Model $model
+     * @param array<string,mixed> $data
+     *
+     * @return void
      * @throws Throwable
      */
-    public function doUpdate(int $id, array $data, array $with = []): Response
+    protected function changeFieldUpdate(Model $model, array &$data): void
     {
         /** @var FlowStateModel $state */
-        $state = FlowStateModel::query()->findOrFail($id);
+        $state = $model;
 
-        // Prevent deactivation when any connected transition exists
-        if (array_key_exists('status', $data) && (int)$state->getAttribute('status') === 1 && (int)$data['status'] === 0) {
-            $hasConnected = FlowTransition::query()
-                ->where(function ($query) use ($id) {
-                    $query->where('from', $id)->orWhere('to', $id);
-                })
-                ->exists();
-
-            if ($hasConnected) {
-                throw ValidationException::withMessages([
-                    'status' => [
-                        trans('workflow::base.validation.flow_state.cannot_deactivate_connected')
-                    ],
-                ]);
-            }
-        }
-
-        // If translation provided, accept only active locales; require non-empty name for provided ones
-        if (array_key_exists('translation', $data) && is_array($data['translation'])) {
-            $incoming = $data['translation'];
-
-            $locales = Language::all([
-                'status' => true
-            ])->pluck('locale')->all();
-
-            $normalized = [];
-            foreach ($locales as $locale) {
-                if (!array_key_exists($locale, $incoming)) {
-                    continue;
-                }
-
-                $fields = (array)$incoming[$locale];
-                $name = trim((string)($fields['name'] ?? ''));
-                if ($name === '') {
-                    throw ValidationException::withMessages([
-                        'translation' => [
-                            trans('workflow::base.validation.flow_state.translation_name_required')
-                        ],
-                    ]);
-                }
-
-                // Unique per flow_id + locale on "name" (exclude current state)
-                $flowIdForRule = (int)($data['flow_id'] ?? $state->flow_id);
-                $uniqueRule = new TranslationFieldExistRule(
-                    FlowStateModel::class,
-                    'name',
-                    $locale,
-                    $state->id,
-                    -1,
-                    ['flow_id' => $flowIdForRule],
-                    'workflow::base.fields.name'
-                );
-                if (!$uniqueRule->passes("translation.$locale.name", $name)) {
-                    throw ValidationException::withMessages([
-                        "translation.$locale.name" => [$uniqueRule->message()],
-                    ]);
-                }
-
-                $normalized[$locale] = [
-                    'name' => $name,
-                    'description' => $fields['description'] ?? null,
-                ];
-            }
-
-            $data['translation'] = $normalized;
-        }
+        $data = dto($data, UpdateFlowStateRequest::class, [
+            'state_id' => $state->id,
+            'flow_id' => $state->flow_id,
+        ]);
 
         $defaults = [
             'is_terminal' => false,
-            'color' => config('flow.state.default.color', '#fff'),
-            'icon' => config('flow.state.default.icon', 'circle'),
+            'color' => config('workflow.state.middle.color'),
+            'icon' => config('workflow.state.middle.icon'),
             'position' => [
-                'x' => 0,
-                'y' => 0
+                'x' => config('workflow.state.middle.position.x'),
+                'y' => config('workflow.state.middle.position.y'),
             ],
         ];
 
         if (array_key_exists('is_terminal', $data)) {
-            $config = is_array($data['config'] ?? null) ? $data['config'] : ($state->config ?? []);
+            $existing = is_object($state->config ?? null) ? (array)$state->config : [];
+            $incoming = is_array($data['config'] ?? null) ? $data['config'] : [];
+
+            $config = array_replace_recursive($existing, $incoming);
 
             Arr::set($config, 'is_terminal', (bool)$data['is_terminal']);
             unset($data['is_terminal']);
@@ -259,22 +152,18 @@ class FlowState extends AbstractCrudService
             $data['config'] = array_replace_recursive($defaults, $config);
         } elseif (array_key_exists('config', $data) && is_array($data['config'])) {
             $config = array_replace_recursive($state->config ?? [], $data['config']);
-
             if (!array_key_exists('is_terminal', $config)) {
                 $config['is_terminal'] = false;
             }
-
             $data['config'] = array_replace_recursive($defaults, $config);
         }
-
-        return parent::update($id, $data, $with);
     }
 
     /**
      * Delete a state after enforcing invariants.
      *
      * @param int $id
-     * @param array $with
+     * @param array<int,string> $with
      *
      * @return Response
      * @throws Throwable
@@ -286,9 +175,7 @@ class FlowState extends AbstractCrudService
 
         if ($state->is_start) {
             throw ValidationException::withMessages([
-                'id' => [
-                    trans('workflow::base.validation.flow_state.cannot_delete_start')
-                ],
+                'id' => [trans('workflow::base.validation.flow_state.cannot_delete_start')],
             ]);
         }
 
@@ -296,10 +183,10 @@ class FlowState extends AbstractCrudService
     }
 
     /**
-     * Runs right after model is persisted (create).
+     * Hook after store: invalidate caches.
      *
      * @param Model $model
-     * @param array $data
+     * @param array<string,mixed> $data
      *
      * @return void
      */
@@ -309,11 +196,10 @@ class FlowState extends AbstractCrudService
     }
 
     /**
-     * Runs right after model is persisted (update).
+     * Hook after update: invalidate caches.
      *
      * @param Model $model
-     * @param array $data
-     *
+     * @param array<string,mixed> $data
      * @return void
      */
     protected function afterUpdate(Model $model, array &$data): void
@@ -322,31 +208,13 @@ class FlowState extends AbstractCrudService
     }
 
     /**
-     * Runs right after deletion.
+     * Hook after destroy: invalidate caches.
      *
      * @param Model $model
-     *
      * @return void
      */
     protected function afterDestroy(Model $model): void
     {
         $this->forgetCache();
-    }
-
-    /**
-     * Ensure each provided locale contains a non-empty "name".
-     *
-     * @param array $translations
-     *
-     * @return bool
-     */
-    private function translationsHaveName(array $translations): bool
-    {
-        foreach ($translations as $fields) {
-            if (!is_array($fields) || trim((string)($fields['name'] ?? '')) === '') {
-                return false;
-            }
-        }
-        return true;
     }
 }

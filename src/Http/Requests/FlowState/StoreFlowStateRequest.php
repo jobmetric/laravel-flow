@@ -2,57 +2,134 @@
 
 namespace JobMetric\Flow\Http\Requests\FlowState;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use JobMetric\Flow\Enums\FlowStateTypeEnum;
-use JobMetric\Flow\Facades\Flow as FlowFacade;
-use JobMetric\Flow\Models\Flow;
+use JobMetric\Flow\Models\FlowState as FlowStateModel;
 use JobMetric\Flow\Rules\CheckStatusInDriverRule;
+use JobMetric\Language\Facades\Language;
+use JobMetric\Translation\Rules\TranslationFieldExistRule;
 
 class StoreFlowStateRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * External context (injected via dto()).
+     *
+     * @var array<string,mixed>
      */
-    public function authorize(): bool
+    protected array $context = [];
+
+    public function setContext(array $context): void
     {
-        return true;
+        $this->context = $context;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Normalize incoming data with safe defaults.
      *
-     * @return array<string, ValidationRule|array|string>
+     * @param array<string,mixed> $data
+     * @param array<string,mixed> $context
+     * @return array<string,mixed>
+     */
+    public static function normalize(array $data, array $context = []): array
+    {
+        $data['is_terminal'] = isset($data['is_terminal']) && (bool)$data['is_terminal'];
+        $data['config'] = is_array($data['config'] ?? null) ? $data['config'] : [];
+        $data['color'] = $data['color'] ?? ($data['is_terminal'] ? config('workflow.state.end.color') : config('workflow.state.middle.color'));
+        $data['position'] = $data['position'] ?? [
+            'x' => ($data['is_terminal'] ? config('workflow.state.end.position.x') : config('workflow.state.middle.position.x')),
+            'y' => ($data['is_terminal'] ? config('workflow.state.end.position.y') : config('workflow.state.middle.position.y')),
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Build validation rules dynamically for active locales and scalar fields.
+     *
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
-        $parameters = request()->route()->parameters();
-        /** @var Flow $flow */
-        $flow = $parameters['flow'];
+        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id'));
 
-        return [
-            'type' => 'in:' . implode(',', FlowStateTypeEnum::values()),
-            'color' => 'sometimes|string',
-            'position' => 'nullable|array',
-            'position.x' => 'required_with:position|numeric',
-            'position.y' => 'required_with:position|numeric',
+        $rules = [
+            'flow_id' => 'required|integer|exists:flows,id',
+
+            'translation' => 'required|array',
+
             'status' => [
-                'required',
-                new CheckStatusInDriverRule($flow->driver)
-            ]
+                'present',
+                'nullable',
+                new CheckStatusInDriverRule($flowId),
+            ],
+
+            'config' => 'sometimes|array',
+
+            'color' => 'sometimes|nullable|hex_color',
+            'icon' => 'sometimes|nullable|string',
+            'position' => 'sometimes|array|required_array_keys:x,y',
+            'position.x' => 'numeric',
+            'position.y' => 'numeric',
+            'is_terminal' => 'sometimes|boolean',
         ];
+
+        $locales = Language::all([
+            'status' => true
+        ])->pluck('locale')->all();
+
+        foreach ($locales as $locale) {
+            $rules["translation.$locale"] = 'required|array';
+            $rules["translation.$locale.name"] = [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($locale, $flowId) {
+                    $name = trim((string)$value);
+
+                    if ($name === '') {
+                        $fail(trans('workflow::base.validation.flow_state.translation_name_required'));
+
+                        return;
+                    }
+
+                    $rule = new TranslationFieldExistRule(FlowStateModel::class, 'name', $locale, null, -1, [
+                        'flow_id' => $flowId
+                    ], 'workflow::base.fields.name');
+
+                    if (!$rule->passes($attribute, $name)) {
+                        $fail($rule->message());
+                    }
+                },
+            ];
+            $rules["translation.$locale.description"] = 'nullable|string';
+        }
+
+        return $rules;
     }
 
     /**
-     * Prepare the data for validation.
+     * Attributes via language keys.
      *
-     * @return void
+     * @return array<string, string>
      */
-    protected function prepareForValidation(): void
+    public function attributes(): array
     {
-        $this->merge([
-            'color' => $this->color ?? '#ddd',
-            'position' => $this->position ?? ['x' => 0, 'y' => 0],
-        ]);
+        return [
+            'flow_id' => trans('workflow::base.fields.flow_id'),
+
+            'translation' => trans('workflow::base.fields.translation'),
+            'translation.*.name' => trans('workflow::base.fields.name'),
+            'translation.*.description' => trans('workflow::base.fields.description'),
+
+            'status' => trans('workflow::base.fields.status'),
+            'color' => trans('workflow::base.fields.color'),
+            'position' => trans('workflow::base.fields.position'),
+            'position.x' => trans('workflow::base.fields.position_x'),
+            'position.y' => trans('workflow::base.fields.position_y'),
+            'is_terminal' => trans('workflow::base.fields.is_terminal'),
+        ];
+    }
+
+    public function authorize(): bool
+    {
+        return true;
     }
 }
