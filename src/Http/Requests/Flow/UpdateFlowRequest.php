@@ -29,6 +29,8 @@ class UpdateFlowRequest extends FormRequest
      */
     public function rules(): array
     {
+        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id'));
+
         $rules = [
             'translation' => 'sometimes|array',
 
@@ -50,7 +52,9 @@ class UpdateFlowRequest extends FormRequest
         ];
 
         $input = $this->all();
-        $locales = Language::all(['status' => true])->pluck('locale')->all();
+        $locales = Language::all([
+            'status' => true
+        ])->pluck('locale')->all();
 
         if (isset($input['translation']) && is_array($input['translation'])) {
             foreach ($locales as $locale) {
@@ -62,7 +66,7 @@ class UpdateFlowRequest extends FormRequest
                 $rules["translation.$locale.name"] = [
                     'required',
                     'string',
-                    function ($attribute, $value, $fail) use ($locale) {
+                    function ($attribute, $value, $fail) use ($locale, $flowId) {
                         $name = trim((string)$value);
 
                         if ($name === '') {
@@ -70,8 +74,6 @@ class UpdateFlowRequest extends FormRequest
 
                             return;
                         }
-
-                        $flowId = (int)($this->context['flow_id'] ?? 0);
 
                         $rule = new TranslationFieldExistRule(FlowModel::class, 'name', $locale, $flowId, -1, [], 'workflow::base.fields.name');
 
