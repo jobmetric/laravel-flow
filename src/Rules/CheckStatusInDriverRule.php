@@ -53,6 +53,10 @@ class CheckStatusInDriverRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if ($value === null || $value === '') {
+            return;
+        }
+
         $flow = Flow::query()->find($this->flowId);
         if (!$flow) {
             $fail(trans('workflow::base.validation.flow_not_found'));
