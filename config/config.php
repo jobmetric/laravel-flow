@@ -50,7 +50,23 @@ return [
                 "x" => env("WORKFLOW_START_X", "0"),
                 "y" => env("WORKFLOW_START_Y", "0"),
             ],
-        ]
+        ],
+        "middle" => [
+            "color" => env("WORKFLOW_STATE_COLOR", "#ddd"),
+            "icon" => env("WORKFLOW_STATE_ICON", "circle"),
+            "position" => [
+                "x" => env("WORKFLOW_STATE_X", "0"),
+                "y" => env("WORKFLOW_STATE_Y", "0"),
+            ],
+        ],
+        "end" => [
+            "color" => env("WORKFLOW_END_COLOR", "#000"),
+            "icon" => env("WORKFLOW_END_ICON", "stop"),
+            "position" => [
+                "x" => env("WORKFLOW_END_X", "300"),
+                "y" => env("WORKFLOW_END_Y", "50"),
+            ],
+        ],
     ],
 
     /*
