@@ -32,8 +32,8 @@ class UpdateFlowStateRequest extends FormRequest
      */
     public static function rulesFor(array $input, array $context = []): array
     {
-        $flowId = (int)($context['flow_id'] ?? $input['flow_id'] ?? 0);
-        $stateId = (int)($context['state_id'] ?? $input['state_id'] ?? 0);
+        $flowId = (int)($context['flow_id'] ?? $input['flow_id'] ?? null);
+        $stateId = (int)($context['state_id'] ?? $input['state_id'] ?? null);
 
         $rules = [
             'translation' => 'sometimes|array',
@@ -99,8 +99,8 @@ class UpdateFlowStateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id'));
-        $stateId = (int)($this->context['state_id'] ?? $this->input('state_id'));
+        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? null);
+        $stateId = (int)($this->context['state_id'] ?? $this->input('state_id') ?? null);
 
         return self::rulesFor($this->all(), [
             'flow_id' => $flowId,

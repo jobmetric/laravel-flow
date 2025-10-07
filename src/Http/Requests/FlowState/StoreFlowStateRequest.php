@@ -45,11 +45,14 @@ class StoreFlowStateRequest extends FormRequest
     /**
      * Build validation rules dynamically for active locales and scalar fields.
      *
-     * @return array<string, mixed>
+     * @param array<string,mixed> $input
+     * @param array<string,mixed> $context
+     *
+     * @return array<string,mixed>
      */
-    public function rules(): array
+    public static function rulesFor(array $input, array $context = []): array
     {
-        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id'));
+        $flowId = (int)($context['flow_id'] ?? $input('flow_id') ?? null);
 
         $rules = [
             'flow_id' => 'required|integer|exists:flows,id',
@@ -103,6 +106,18 @@ class StoreFlowStateRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function rules(): array
+    {
+        $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? null);
+
+        return self::rulesFor($this->all(), [
+            'flow_id' => $flowId,
+        ]);
     }
 
     /**
