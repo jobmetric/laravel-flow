@@ -4,8 +4,12 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pipeline\Pipeline;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
+use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
+use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
+use JobMetric\Flow\Http\Requests\FlowTransition\StoreFlowTransitionRequest;
+use JobMetric\Flow\Http\Requests\FlowTransition\UpdateFlowTransitionRequest;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\FlowTransition as FlowTransitionModel;
 use JobMetric\PackageCore\Output\Response;
@@ -17,28 +21,22 @@ class FlowTransition extends AbstractCrudService
     use InvalidatesFlowCache;
 
     /**
-     * Translation key for entity name used in responses.
+     * Human-readable entity name key used in response messages.
      *
      * @var string
      */
     protected string $entityName = 'workflow::base.entity_names.flow_transition';
 
     /**
-     * Bound Eloquent model.
+     * Bound model/resource classes for the base CRUD.
      *
      * @var class-string
      */
     protected static string $modelClass = FlowTransitionModel::class;
-
-    /**
-     * Bound API Resource.
-     *
-     * @var class-string
-     */
     protected static string $resourceClass = FlowTransitionResource::class;
 
     /**
-     * Allowed fields for query builder (select/filter/sort).
+     * Allowed fields for selection/filter/sort in QueryBuilder.
      *
      * @var string[]
      */
@@ -53,53 +51,51 @@ class FlowTransition extends AbstractCrudService
     ];
 
     /**
-     * Create a new transition after enforcing invariants.
+     * Domain events mapping for CRUD lifecycle.
      *
-     * @param array $data
-     * @param array $with
+     * @var class-string|null
+     */
+    protected static ?string $storeEventClass = FlowTransitionStoreEvent::class;
+    protected static ?string $updateEventClass = FlowTransitionUpdateEvent::class;
+    protected static ?string $deleteEventClass = FlowTransitionDeleteEvent::class;
+
+    /**
+     * Validate & normalize payload before create.
      *
-     * @return Response
+     * Role: ensures a clean, validated input for store().
+     *
+     * @param array<string,mixed> $data
+     *
+     * @return void
      * @throws Throwable
      */
-    public function doStore(array $data, array $with = []): Response
+    protected function changeFieldStore(array &$data): void
     {
-        $normalized = DB::transaction(function () use ($data) {
-            return app(Pipeline::class)
-                ->send($data)
-                ->through([
-
-                ])
-                ->thenReturn();
-        });
-
-        return parent::store($normalized, $with);
+        $data = dto($data, StoreFlowTransitionRequest::class, [
+            'flow_id' => $data['flow_id'] ?? null,
+        ]);
     }
 
     /**
-     * Update a transition after enforcing invariants.
+     * Validate & normalize payload before update.
      *
-     * @param int $id
-     * @param array $data
-     * @param array $with
+     * Role: aligns input with update rules for the specific FlowState.
      *
-     * @return Response
+     * @param Model $model
+     * @param array<string,mixed> $data
+     *
+     * @return void
      * @throws Throwable
      */
-    public function doUpdate(int $id, array $data, array $with = []): Response
+    protected function changeFieldUpdate(Model $model, array &$data): void
     {
-        $normalized = DB::transaction(function () use ($id, $data) {
-            return app(Pipeline::class)
-                ->send([
-                    'id' => $id,
-                    ...Arr::except($data, ['id']),
-                ])
-                ->through([
+        /** @var FlowTransitionModel $transition */
+        $transition = $model;
 
-                ])
-                ->thenReturn();
-        });
-
-        return parent::update($id, $normalized, $with);
+        $data = dto($data, UpdateFlowTransitionRequest::class, [
+            'flow_transition_id' => $transition->id,
+            'flow_id' => $model->flow_id,
+        ]);
     }
 
     /**
@@ -113,14 +109,32 @@ class FlowTransition extends AbstractCrudService
      */
     public function doDestroy(int $id, array $with = []): Response
     {
+        // Here we need to check that the transition that comes out of the start is removed last.
+        return DB::transaction(function () use ($id, $with) {
+            /** @var FlowTransitionModel $transition */
+            $transition = $this->getModelQuery()->with($with)->findOrFail($id);
+
+            $startState = $transition->flow->states()->where('type', 'start')->first();
+            if ($startState && $startState->id === $transition->from) {
+                $lastTransition = $transition->flow->transitions()
+                    ->where('id', '!=', $transition->id)
+                    ->where('from', $startState->id)
+                    ->exists();
+                if ($lastTransition) {
+                    throw new \RuntimeException(trans('workflow::errors.flow_transition.start_state_last_transition_delete'));
+                }
+            }
+            return (new Pipeline(app()))->send($id)->through($this->getDestroyPipes())->then(fn($id) => $this->destroyModel($id, $with));
+        });
+
         return parent::destroy($id, $with);
     }
 
     /**
-     * Runs right after model is persisted (create).
+     * Hook after store: invalidate caches.
      *
      * @param Model $model
-     * @param array $data
+     * @param array<string,mixed> $data
      *
      * @return void
      */
@@ -130,11 +144,10 @@ class FlowTransition extends AbstractCrudService
     }
 
     /**
-     * Runs right after model is persisted (update).
+     * Hook after update: invalidate caches.
      *
      * @param Model $model
-     * @param array $data
-     *
+     * @param array<string,mixed> $data
      * @return void
      */
     protected function afterUpdate(Model $model, array &$data): void
@@ -143,10 +156,9 @@ class FlowTransition extends AbstractCrudService
     }
 
     /**
-     * Runs right after deletion.
+     * Hook after destroy: invalidate caches.
      *
      * @param Model $model
-     *
      * @return void
      */
     protected function afterDestroy(Model $model): void
