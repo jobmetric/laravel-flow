@@ -55,7 +55,7 @@ class StoreFlowStateRequest extends FormRequest
         $flowId = (int)($context['flow_id'] ?? $input('flow_id') ?? null);
 
         $rules = [
-            'flow_id' => 'required|integer|exists:flows,id',
+            'flow_id' => 'required|integer|exists:' . config('workflow.tables.flow') . ',id',
 
             'translation' => 'required|array',
 
