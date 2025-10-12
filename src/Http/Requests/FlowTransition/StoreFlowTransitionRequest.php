@@ -112,10 +112,10 @@ class StoreFlowTransitionRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? 0);
+            $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? null);
 
             // If base rules failed, skip heavy checks
-            if ($v->errors()->isNotEmpty() || $flowId <= 0) {
+            if ($v->errors()->isNotEmpty() || is_null($flowId)) {
                 return;
             }
 
@@ -128,17 +128,17 @@ class StoreFlowTransitionRequest extends FormRequest
                 ->where('type', FlowStateTypeEnum::START())
                 ->value('id');
 
-            // 1) from and to must not be equal
+            // from and to must not be equal
             if (!is_null($from) && !is_null($to) && (int)$from === (int)$to) {
                 $v->errors()->add('to', trans('workflow::base.validation.flow_transition.from_cannot_equal_to'));
             }
 
-            // 2) to must not point to START
+            // to must not point to START
             if (!is_null($to) && $startId && (int)$to === (int)$startId) {
                 $v->errors()->add('to', trans('workflow::base.validation.flow_transition.to_cannot_be_start'));
             }
 
-            // 3) (flow_id, from, to) must be unique
+            // (flow_id, from, to) must be unique
             if (!is_null($from) && !is_null($to)) {
                 $duplicate = FlowTransition::query()
                     ->where('flow_id', $flowId)
@@ -151,22 +151,16 @@ class StoreFlowTransitionRequest extends FormRequest
                 }
             }
 
-            // 4) If this is the first transition of the flow, it must start from START
-            if ($startId) {
-                $hasAny = FlowTransition::query()
-                    ->where('flow_id', $flowId)
-                    ->exists();
+            // If this is the first transition of the flow, it must start from START
+            $hasAny = FlowTransition::query()
+                ->where('flow_id', $flowId)
+                ->exists();
 
-                if (!$hasAny) {
-                    // first transition in this flow
-                    if (is_null($from) || (int)$from !== (int)$startId) {
-                        $v->errors()->add('from', trans('workflow::base.validation.flow_transition.first_must_from_start'));
-                    }
+            if (!$hasAny) {
+                // first transition in this flow
+                if (is_null($from) || (int)$from !== (int)$startId) {
+                    $v->errors()->add('from', trans('workflow::base.validation.flow_transition.first_must_from_start'));
                 }
-            } else {
-                // If no START exists in this flow, you may want to block creation or warn
-                // Depending on your business rule, uncomment if needed:
-                // $v->errors()->add('flow_id', trans('workflow::base.validation.flow_transition.start_state_missing'));
             }
         });
     }

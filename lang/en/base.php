@@ -74,6 +74,15 @@ return [
         "task_driver_not_found" => "flow task driver [:task] not found",
     ],
 
+    'fields' => [
+        'flow_id' => 'Flow',
+        'translation' => 'Translation',
+        'name' => 'Name',
+        'from' => 'From',
+        'to' => 'To',
+        'slug' => 'Slug',
+    ],
+
     "validation" => [
         "start_required" => "Flow must have exactly one START state.",
         "start_must_not_have_incoming" => "START state must not have incoming transitions.",
@@ -84,6 +93,13 @@ return [
         'status_enum_error' => 'Could not resolve the status enum for the subject model.',
         'status_enum_missing' => 'No allowed status values were found for the subject model.',
         'check_status_in_driver' => 'Invalid status. Allowed values: :status',
+        'flow_transition' => [
+            'translation_name_required' => 'The translation name field is required.',
+            'from_cannot_equal_to' => 'The transition’s source and destination cannot be the same.',
+            'to_cannot_be_start' => 'The transition destination cannot be the START state.',
+            'duplicate_transition' => 'A transition with the same source and destination already exists in this flow.',
+            'first_must_from_start' => 'The first transition in this flow must originate from the START state.',
+        ],
 
         "check_driver_exists" => "The selected driver :driver does not exists",
     ],

@@ -74,6 +74,15 @@ return [
         "task_driver_not_found" => "درایور وظیفه فلو [:task] پیدا نشد",
     ],
 
+    'fields' => [
+        'flow_id' => 'جریان',
+        'translation' => 'ترجمه',
+        'name' => 'نام',
+        'from' => 'مبدأ',
+        'to' => 'مقصد',
+        'slug' => 'نامک',
+    ],
+
     "validation" => [
         'start_required' => 'گردش‌کار باید دقیقاً یک وضعیت شروع داشته باشد.',
         'start_must_not_have_incoming' => 'وضعیت شروع نباید هیچ ترنزیشن ورودی داشته باشد.',
@@ -84,6 +93,13 @@ return [
         'status_enum_error' => 'امکان تشخیص enum وضعیت برای مدل موضوع وجود ندارد.',
         'status_enum_missing' => 'هیچ مقدار مجازِ وضعیت برای مدل موضوع یافت نشد.',
         'check_status_in_driver' => 'وضعیت نامعتبر است. مقادیر مجاز: :status',
+        'flow_transition' => [
+            'translation_name_required' => 'فیلد نام ترجمه الزامی است.',
+            'from_cannot_equal_to' => 'مبدأ و مقصد ترنزیشن نمی‌توانند یکسان باشند.',
+            'to_cannot_be_start' => 'مقصد ترنزیشن نمی‌تواند استیت شروع (START) باشد.',
+            'duplicate_transition' => 'ترنزیشنی با همین مبدأ و مقصد در این فلو وجود دارد.',
+            'first_must_from_start' => 'اولین ترنزیشن این فلو باید از استیت شروع (START) آغاز شود.',
+        ],
 
         "check_driver_exists" => "درایور انتخاب شده :driver وجود ندارد",
     ],
