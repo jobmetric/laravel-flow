@@ -93,8 +93,8 @@ class FlowTransition extends AbstractCrudService
         $transition = $model;
 
         $data = dto($data, UpdateFlowTransitionRequest::class, [
+            'flow_id' => $transition->flow_id,
             'flow_transition_id' => $transition->id,
-            'flow_id' => $model->flow_id,
         ]);
     }
 

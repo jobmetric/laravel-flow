@@ -99,6 +99,7 @@ return [
             'to_cannot_be_start' => 'The transition destination cannot be the START state.',
             'duplicate_transition' => 'A transition with the same source and destination already exists in this flow.',
             'first_must_from_start' => 'The first transition in this flow must originate from the START state.',
+            'must_connect_two_states'   => 'A transition must connect two concrete states (both from and to are required after update).',
         ],
 
         "check_driver_exists" => "The selected driver :driver does not exists",

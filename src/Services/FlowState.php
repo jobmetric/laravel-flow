@@ -126,8 +126,8 @@ class FlowState extends AbstractCrudService
         $state = $model;
 
         $data = dto($data, UpdateFlowStateRequest::class, [
-            'state_id' => $state->id,
             'flow_id' => $state->flow_id,
+            'state_id' => $state->id,
         ]);
 
         $defaults = [
