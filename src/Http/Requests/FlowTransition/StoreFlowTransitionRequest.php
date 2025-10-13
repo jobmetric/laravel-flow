@@ -34,7 +34,7 @@ class StoreFlowTransitionRequest extends FormRequest
      */
     public static function rulesFor(array $input, array $context = []): array
     {
-        $flowId = (int)($context['flow_id'] ?? $input('flow_id') ?? null);
+        $flowId = (int)($context['flow_id'] ?? ($input['flow_id'] ?? null));
 
         $rules = [
             'flow_id' => 'required|integer|exists:flows,id',
@@ -112,15 +112,18 @@ class StoreFlowTransitionRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? null);
+            $data = $v->getData();
+
+            $flowId = (int)($this->context['flow_id'] ?? $data['flow_id'] ?? null);
 
             // If base rules failed, skip heavy checks
             if ($v->errors()->isNotEmpty() || is_null($flowId)) {
                 return;
             }
 
-            $from = $this->input('from');
-            $to = $this->input('to');
+
+            $from = $data['from'] ?? null;
+            $to = $data['to'] ?? null;
 
             // Load START state id for this flow (if any)
             $startId = FlowState::query()

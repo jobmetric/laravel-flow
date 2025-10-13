@@ -121,8 +121,10 @@ class UpdateFlowTransitionRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $flowId = (int)($this->context['flow_id'] ?? $this->input('flow_id') ?? null);
-            $flowTransitionId = (int)($this->context['flow_transition_id'] ?? $this->input('flow_transition_id') ?? null);
+            $data = $v->getData();
+
+            $flowId = (int)($this->context['flow_id'] ?? $data['flow_id'] ?? null);
+            $flowTransitionId = (int)($this->context['flow_transition_id'] ?? $data['flow_transition_id'] ?? null);
 
             /** @var FlowTransition|null $current */
             $current = $flowTransitionId ? FlowTransition::query()->find($flowTransitionId) : null;
@@ -132,8 +134,8 @@ class UpdateFlowTransitionRequest extends FormRequest
             }
 
             // Effective values after update: if not provided, fall back to current
-            $newFrom = $this->has('from') ? $this->input('from') : $current->from;
-            $newTo = $this->has('to') ? $this->input('to') : $current->to;
+            $newFrom = array_key_exists('from', $data) ? $data['from'] : $current->from;
+            $newTo = array_key_exists('to', $data) ? $data['to'] : $current->to;
 
             // from and to must not be equal
             if (!is_null($newFrom) && !is_null($newTo) && (int)$newFrom === (int)$newTo) {
@@ -164,6 +166,10 @@ class UpdateFlowTransitionRequest extends FormRequest
                 ->where('flow_id', $flowId)
                 ->where('type', FlowStateTypeEnum::START())
                 ->value('id');
+
+            if (!is_null($newTo) && $startId && (int)$newTo === (int)$startId) {
+                $v->errors()->add('to', trans('workflow::base.validation.flow_transition.to_cannot_be_start'));
+            }
 
             $isOnlyTransition = !FlowTransition::query()
                 ->where('flow_id', $flowId)
