@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use JobMetric\Translation\HasTranslation;
 
 /**
  * Class FlowTransition
@@ -46,7 +47,7 @@ use Illuminate\Support\Carbon;
  */
 class FlowTransition extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslation;
 
     /**
      * Touch the parent flow when this transition changes.
