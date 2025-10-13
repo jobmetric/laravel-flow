@@ -3,8 +3,8 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\DB;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
@@ -14,6 +14,7 @@ use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\FlowTransition as FlowTransitionModel;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
+use RuntimeException;
 use Throwable;
 
 class FlowTransition extends AbstractCrudService
@@ -112,22 +113,30 @@ class FlowTransition extends AbstractCrudService
         // Here we need to check that the transition that comes out of the start is removed last.
         return DB::transaction(function () use ($id, $with) {
             /** @var FlowTransitionModel $transition */
-            $transition = $this->getModelQuery()->with($with)->findOrFail($id);
+            $transition = (static::$modelClass)::query()
+                ->with($with)
+                ->findOrFail($id);
 
-            $startState = $transition->flow->states()->where('type', 'start')->first();
-            if ($startState && $startState->id === $transition->from) {
-                $lastTransition = $transition->flow->transitions()
+            $startStateId = $transition->flow
+                ->states()
+                ->where('type', FlowStateTypeEnum::START())
+                ->value('id');
+
+            if ($startStateId && (int)$transition->from === (int)$startStateId) {
+                $hasAnotherFromStart = $transition->flow
+                    ->transitions()
                     ->where('id', '!=', $transition->id)
-                    ->where('from', $startState->id)
                     ->exists();
-                if ($lastTransition) {
-                    throw new \RuntimeException(trans('workflow::errors.flow_transition.start_state_last_transition_delete'));
+
+                if ($hasAnotherFromStart) {
+                    throw new RuntimeException(
+                        trans('workflow::errors.flow_transition.start_state_last_transition_delete')
+                    );
                 }
             }
-            return (new Pipeline(app()))->send($id)->through($this->getDestroyPipes())->then(fn($id) => $this->destroyModel($id, $with));
-        });
 
-        return parent::destroy($id, $with);
+            return parent::destroy($id, $with);
+        });
     }
 
     /**
