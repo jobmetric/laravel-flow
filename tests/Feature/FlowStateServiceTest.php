@@ -28,14 +28,7 @@ class FlowStateServiceTest extends BaseTestCase
      * @param string|null $title
      * @return array<string,mixed>
      */
-    protected function makeFlowPayload(
-        string  $subject,
-        ?string $scope,
-        int     $version = 1,
-        bool    $isDefault = true,
-        bool    $status = true,
-        ?string $title = null
-    ): array
+    protected function makeFlowPayload(string $subject, ?string $scope, int $version = 1, bool $isDefault = true, bool $status = true, ?string $title = null): array
     {
         $translation = [
             'en' => [
@@ -57,7 +50,6 @@ class FlowStateServiceTest extends BaseTestCase
             'ordering' => 0,
             'rollout_pct' => null,
             'environment' => 'test',
-            'title' => $title ?? "Test Flow v{$version}",
             'translation' => $translation,
         ];
     }
