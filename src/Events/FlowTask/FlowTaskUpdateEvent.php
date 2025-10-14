@@ -2,21 +2,16 @@
 
 namespace JobMetric\Flow\Events\FlowTask;
 
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 use JobMetric\Flow\Models\FlowTask;
 
-class FlowTaskUpdateEvent
+readonly class FlowTaskUpdateEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
     /**
      * Create a new event instance.
      */
     public function __construct(
-        public readonly FlowTask $flowTask,
-        public readonly array    $data
+        public FlowTask $flowTask,
+        public array    $data
     )
     {
     }
