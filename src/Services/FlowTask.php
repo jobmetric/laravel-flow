@@ -2,84 +2,137 @@
 
 namespace JobMetric\Flow\Services;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
 use JobMetric\Flow\Contracts\TaskContract;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
-use JobMetric\Flow\Models\FlowTask;
-use JobMetric\Metadata\Metadata;
+use JobMetric\Flow\Http\Requests\FlowTask\StoreFlowTaskRequest;
+use JobMetric\Flow\Http\Requests\FlowTask\UpdateFlowTaskRequest;
+use JobMetric\Flow\Http\Resources\FlowTaskResource;
+use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
+use JobMetric\PackageCore\Services\AbstractCrudService;
 use Str;
+use Throwable;
 
-class FlowTask
+class FlowTask extends AbstractCrudService
 {
-    /**
-     * The application instance.
-     *
-     * @var Application
-     */
-    protected Application $app;
+    use InvalidatesFlowCache;
 
     /**
-     * The metadata instance.
+     * Human-readable entity name key used in response messages.
      *
-     * @var Metadata
+     * @var string
      */
-    protected Metadata $metadata;
+    protected string $entityName = 'workflow::base.entity_names.flow_task';
 
     /**
-     * Create a new Translation instance.
+     * Bound model/resource classes for the base CRUD.
      *
-     * @param Application $app
+     * @var class-string
+     */
+    protected static string $modelClass = FlowTaskModel::class;
+    protected static string $resourceClass = FlowTaskResource::class;
+
+    /**
+     * Allowed fields for selection/filter/sort in QueryBuilder.
+     *
+     * @var string[]
+     */
+    protected static array $fields = [
+        'id',
+        'flow_transition_id',
+        'driver',
+        'config',
+        'ordering',
+        'status',
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Domain events mapping for CRUD lifecycle.
+     *
+     * @var class-string|null
+     */
+    protected static ?string $storeEventClass = FlowTaskStoreEvent::class;
+    protected static ?string $updateEventClass = FlowTaskUpdateEvent::class;
+    protected static ?string $deleteEventClass = FlowTaskDeleteEvent::class;
+
+    /**
+     * Validate & normalize payload before create.
+     *
+     * Role: ensures a clean, validated input for store().
+     *
+     * @param array<string,mixed> $data
      *
      * @return void
-     * @throws BindingResolutionException
+     * @throws Throwable
      */
-    public function __construct(Application $app)
+    protected function changeFieldStore(array &$data): void
     {
-        $this->app = $app;
-
-        $this->Metadata = $app->make('Metadata');
+        $data = dto($data, StoreFlowTaskRequest::class, [
+            'flow_id' => $data['flow_id'] ?? null,
+        ]);
     }
 
-    public function store(int $flow_id, int $flow_transition_id, array $data): FlowTask
+    /**
+     * Validate & normalize payload before update.
+     *
+     * Role: aligns input with update rules for the specific FlowTask.
+     *
+     * @param Model $model
+     * @param array<string,mixed> $data
+     *
+     * @return void
+     * @throws Throwable
+     */
+    protected function changeFieldUpdate(Model $model, array &$data): void
     {
-        // @todo: add exception
+        /** @var FlowTaskModel $task */
+        $task = $model;
 
-        $task = FlowTask::create($data);
-
-        event(new FlowTaskStoreEvent($task));
-
-        return $task;
+        $data = dto($data, UpdateFlowTaskRequest::class, [
+            'flow_id' => $task->flow_id,
+            'flow_task_id' => $task->id,
+        ]);
     }
 
-    public function update(int $flow_task_id, $data = []): FlowTask
+    /**
+     * Hook after store: invalidate caches.
+     *
+     * @param Model $model
+     * @param array<string,mixed> $data
+     *
+     * @return void
+     */
+    protected function afterStore(Model $model, array &$data): void
     {
-        // @todo: add exception
-
-        $task = FlowTask::findOrFail($flow_task_id);
-
-        $task->update($data);
-
-        event(new FlowTaskUpdateEvent($task, $data));
-
-        return $task;
+        $this->forgetCache();
     }
 
-    public function delete(int $flow_task_id): FlowTask
+    /**
+     * Hook after update: invalidate caches.
+     *
+     * @param Model $model
+     * @param array<string,mixed> $data
+     * @return void
+     */
+    protected function afterUpdate(Model $model, array &$data): void
     {
-        $task = FlowTask::findOrFail($flow_task_id);
-        $task->delete();
-        event(new FlowTaskDeleteEvent($task));
-        return $task;
+        $this->forgetCache();
     }
 
-
-    public function show(int $flow_task_id): FlowTask
+    /**
+     * Hook after destroy: invalidate caches.
+     *
+     * @param Model $model
+     * @return void
+     */
+    protected function afterDestroy(Model $model): void
     {
-        return FlowTask::findOrFail($flow_task_id);
+        $this->forgetCache();
     }
 
     /**
@@ -104,7 +157,7 @@ class FlowTask
             'tasks' => $global_tasks
         ];
 
-        if($flow_driver != '') {
+        if ($flow_driver != '') {
             $flow_driver = Str::studly($flow_driver);
             $driver = flowResolve($flow_driver);
 
@@ -137,7 +190,7 @@ class FlowTask
         $flow_driver = Str::studly($flow_driver);
         $task_driver = Str::studly($task_driver);
 
-        if('Global' == $flow_driver) {
+        if ('Global' == $flow_driver) {
             $object = resolve('\\App\\Flows\\Global\\' . $task_driver);
 
             return $this->getDetailsFromTask($object);
