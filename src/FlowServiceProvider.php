@@ -6,6 +6,7 @@ use JobMetric\Flow\Services\Flow;
 use JobMetric\Flow\Services\FlowState;
 use JobMetric\Flow\Services\FlowTask;
 use JobMetric\Flow\Services\FlowTransition;
+use JobMetric\Flow\Support\TaskRegistry;
 use JobMetric\PackageCore\Enums\RegisterClassTypeEnum;
 use JobMetric\PackageCore\Exceptions\DependencyPublishableClassNotFoundException;
 use JobMetric\PackageCore\Exceptions\MigrationFolderNotFoundException;
@@ -26,8 +27,7 @@ class FlowServiceProvider extends PackageCoreServiceProvider
      */
     public function configuration(PackageCore $package): void
     {
-        $package
-            ->name('laravel-workflow')
+        $package->name('laravel-workflow')
             ->hasConfig()
             ->hasMigration()
             ->hasRoute()
@@ -37,6 +37,7 @@ class FlowServiceProvider extends PackageCoreServiceProvider
             ->registerClass('flow', Flow::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('flow-state', FlowState::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('flow-transition', FlowTransition::class, RegisterClassTypeEnum::SINGLETON())
-            ->registerClass('flow-task', FlowTask::class, RegisterClassTypeEnum::SINGLETON());
+            ->registerClass('flow-task', FlowTask::class, RegisterClassTypeEnum::SINGLETON())
+            ->registerClass('FlowTaskRegistry', TaskRegistry::class, RegisterClassTypeEnum::SINGLETON());
     }
 }

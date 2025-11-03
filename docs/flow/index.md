@@ -21,7 +21,7 @@ this class contains below code:
 ```php
 namespace App\Flows\Drivers\Request;
 
-use JobMetric\Flow\Contracts\DriverContract;
+use JobMetric\Flow\Abstracts\DriverContract;
 use JobMetric\Flow\Models\FlowState;
 
 class RequestDriverFlow extends DriverContract

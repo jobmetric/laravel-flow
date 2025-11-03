@@ -1,35 +1,68 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{namespace}};
 
 use Illuminate\Database\Eloquent\Model;
-use JobMetric\Flow\Contracts\AbstractFlowTask;
+use JobMetric\Flow\Abstracts\TaskAbstract;
+use JobMetric\Flow\Enums\TaskOperationType;
+use JobMetric\Form\FormBuilder;
 
-class {{ class }}Task extends AbstractFlowTask
+class {{task}}Task extends TaskAbstract
 {
-    public static function title(): string
+    /**
+     * Model class the task applies to
+     *
+     * @var Model
+     */
+    protected Model $model = {{model}};
+
+    /**
+     * Type of task
+     *
+     * @var TaskOperationType
+     */
+    protected TaskOperationType $type = TaskOperationType::{{type}};
+
+    /**
+     * title of task
+     *
+     * @var string
+     */
+    protected string $title = {{title}};
+
+    /**
+     * description of task
+     *
+     * @var ?string
+     */
+    protected ?string $description = null;
+
+    /**
+     * Run the task asynchronously
+     *
+     * @var bool
+     */
+    protected bool $async = false;
+
+    /**
+     * Form of the task
+     *
+     * @return FormBuilder
+     */
+    public function form(): FormBuilder
     {
-        return '{{ class }}';
+        // Define and return the form structure here
     }
 
-    public static function description(): string
+    /**
+     * Handle the task logic
+     *
+     * @param array $config Configuration array for the task
+     *
+     * @return mixed
+     */
+    public function handle(array $config): mixed
     {
-        return '{{ description }}';
-    }
-
-    public static function modelType(): ?string
-    {
-        // return \App\Models\YourModel::class;
-        return null;
-    }
-
-    public function operations(): array
-    {
-        return [TaskOperationType::VALIDATION];
-    }
-
-    public function handle(Model $model): void
-    {
-        // TODO: Implement logic
+        // Implement the task logic here
     }
 }

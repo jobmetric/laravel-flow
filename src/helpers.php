@@ -1,6 +1,6 @@
 <?php
 
-use JobMetric\Flow\Contracts\DriverContract;
+use JobMetric\Flow\Abstracts\DriverContract;
 use JobMetric\Flow\Facades\Flow;
 
 if (!function_exists('flowResolve')) {

@@ -4,7 +4,7 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
-use JobMetric\Flow\Contracts\TaskContract;
+use JobMetric\Flow\Abstracts\TaskContract;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
