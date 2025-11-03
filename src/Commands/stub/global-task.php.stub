@@ -2,38 +2,64 @@
 
 namespace App\Flows\Global;
 
-use JobMetric\Flow\Contracts\TaskContract;
+use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Contracts\AbstractFlowTask;
 
-class {{task}}GlobalTask extends TaskContract
+class {{task}}GlobalTask extends AbstractFlowTask
 {
     /**
-     * title of task
-     *
-     * validation: required
-     * @var string
+     * Title of the task (human-readable name).
      */
-    protected string $title = "";
-
-    /**
-     * description of task
-     *
-     * validation: optional
-     * @var ?string
-     */
-    protected ?string $description = null;
-
-    /**
-     * fields of task
-     *
-     * validation: optional
-     * sample: sample in parent class(TaskContract)
-     *
-     * @var array
-     */
-    protected array $fields = [];
-
-    public function handle()
+    public static function title(): string
     {
-        // write code here
+        return '{{task}} Global Task';
+    }
+
+    /**
+     * Description of the task purpose.
+     */
+    public static function description(): string
+    {
+        return 'Describe what {{task}}GlobalTask does here.';
+    }
+
+    /**
+     * The related Eloquent model class for which this task applies.
+     * If it’s a global task, return null.
+     */
+    public static function modelType(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * The operation types this task performs (e.g. validation, restriction, action).
+     *
+     * @return array
+     */
+    public function operations(): array
+    {
+        return [TaskOperationType::VALIDATION];
+    }
+
+    /**
+     * Indicates whether the task should be executed in the background.
+     *
+     * @return bool
+     */
+    public function isBackground(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Main logic of the task.
+     *
+     * @param Model $model
+     * @return void
+     */
+    public function handle(Model $model): void
+    {
+        // TODO: Implement your task logic here.
     }
 }

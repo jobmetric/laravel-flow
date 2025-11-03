@@ -1,39 +1,35 @@
 <?php
 
-namespace App\Flows\Drivers\{{driver}}\Tasks;
+namespace {{ namespace }};
 
-use JobMetric\Flow\Contracts\TaskContract;
+use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Contracts\AbstractFlowTask;
 
-class {{task}}{{driver}}Task extends TaskContract
+class {{ class }}Task extends AbstractFlowTask
 {
-    /**
-     * title of task
-     *
-     * validation: required
-     * @var string
-     */
-    protected string $title = "";
-
-    /**
-     * description of task
-     *
-     * validation: optional
-     * @var ?string
-     */
-    protected ?string $description = null;
-
-    /**
-     * fields of task
-     *
-     * validation: optional
-     * sample: sample in parent class(TaskContract)
-     *
-     * @var array
-     */
-    protected array $fields = [];
-
-    public function handle()
+    public static function title(): string
     {
-        // write code here
+        return '{{ class }}';
+    }
+
+    public static function description(): string
+    {
+        return '{{ description }}';
+    }
+
+    public static function modelType(): ?string
+    {
+        // return \App\Models\YourModel::class;
+        return null;
+    }
+
+    public function operations(): array
+    {
+        return [TaskOperationType::VALIDATION];
+    }
+
+    public function handle(Model $model): void
+    {
+        // TODO: Implement logic
     }
 }
