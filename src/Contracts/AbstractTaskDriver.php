@@ -2,10 +2,18 @@
 
 namespace JobMetric\Flow\Contracts;
 
+use Illuminate\Database\Eloquent\Model;
 use JobMetric\Form\FormBuilder;
 
 abstract class AbstractTaskDriver
 {
+    /**
+     * Returns the Eloquent model class that this task operates on.
+     *
+     * @return Model
+     */
+    abstract public static function subject(): Model;
+
     /**
      * Returns the translation key that represents the display title of the task.
      *
