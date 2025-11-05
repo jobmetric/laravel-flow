@@ -1,0 +1,74 @@
+<?php
+
+namespace {{namespace}};
+
+use Illuminate\Database\Eloquent\Model;
+use JobMetric\Flow\Contracts\AbstractActionTask;
+use JobMetric\Flow\Concerns\RunInBackground;
+use JobMetric\Flow\Support\FlowTaskContext;
+use JobMetric\Form\FormBuilder;
+
+class {{task}}Task extends AbstractActionTask
+{
+    // use RunInBackground;
+
+    /**
+     * Returns the Eloquent model class that this task operates on.
+     *
+     * @return Model
+     */
+    public static function subject(): Model
+    {
+        return {{model}};
+    }
+
+    /**
+     * Returns the translation key that represents the display title of the task.
+     *
+     * @return string
+     */
+    public static function title(): string
+    {
+        return {{title}};
+    }
+
+    /**
+     * Returns the translation key that represents the human-readable description of the task.
+     *
+     * @return string|null
+     */
+    public static function description(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Registers configuration fields for this task using the provided form builder instance.
+     *
+     * @param FormBuilder $form
+     *
+     * @return void
+     */
+    public function form(FormBuilder $form): void
+    {
+        // Define configuration fields for this task here.
+    }
+
+    /**
+     * Executes the main action logic implemented by the concrete task.
+     *
+     * @param FlowTaskContext $context
+     *
+     * @return mixed
+     */
+    protected function handle(FlowTaskContext $context): mixed
+    {
+        // Implement the task logic here using:
+        // $context->subject();   // The main model
+        // $context->user();      // The authenticated user
+        // $context->transition();// The transition key
+        // $context->config();    // The stored configuration for this task
+
+        return null;
+    }
+}

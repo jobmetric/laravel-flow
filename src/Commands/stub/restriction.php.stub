@@ -1,0 +1,68 @@
+<?php
+
+namespace {{namespace}};
+
+use JobMetric\Flow\Contracts\AbstractRestrictionTask;
+use JobMetric\Flow\Support\FlowTaskContext;
+use JobMetric\Flow\Support\RestrictionResult;
+use JobMetric\Form\FormBuilder;
+
+class {{task}}RestrictionTask extends AbstractRestrictionTask
+{
+    /**
+     * Returns the Eloquent model class that this task operates on.
+     *
+     * @return Model
+     */
+    public static function subject(): Model
+    {
+        return {{model}};
+    }
+
+    /**
+     * Returns the translation key that represents the display title of the task.
+     *
+     * @return string
+     */
+    public static function title(): string
+    {
+        return {{title}};
+    }
+
+    /**
+     * Returns the translation key that represents the human-readable description of the task.
+     *
+     * @return string|null
+     */
+    public static function description(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Registers configuration fields for this task using the provided form builder instance.
+     *
+     * @param FormBuilder $form
+     *
+     * @return void
+     */
+    public function form(FormBuilder $form): void
+    {
+        // Define configuration fields for this restriction task here.
+    }
+
+    /**
+     * Evaluates whether the current operation is allowed within the provided flow context.
+     *
+     * @param FlowTaskContext $context
+     *
+     * @return RestrictionResult
+     */
+    public function restriction(FlowTaskContext $context): RestrictionResult
+    {
+        // Use $context->subject(), $context->user(), $context->payload(), $context->config()
+        // to implement your restriction logic.
+
+        return RestrictionResult::allow();
+    }
+}

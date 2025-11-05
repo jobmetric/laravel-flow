@@ -1,0 +1,88 @@
+<?php
+
+namespace {{namespace}};
+
+use JobMetric\Flow\Contracts\AbstractValidationTask;
+use JobMetric\Flow\Support\FlowTaskContext;
+use JobMetric\Form\FormBuilder;
+
+class {{task}}ValidationTask extends AbstractValidationTask
+{
+    /**
+     * Returns the Eloquent model class that this task operates on.
+     *
+     * @return Model
+     */
+    public static function subject(): Model
+    {
+        return {{model}};
+    }
+
+    /**
+     * Returns the translation key that represents the display title of the task.
+     *
+     * @return string
+     */
+    public static function title(): string
+    {
+        return {{title}};
+    }
+
+    /**
+     * Returns the translation key that represents the human-readable description of the task.
+     *
+     * @return string|null
+     */
+    public static function description(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Registers configuration fields for this task using the provided form builder instance.
+     *
+     * @param FormBuilder $form
+     *
+     * @return void
+     */
+    public function form(FormBuilder $form): void
+    {
+        // Define configuration fields for this validation task here.
+    }
+
+    /**
+     * Builds the validation rule set that will be applied when this task is executed.
+     *
+     * @param FlowTaskContext $context
+     *
+     * @return array<string,mixed>
+     */
+    public function rules(FlowTaskContext $context): array
+    {
+        return [];
+    }
+
+    /**
+     * Builds an optional list of custom validation messages for the defined rule set.
+     *
+     * @param FlowTaskContext $context
+     *
+     * @return array<string,string>
+     */
+    public function messages(FlowTaskContext $context): array
+    {
+        return [];
+    }
+
+    /**
+     * Builds an optional list of custom attribute names for more readable validation errors.
+     *
+     * @param FlowTaskContext $context
+     *
+     * @return array<string,string>
+     */
+    public function attributes(FlowTaskContext $context): array
+    {
+        return [];
+    }
+}
