@@ -10,9 +10,9 @@ abstract class AbstractTaskDriver
     /**
      * Returns the Eloquent model class that this task operates on.
      *
-     * @return Model
+     * @return string
      */
-    abstract public static function subject(): Model;
+    abstract public static function subject(): string;
 
     /**
      * Returns the translation key that represents the display title of the task.
