@@ -3,34 +3,10 @@
 namespace JobMetric\Flow\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use JobMetric\Flow\HasWorkflow;
 use JobMetric\PackageCore\Commands\ConsoleTools;
 
-/**
- * Class MakeTask
- *
- * This Artisan command generates a new Flow Task class within the `app/Flows` directory.
- * You can create a global task or a driver-specific one (e.g., Order, Product, etc.).
- * The command uses a stub file to scaffold a task class that extends the base Flow TaskContract.
- *
- * ## Usage examples:
- * ```
- * php artisan make:flow-task CheckUserStatus
- * php artisan make:flow-task CheckUserStatus Order
- * ```
- *
- * ## Options:
- * - `--force` or `-f`: Overwrite the file if it already exists.
- *
- * The generated file will be created in one of the following directories:
- * - Global: `app/Flows/Global/CheckUserStatusGlobalTask.php`
- * - Driver: `app/Flows/Drivers/Order/Tasks/CheckUserStatusOrderTask.php`
- *
- * After generation, you should register the task in `TaskRegistry` for automatic discovery.
- *
- * @package JobMetric\Flow\Commands
- */
 class MakeTask extends Command
 {
     use ConsoleTools;
@@ -40,9 +16,11 @@ class MakeTask extends Command
      *
      * @var string
      */
-    protected $signature = 'make:flow-task
-        {name : The name of the task (e.g. RestrictOrderCancellation)}
-        {driver? : Optional driver name (e.g. Order)}
+    protected $signature = 'flow:make-task
+        {type? : The type of the task (e.g. validation, restriction, action) default: action}
+        {name? : The name of the task (e.g. RestrictOrderCancellation)}
+        {model? : Driver name (e.g. Order)}
+        {title? : The title of the task (e.g. translation key flow::base.task.restrict_order_cancellation.title)}
         {--f|force : Overwrite if file already exists}';
 
     /**
@@ -59,55 +37,118 @@ class MakeTask extends Command
      */
     public function handle(): int
     {
-        $name = Str::studly($this->argument('name'));
-        $driver = $this->argument('driver') ? Str::studly($this->argument('driver')) : null;
+        $appNamespace = trim(appNamespace(), "\\");
+
+        // select task type
+        $type = $this->argument('type');
+        if (! $type) {
+            $type = $this->choice('Enter the type of the task:', ['Validation', 'Restriction', 'Action'], 2);
+
+            $this->line("Selected task type: <options=bold>[$type]</>");
+        }
+
+        if (! in_array($type, ['Validation', 'Restriction', 'Action'], true)) {
+            $this->message("Invalid task type: [{$type}]. Allowed types are: Validation, Restriction, Action.", 'error');
+
+            return self::FAILURE;
+        }
+
+        // ask for task name
+        $name = $this->argument('name');
+        if (! $name) {
+            askAgainTaskName:
+            $name = $this->ask('Enter the name of the task (e.g. RestrictOrderCancellation)');
+
+            if (! $name) {
+                $this->message("Task name is required.", 'error');
+
+                goto askAgainTaskName;
+            }
+            else {
+                $this->line("Task name: <options=bold>[{$name}]</>");
+            }
+        }
+
+        $name = Str::studly($name);
+
+        // ask for model
+        $model = $this->argument('model');
+        if (! $model) {
+            $model = $this->choice('Enter the namespace model:', $this->getEloquentModels(), 0);
+        }
+
+        if (in_array(HasWorkflow::class, class_uses_recursive($model), true)) {
+            $driver = class_basename($model);
+        }
+        else {
+            $this->message("The model [{$model}] does not use the HasWorkflow trait.", 'error');
+
+            return self::FAILURE;
+        }
+
+        // ask for title
+        $title = $this->argument('title');
+        if (! $title) {
+            askAgainTaskTitle:
+            $title = $this->ask('Enter the title of the task (e.g. translation key flow::base.task.restrict_order_cancellation.title)');
+
+            if (! $title) {
+                $this->message("Task title is required.", 'error');
+
+                goto askAgainTaskTitle;
+            }
+        }
+
         $force = $this->option('force');
 
-        // Define base directory for the new task file
-        $basePath = $driver
-            ? base_path("app/Flows/Drivers/{$driver}/Tasks")
-            : base_path("app/Flows/Global");
+        $ns = $appNamespace . '\\Flows\\' . $driver;
 
-        File::ensureDirectoryExists($basePath);
+        $targetDir = app_path('Flows' . DIRECTORY_SEPARATOR . $driver);
+        $classTarget = $targetDir . DIRECTORY_SEPARATOR . $name . $type . 'Task.php';
 
-        $className = $driver ? "{$name}{$driver}Task" : "{$name}GlobalTask";
-        $filePath = "{$basePath}/{$className}.php";
+        // stub contents
+        $classContent = $this->getStub(__DIR__ . "/stub/" . strtolower($type), [
+            'namespace' => $ns,
+            'task'      => $name . $type,
+            'model'     => '\\' . $model . '::class',
+            'title'     => $title,
+        ]);
 
-        if (File::exists($filePath) && !$force) {
-            $this->message("Flow Task already exists: <options=bold>[{$filePath}]</>", 'error');
-            return self::FAILURE;
+        // create custom field directory
+        if (! $this->isDir($targetDir)) {
+            $this->makeDir($targetDir);
         }
 
-        // Locate stub file
-        $stubPath = __DIR__ . '/stub/global-task.php.stub';
+        if ($this->isFile($classTarget) && ! $force) {
+            $this->message("Flow $type Task class already exists: <options=bold>[$ns]</>, Use --force to overwrite.", 'error');
 
-        if (!File::exists($stubPath)) {
-            $this->message("Stub file not found at: {$stubPath}", 'error');
-            return self::FAILURE;
+            // confirm overwrite
+            if (! $this->confirm('Do you want to overwrite the existing file?')) {
+                $this->line('Operation cancelled.');
+
+                return self::FAILURE;
+            }
         }
 
-        $stub = File::get($stubPath);
+        $this->putFile($classTarget, $classContent);
 
-        // Replace variables in stub
-        $namespace = $driver
-            ? "App\\Flows\\Drivers\\{$driver}\\Tasks"
-            : "App\\Flows\\Global";
+        $this->message("Flow $type Task <options=bold>[$ns\\$name{$type}Task]</> created successfully.", "success");
 
-        $content = str_replace(
-            ['{{namespace}}', '{{task}}'],
-            [$namespace, $name],
-            $stub
-        );
-
-        File::put($filePath, $content);
-
-        $this->message("Flow Task created successfully: <options=bold>[{$filePath}]</>", 'success');
-
+        // tips for registration
         $this->line('');
         $this->info('Next steps:');
-        $this->line("- Register it in TaskRegistry for auto-loading:");
-        $this->line("  Example: app('TaskRegistry')->register(new \\{$namespace}\\{$className}());");
+        $this->line('- Register your new flow task in a service provider using FlowTaskRegistry.');
+        $this->line("  Example: app('FlowTaskRegistry')->register(new \\$ns\\$name{$type}Task);");
 
         return self::SUCCESS;
+    }
+
+    private function getEloquentModels(): array
+    {
+        return [
+            \App\Models\Order::class,
+            \App\Models\User::class,
+            \App\Models\Product::class,
+        ];
     }
 }

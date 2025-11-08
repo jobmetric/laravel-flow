@@ -7,14 +7,14 @@ use JobMetric\Flow\Support\FlowTaskContext;
 use JobMetric\Flow\Support\RestrictionResult;
 use JobMetric\Form\FormBuilder;
 
-class {{task}}RestrictionTask extends AbstractRestrictionTask
+class {{task}}Task extends AbstractRestrictionTask
 {
     /**
      * Returns the Eloquent model class that this task operates on.
      *
-     * @return Model
+     * @return string
      */
-    public static function subject(): Model
+    public static function subject(): string
     {
         return {{model}};
     }
@@ -26,7 +26,7 @@ class {{task}}RestrictionTask extends AbstractRestrictionTask
      */
     public static function title(): string
     {
-        return {{title}};
+        return '{{title}}';
     }
 
     /**

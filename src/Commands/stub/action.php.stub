@@ -2,22 +2,20 @@
 
 namespace {{namespace}};
 
-use Illuminate\Database\Eloquent\Model;
 use JobMetric\Flow\Contracts\AbstractActionTask;
-use JobMetric\Flow\Concerns\RunInBackground;
 use JobMetric\Flow\Support\FlowTaskContext;
 use JobMetric\Form\FormBuilder;
 
 class {{task}}Task extends AbstractActionTask
 {
-    // use RunInBackground;
+    // use \JobMetric\Flow\Concerns\RunInBackground;
 
     /**
      * Returns the Eloquent model class that this task operates on.
      *
-     * @return Model
+     * @return string
      */
-    public static function subject(): Model
+    public static function subject(): string
     {
         return {{model}};
     }
@@ -29,7 +27,7 @@ class {{task}}Task extends AbstractActionTask
      */
     public static function title(): string
     {
-        return {{title}};
+        return '{{title}}';
     }
 
     /**

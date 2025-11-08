@@ -6,14 +6,14 @@ use JobMetric\Flow\Contracts\AbstractValidationTask;
 use JobMetric\Flow\Support\FlowTaskContext;
 use JobMetric\Form\FormBuilder;
 
-class {{task}}ValidationTask extends AbstractValidationTask
+class {{task}}Task extends AbstractValidationTask
 {
     /**
      * Returns the Eloquent model class that this task operates on.
      *
-     * @return Model
+     * @return string
      */
-    public static function subject(): Model
+    public static function subject(): string
     {
         return {{model}};
     }
@@ -25,7 +25,7 @@ class {{task}}ValidationTask extends AbstractValidationTask
      */
     public static function title(): string
     {
-        return {{title}};
+        return '{{title}}';
     }
 
     /**
