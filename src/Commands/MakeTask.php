@@ -5,6 +5,7 @@ namespace JobMetric\Flow\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use JobMetric\Flow\HasWorkflow;
+use JobMetric\Flow\Support\FilesystemHasWorkflowInModelLocator;
 use JobMetric\PackageCore\Commands\ConsoleTools;
 
 class MakeTask extends Command
@@ -145,10 +146,6 @@ class MakeTask extends Command
 
     private function getEloquentModels(): array
     {
-        return [
-            \App\Models\Order::class,
-            \App\Models\User::class,
-            \App\Models\Product::class,
-        ];
+        return FilesystemHasWorkflowInModelLocator::all();
     }
 }
