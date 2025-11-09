@@ -3,8 +3,7 @@
 namespace JobMetric\Flow\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use JobMetric\Flow\Models\Flow;
-use JobMetric\Flow\Services\FlowTask;
+use JobMetric\Flow\Services\FlowTask as FlowTaskService;
 
 /**
  * @method static \JobMetric\Flow\Models\FlowTask store(int $flow_id, int $flow_transition_id, array $data)
@@ -14,7 +13,7 @@ use JobMetric\Flow\Services\FlowTask;
  * @method static array drivers(string $flow_driver = '')
  * @method static array details(string $flow_driver, string $task_driver)
  *
- * @see \JobMetric\Flow\Services\FlowTask
+ * @see \JobMetric\Flow\Services\FlowTaskService
  */
 class FlowTask extends Facade
 {
@@ -25,6 +24,6 @@ class FlowTask extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return FlowTask::class;
+        return FlowTaskService::class;
     }
 }
