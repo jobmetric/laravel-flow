@@ -6,7 +6,7 @@ use JobMetric\Flow\Services\Flow;
 use JobMetric\Flow\Services\FlowState;
 use JobMetric\Flow\Services\FlowTask;
 use JobMetric\Flow\Services\FlowTransition;
-use JobMetric\Flow\Support\TaskRegistry;
+use JobMetric\Flow\Support\FlowTaskRegistry;
 use JobMetric\PackageCore\Enums\RegisterClassTypeEnum;
 use JobMetric\PackageCore\Exceptions\DependencyPublishableClassNotFoundException;
 use JobMetric\PackageCore\Exceptions\MigrationFolderNotFoundException;
@@ -38,6 +38,6 @@ class FlowServiceProvider extends PackageCoreServiceProvider
             ->registerClass('flow-state', FlowState::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('flow-transition', FlowTransition::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('flow-task', FlowTask::class, RegisterClassTypeEnum::SINGLETON())
-            ->registerClass('FlowTaskRegistry', TaskRegistry::class, RegisterClassTypeEnum::SINGLETON());
+            ->registerClass('FlowTaskRegistry', FlowTaskRegistry::class, RegisterClassTypeEnum::SINGLETON());
     }
 }
