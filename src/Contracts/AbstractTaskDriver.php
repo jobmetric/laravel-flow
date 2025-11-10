@@ -2,7 +2,6 @@
 
 namespace JobMetric\Flow\Contracts;
 
-use Illuminate\Database\Eloquent\Model;
 use JobMetric\Form\FormBuilder;
 
 abstract class AbstractTaskDriver
