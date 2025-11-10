@@ -3,8 +3,8 @@
 namespace JobMetric\Flow\Support;
 
 use InvalidArgumentException;
-use JobMetric\Flow\Abstracts\AbstractFlowTask;
-use JobMetric\Flow\Abstracts\TaskAbstract;
+//use JobMetric\Flow\Contracts\TaskAbstract;
+use JobMetric\Flow\Contracts\AbstractTaskDriver;
 
 
 /**
@@ -18,7 +18,7 @@ class FlowTaskRegistry
     /**
      * List of all registered tasks.
      *
-     * @var AbstractFlowTask[]
+     * @var AbstractTaskDriver[]
      */
     protected array $tasks = [];
 
@@ -28,21 +28,35 @@ class FlowTaskRegistry
      * Accepts either an instance of AbstractFlowTask or a fully qualified class name.
      * Prevents duplicate registration of the same task class.
      *
-     * @param TaskAbstract $task
+     * @param AbstractTaskDriver $task
      *
      * @return static
      */
-    public function register(TaskAbstract $task): static
+    public function register(AbstractTaskDriver $task): static
     {
-        $model = get_class($task->model);
-        $type = $task->type->value;
-        $task = get_class($task);
+        $subject = $task::subject();
 
-        if (isset($this->tasks[$model][$type][$task])) {
-            throw new InvalidArgumentException("Task '{$task}' already registered for model '{$model}' and type '{$type}'.");
+        if ($task instanceof \JobMetric\Flow\Contracts\AbstractActionTask) {
+            $type = 'action';
+        } elseif ($task instanceof \JobMetric\Flow\Contracts\AbstractValidationTask) {
+            $type = 'validation';
+        } elseif ($task instanceof \JobMetric\Flow\Contracts\AbstractRestrictionTask) {
+            $type = 'restriction';
+        } else {
+            throw new InvalidArgumentException("Task must extend a known Task type");
         }
 
-        $this->tasks[$model][$type][$task] = $task;
+        if(! isset($this->tasks[$subject][$type])) {
+            $this->tasks[$subject][$type] = [];
+        }
+
+        foreach ($this->tasks[$subject][$type] as $existingTask) {
+            if ($existingTask === $task) {
+                throw new \InvalidArgumentException("This Task instance is already registered for model '{$subject}' and type '{$type}'");
+            }
+        }
+
+        $this->tasks[$subject][$type][] = $task;
 
         return $this;
     }
@@ -50,13 +64,13 @@ class FlowTaskRegistry
     /**
      * Get all tasks associated with a specific model.
      *
-     * @param string $model Fully qualified class name of the model.
+     * @param string $subject Fully qualified class name of the model.
      *
      * @return array
      */
-    public function all(string $model): array
+    public function all(string $subject): array
     {
-        return $this->tasks[$model] ?? [];
+        return $this->tasks[$subject] ?? [];
     }
 
     /**
