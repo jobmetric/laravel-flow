@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use JobMetric\Flow\Casts\TaskDriverCast;
+use JobMetric\Flow\Contracts\AbstractTaskDriver;
 use JobMetric\PackageCore\Models\HasBooleanStatus;
 
 /**
@@ -19,14 +21,14 @@ use JobMetric\PackageCore\Models\HasBooleanStatus;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the flow task row.
- * @property int $flow_transition_id The owning transition identifier.
- * @property string $driver The task driver class/name.
- * @property array|null $config Optional JSON configuration for the task.
- * @property int $ordering Execution/display ordering within the transition.
- * @property bool $status Active flag for the task (true=enabled, false=disabled).
- * @property Carbon $created_at The timestamp when this task was created.
- * @property Carbon $updated_at The timestamp when this task was last updated.
+ * @property int $id                                         The primary identifier of the flow task row.
+ * @property int $flow_transition_id                         The owning transition identifier.
+ * @property AbstractTaskDriver|string|null $driver          The task driver class/name.
+ * @property array|null $config                              Optional JSON configuration for the task.
+ * @property int $ordering                                   Execution/display ordering within the transition.
+ * @property bool $status                                    Active flag for the task (true=enabled, false=disabled).
+ * @property Carbon $created_at                              The timestamp when this task was created.
+ * @property Carbon $updated_at                              The timestamp when this task was last updated.
  *
  * @property-read FlowTransition $transition
  * @property-read Flow|null $flow
@@ -41,8 +43,7 @@ use JobMetric\PackageCore\Models\HasBooleanStatus;
  */
 class FlowTask extends Model
 {
-    use HasFactory,
-        HasBooleanStatus;
+    use HasFactory, HasBooleanStatus;
 
     /**
      * Touch the parent transition when this task changes.
@@ -71,10 +72,10 @@ class FlowTask extends Model
      */
     protected $casts = [
         'flow_transition_id' => 'integer',
-        'driver' => 'string',
-        'config' => AsArrayObject::class,
-        'ordering' => 'integer',
-        'status' => 'boolean',
+        'driver'             => TaskDriverCast::class,
+        'config'             => AsArrayObject::class,
+        'ordering'           => 'integer',
+        'status'             => 'boolean',
     ];
 
     /**
@@ -97,7 +98,8 @@ class FlowTask extends Model
         // Auto-assign ordering if not provided (append to end of the transition's list).
         static::creating(function (self $task): void {
             if ($task->ordering === null) {
-                $max = static::where('flow_transition_id', $task->flow_transition_id)->max('ordering');
+                $max = static::where('flow_transition_id', $task->flow_transition_id)
+                    ->max('ordering');
                 $task->ordering = is_null($max) ? 0 : ($max + 1);
             }
         });
@@ -135,12 +137,15 @@ class FlowTask extends Model
             /** @var FlowTransition|null $transition */
             $transition = $this->getRelation('transition');
 
-            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()->first();
+            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()
+                ->first();
         }
 
-        $transition = $this->transition()->first();
+        $transition = $this->transition()
+            ->first();
 
-        return $transition?->flow()->first();
+        return $transition?->flow()
+            ->first();
     }
 
     /**
