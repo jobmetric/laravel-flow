@@ -26,30 +26,20 @@ class RestrictionResult
     protected ?string $message;
 
     /**
-     * Holds additional contextual data that may be useful for debugging or analytics.
-     *
-     * @var array<string,mixed>
-     */
-    protected array $details;
-
-    /**
      * Creates a new restriction result instance with the given attributes.
      *
      * @param bool $allowed                Indicates whether the restriction check has passed.
      * @param string|null $code            Provides a machine-readable code describing the decision.
      * @param string|null $message         Provides a human-readable explanation of the decision.
-     * @param array<string,mixed> $details Provides extra contextual information for the decision.
      */
     public function __construct(
         bool $allowed,
         ?string $code = null,
         ?string $message = null,
-        array $details = [],
     ) {
         $this->allowed = $allowed;
         $this->code = $code;
         $this->message = $message;
-        $this->details = $details;
     }
 
     /**
@@ -67,13 +57,12 @@ class RestrictionResult
      *
      * @param string $code                 Provides a machine-readable code describing why the operation is denied.
      * @param string|null $message         Provides a human-readable explanation of the denial.
-     * @param array<string,mixed> $details Provides extra contextual information about the denial.
      *
      * @return static
      */
-    public static function deny(string $code, ?string $message = null, array $details = []): self
+    public static function deny(string $code, ?string $message = null): self
     {
-        return new self(false, $code, $message, $details);
+        return new self(false, $code, $message);
     }
 
     /**
@@ -104,15 +93,5 @@ class RestrictionResult
     public function message(): ?string
     {
         return $this->message;
-    }
-
-    /**
-     * Returns the extra contextual details attached to this restriction result.
-     *
-     * @return array<string,mixed>
-     */
-    public function details(): array
-    {
-        return $this->details;
     }
 }
