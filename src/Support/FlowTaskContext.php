@@ -5,7 +5,6 @@ namespace JobMetric\Flow\Support;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use JobMetric\Flow\DTO\ActionResult;
-use JobMetric\Flow\Models\FlowTask;
 
 class FlowTaskContext
 {
@@ -38,13 +37,6 @@ class FlowTaskContext
     protected array $payload;
 
     /**
-     * Holds the database identifier of the stored configuration record for this task instance.
-     *
-     * @var int
-     */
-    protected int $flowTaskId;
-
-    /**
      * Caches the loaded configuration for this task instance.
      *
      * @var array<string,mixed>|null
@@ -55,20 +47,17 @@ class FlowTaskContext
      * Creates a new flow task context instance with all relevant runtime data.
      *
      * @param Model $subject             The main model that the flow is currently working with.
-     * @param int $flowTaskId            The ID of the stored configuration record for this task.
      * @param ActionResult $result       The result of the action execution, if applicable.
      * @param array $payload             The input payload associated with the transition.
      * @param Authenticatable|null $user The user that initiated the transition execution.
      */
     public function __construct(
         Model $subject,
-        int $flowTaskId,
         ActionResult $result,
         array $payload = [],
         ?Authenticatable $user = null,
     ) {
         $this->subject = $subject;
-        $this->flowTaskId = $flowTaskId;
         $this->result = $result;
         $this->payload = $payload;
         $this->user = $user;
@@ -82,16 +71,6 @@ class FlowTaskContext
     public function subject(): Model
     {
         return $this->subject;
-    }
-
-    /**
-     * Returns the database identifier of the stored configuration record for this task instance.
-     *
-     * @return int
-     */
-    public function flowTaskId(): int
-    {
-        return $this->flowTaskId;
     }
 
     /**
@@ -115,25 +94,29 @@ class FlowTaskContext
     }
 
     /**
-     * Loads and returns the persisted configuration payload for this task instance.
+     * Replaces the in-memory configuration for this task instance.
+     * Use this to inject configuration from outside without hitting the database.
      *
-     * The configuration is expected to be stored in a FlowTask model with a "config" attribute
-     * that is cast to an array. You may adjust the model class or attribute name to match your schema.
+     * @param array<string,mixed> $config
+     *
+     * @return static
+     */
+    public function replaceConfig(array $config): static
+    {
+        $this->config = $config;
+
+        return $this;
+    }
+
+    /**
+     * Returns the cached configuration for this task instance.
+     * No database calls are performed; returns an empty array when not set.
      *
      * @return array<string,mixed>
      */
     public function config(): array
     {
-        if ($this->config !== null) {
-            return $this->config;
-        }
-
-        /** @var FlowTask|null $record */
-        $record = FlowTask::query()->find($this->flowTaskId);
-
-        $this->config = $record?->config ?? [];
-
-        return $this->config;
+        return $this->config ?? [];
     }
 
     /**
