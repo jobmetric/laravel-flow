@@ -57,9 +57,9 @@ class {{task}}Task extends AbstractActionTask
      *
      * @param FlowTaskContext $context
      *
-     * @return mixed
+     * @return void
      */
-    protected function handle(FlowTaskContext $context): mixed
+    protected function handle(FlowTaskContext $context): void
     {
         // Implement the task logic here using:
         // $context->subject();   // The main model

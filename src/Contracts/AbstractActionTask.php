@@ -22,12 +22,12 @@ abstract class AbstractActionTask extends AbstractTaskDriver
      *
      * @param FlowTaskContext $context
      *
-     * @return mixed
+     * @return void
      */
-    public function run(FlowTaskContext $context): mixed
+    public function run(FlowTaskContext $context): void
     {
         if (! $this->async()) {
-            return $this->handle($context);
+            $this->handle($context);
         }
 
         $defaultOptions = [
@@ -40,8 +40,6 @@ abstract class AbstractActionTask extends AbstractTaskDriver
         AsyncProcess::run(function () use ($context): void {
             $this->handle($context);
         }, [], $options);
-
-        return null;
     }
 
     /**
@@ -62,7 +60,7 @@ abstract class AbstractActionTask extends AbstractTaskDriver
      *
      * @param FlowTaskContext $context
      *
-     * @return mixed
+     * @return void
      */
-    abstract protected function handle(FlowTaskContext $context): mixed;
+    abstract protected function handle(FlowTaskContext $context): void;
 }
