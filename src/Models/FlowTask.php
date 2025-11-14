@@ -8,9 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 use JobMetric\Flow\Casts\TaskDriverCast;
+use JobMetric\Flow\Contracts\AbstractActionTask;
+use JobMetric\Flow\Contracts\AbstractRestrictionTask;
 use JobMetric\Flow\Contracts\AbstractTaskDriver;
+use JobMetric\Flow\Contracts\AbstractValidationTask;
 use JobMetric\PackageCore\Models\HasBooleanStatus;
+use Throwable;
 
 /**
  * Class FlowTask
@@ -44,6 +49,15 @@ use JobMetric\PackageCore\Models\HasBooleanStatus;
 class FlowTask extends Model
 {
     use HasFactory, HasBooleanStatus;
+
+    /**
+     * Task types.
+     *
+     * @var string
+     */
+    public const TYPE_ACTION = 'action';
+    public const TYPE_VALIDATION = 'validation';
+    public const TYPE_RESTRICTION = 'restriction';
 
     /**
      * Touch the parent transition when this task changes.
@@ -184,5 +198,45 @@ class FlowTask extends Model
     public function scopeDriver(Builder $query, string $driver): Builder
     {
         return $query->where('driver', $driver);
+    }
+
+    /**
+     * Resolve the logical task type for the given driver instance.
+     * This method maps the concrete abstract base class to a normalized string type.
+     *
+     * @param AbstractTaskDriver $task
+     *
+     * @return string
+     * @throws Throwable
+     */
+    public static function determineTaskType(AbstractTaskDriver $task): string
+    {
+        return match (true) {
+            $task instanceof AbstractActionTask => FlowTask::TYPE_ACTION,
+            $task instanceof AbstractRestrictionTask => FlowTask::TYPE_RESTRICTION,
+            $task instanceof AbstractValidationTask => FlowTask::TYPE_VALIDATION,
+            default => throw new InvalidArgumentException(sprintf("Task '%s' must extend one of [%s, %s, %s].", get_class($task), AbstractActionTask::class, AbstractValidationTask::class, AbstractRestrictionTask::class)),
+        };
+    }
+
+    /**
+     * Ensure that the given type string is one of the supported task types.
+     *
+     * @param string $type
+     *
+     * @return void
+     * @throws Throwable
+     */
+    public static function assertValidType(string $type): void
+    {
+        $valid = [
+            self::TYPE_ACTION,
+            self::TYPE_VALIDATION,
+            self::TYPE_RESTRICTION,
+        ];
+
+        if (! in_array($type, $valid, true)) {
+            throw new InvalidArgumentException("Invalid task type '{$type}'. Allowed types are: '" . implode("', '", $valid) . "'.");
+        }
     }
 }

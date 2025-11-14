@@ -6,7 +6,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use JobMetric\Flow\Contracts\AbstractTaskDriver;
 use JobMetric\Flow\DTO\ActionResult;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
@@ -201,7 +200,7 @@ class FlowTransition extends AbstractCrudService
                 'tasks',
             ])
             ->firstOrFail();
-        
+
         if (! $transition) {
             throw new TransitionNotFoundException;
         }
@@ -218,7 +217,7 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if ($driver->taskType() == AbstractTaskDriver::TASK_TYPE_RESTRICTION) {
+            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_RESTRICTION) {
                 $context->replaceConfig($item->config);
 
                 /** @var RestrictionResult $result */
@@ -240,7 +239,7 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if ($driver->taskType() == AbstractTaskDriver::TASK_TYPE_VALIDATION) {
+            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_VALIDATION) {
                 $context->replaceConfig($item->config);
 
                 $rules = $driver->rules($context);
@@ -264,7 +263,7 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if ($driver->taskType() == AbstractTaskDriver::TASK_TYPE_ACTION) {
+            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_ACTION) {
                 $context->replaceConfig($item->config);
 
                 $driver->run($context);
