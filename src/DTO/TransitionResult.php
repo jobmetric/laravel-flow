@@ -3,10 +3,10 @@
 namespace JobMetric\Flow\DTO;
 
 /**
- * ActionResult represents the outcome of running one or more action tasks
+ * TransitionResult represents the outcome of running one or more action tasks
  * and carries both machine-readable and human-readable data through the pipeline.
  */
-class ActionResult
+class TransitionResult
 {
     /**
      * Flag indicating whether the overall pipeline or action set was successful.
@@ -58,11 +58,11 @@ class ActionResult
     protected ?string $code = null;
 
     /**
-     * Create a new ActionResult instance.
+     * Create a new TransitionResult instance.
      *
-     * @param bool $success Initial success flag
-     * @param string $status Initial status string
-     * @param string|null $code Optional machine-readable code
+     * @param bool $success
+     * @param string $status
+     * @param string|null $code
      */
     public function __construct(bool $success = true, string $status = 'ok', ?string $code = null)
     {
@@ -72,9 +72,9 @@ class ActionResult
     }
 
     /**
-     * Create a successful ActionResult with optional initial data.
+     * Create a successful TransitionResult with optional initial data.
      *
-     * @param array<string, mixed> $data Initial data payload
+     * @param array<string, mixed> $data
      *
      * @return static
      */
@@ -87,10 +87,10 @@ class ActionResult
     }
 
     /**
-     * Create a failed ActionResult with an optional error message and code.
+     * Create a failed TransitionResult with an optional error message and code.
      *
-     * @param string|null $message Optional error message
-     * @param string|null $code Optional machine-readable error code
+     * @param string|null $message
+     * @param string|null $code
      *
      * @return static
      */
@@ -108,7 +108,7 @@ class ActionResult
     /**
      * Mark the result as successful and optionally update the status.
      *
-     * @param string $status New status string
+     * @param string $status
      *
      * @return $this
      */
@@ -123,8 +123,8 @@ class ActionResult
     /**
      * Mark the result as failed and optionally update the status and code.
      *
-     * @param string $status New status string
-     * @param string|null $code Optional machine-readable error code
+     * @param string $status
+     * @param string|null $code
      *
      * @return $this
      */
@@ -140,7 +140,7 @@ class ActionResult
     /**
      * Add an informational message to the result.
      *
-     * @param string $message Message text
+     * @param string $message
      *
      * @return $this
      */
@@ -154,8 +154,8 @@ class ActionResult
     /**
      * Add an error message to the result and mark it as failed if required.
      *
-     * @param string $error Error text
-     * @param bool $markFailed Whether to automatically mark the result as failed
+     * @param string $error
+     * @param bool $markFailed
      *
      * @return $this
      */
@@ -174,7 +174,7 @@ class ActionResult
     /**
      * Merge an array of data into the existing data payload.
      *
-     * @param array<string, mixed> $data Data to merge
+     * @param array<string, mixed> $data
      *
      * @return $this
      */
@@ -188,8 +188,8 @@ class ActionResult
     /**
      * Set a single data key on the result payload.
      *
-     * @param string $key Data key
-     * @param mixed $value Data value
+     * @param string $key
+     * @param mixed $value
      *
      * @return $this
      */
@@ -203,7 +203,7 @@ class ActionResult
     /**
      * Merge an array of metadata into the existing metadata payload.
      *
-     * @param array<string, mixed> $meta Metadata to merge
+     * @param array<string, mixed> $meta
      *
      * @return $this
      */
@@ -217,8 +217,8 @@ class ActionResult
     /**
      * Set a single metadata key on the result payload.
      *
-     * @param string $key Metadata key
-     * @param mixed $value Metadata value
+     * @param string $key
+     * @param mixed $value
      *
      * @return $this
      */
@@ -230,14 +230,14 @@ class ActionResult
     }
 
     /**
-     * Merge another ActionResult into the current instance.
+     * Merge another TransitionResult into the current instance.
      * Messages, errors, data and meta are merged; success and status are combined.
      *
-     * @param ActionResult $other Result to merge from
+     * @param TransitionResult $other
      *
      * @return $this
      */
-    public function merge(ActionResult $other): self
+    public function merge(TransitionResult $other): self
     {
         $this->messages = array_merge($this->messages, $other->getMessages());
         $this->errors = array_merge($this->errors, $other->getErrors());

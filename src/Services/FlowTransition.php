@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use JobMetric\Flow\DTO\ActionResult;
+use JobMetric\Flow\DTO\TransitionResult;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
@@ -184,7 +184,7 @@ class FlowTransition extends AbstractCrudService
     /**
      * @throws Throwable
      */
-    public function runner(int|string $key, array $payload = [], ?Authenticatable $user = null): ActionResult
+    public function runner(int|string $key, array $payload = [], ?Authenticatable $user = null): TransitionResult
     {
         $transition = FlowTransitionModel::query()
             ->when(is_string($key), function ($query) use ($key) {
@@ -205,8 +205,8 @@ class FlowTransition extends AbstractCrudService
             throw new TransitionNotFoundException;
         }
 
-        $actionResult = new ActionResult;
-        $context = new FlowTaskContext($transition->flow->subject_type, $actionResult, $payload, $user);
+        $transitionResult = new TransitionResult;
+        $context = new FlowTaskContext($transition->flow->subject_type, $transitionResult, $payload, $user);
 
         // Run restrictions tasks
         foreach ($transition->tasks as $item) {
@@ -270,6 +270,6 @@ class FlowTransition extends AbstractCrudService
             }
         }
 
-        return $actionResult;
+        return $transitionResult;
     }
 }

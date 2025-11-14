@@ -4,7 +4,7 @@ namespace JobMetric\Flow\Support;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use JobMetric\Flow\DTO\ActionResult;
+use JobMetric\Flow\DTO\TransitionResult;
 
 class FlowTaskContext
 {
@@ -25,9 +25,9 @@ class FlowTaskContext
     /**
      * Holds the result of the action execution, if applicable.
      *
-     * @var ActionResult
+     * @var TransitionResult
      */
-    protected ActionResult $result;
+    protected TransitionResult $result;
 
     /**
      * Carries arbitrary input payload coming from the form or API request.
@@ -46,16 +46,16 @@ class FlowTaskContext
     /**
      * Creates a new flow task context instance with all relevant runtime data.
      *
-     * @param Model $subject             The main model that the flow is currently working with.
-     * @param ActionResult $result       The result of the action execution, if applicable.
-     * @param array $payload             The input payload associated with the transition.
-     * @param Authenticatable|null $user The user that initiated the transition execution.
+     * @param Model $subject
+     * @param TransitionResult $result
+     * @param array $payload
+     * @param Authenticatable|null $user
      */
     public function __construct(
         Model $subject,
-        ActionResult $result,
+        TransitionResult $result,
         array $payload = [],
-        ?Authenticatable $user = null,
+        ?Authenticatable $user = null
     ) {
         $this->subject = $subject;
         $this->result = $result;
@@ -76,9 +76,9 @@ class FlowTaskContext
     /**
      * Returns the result of the action execution associated with this task.
      *
-     * @return ActionResult
+     * @return TransitionResult
      */
-    public function result(): ActionResult
+    public function result(): TransitionResult
     {
         return $this->result;
     }
