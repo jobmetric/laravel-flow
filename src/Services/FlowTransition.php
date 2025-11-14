@@ -231,6 +231,9 @@ class FlowTransition extends AbstractCrudService
         }
 
         // Run validations tasks
+        $rules = [];
+        $messages = [];
+        $attributes = [];
         foreach ($transition->tasks as $item) {
             /** @var FlowTaskModel $item */
             $driver = $item->driver;
@@ -242,16 +245,16 @@ class FlowTransition extends AbstractCrudService
             if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_VALIDATION) {
                 $context->replaceConfig($item->config);
 
-                $rules = $driver->rules($context);
-                $messages = $driver->messages($context);
-                $attributes = $driver->attributes($context);
-
-                $validator = validator($payload, $rules, $messages, $attributes);
-
-                if ($validator->fails()) {
-                    ValidationException::withMessages($validator->messages());
-                }
+                $rules = array_merge($rules, $driver->rules($context));
+                $messages = array_merge($messages, $driver->messages($context));
+                $attributes = array_merge($attributes, $driver->attributes($context));
             }
+        }
+
+        $validator = validator($payload, $rules, $messages, $attributes);
+
+        if ($validator->fails()) {
+            ValidationException::withMessages($validator->messages());
         }
 
         // Run actions tasks
