@@ -6,6 +6,11 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+use JobMetric\Flow\Contracts\AbstractActionTask;
+use JobMetric\Flow\Contracts\AbstractRestrictionTask;
+use JobMetric\Flow\Contracts\AbstractTaskDriver;
+use JobMetric\Flow\Contracts\AbstractValidationTask;
 use JobMetric\Flow\DTO\TransitionResult;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
@@ -19,6 +24,7 @@ use JobMetric\Flow\Http\Resources\FlowTransitionResource;
 use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
 use JobMetric\Flow\Models\FlowTransition as FlowTransitionModel;
 use JobMetric\Flow\Support\FlowTaskContext;
+use JobMetric\Flow\Support\FlowTaskRegistry;
 use JobMetric\Flow\Support\RestrictionResult;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
@@ -28,6 +34,12 @@ use Throwable;
 class FlowTransition extends AbstractCrudService
 {
     use InvalidatesFlowCache;
+
+    public function __construct(
+        protected FlowTaskRegistry $taskRegistry
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Human-readable entity name key used in response messages.
@@ -121,18 +133,12 @@ class FlowTransition extends AbstractCrudService
         // Here we need to check that the transition that comes out of the start is removed last.
         return DB::transaction(function () use ($id, $with) {
             /** @var FlowTransitionModel $transition */
-            $transition = (static::$modelClass)::query()
-                ->with($with)
-                ->findOrFail($id);
+            $transition = (static::$modelClass)::query()->with($with)->findOrFail($id);
 
-            $startStateId = $transition->flow->states()
-                ->where('type', FlowStateTypeEnum::START())
-                ->value('id');
+            $startStateId = $transition->flow->states()->where('type', FlowStateTypeEnum::START())->value('id');
 
             if ($startStateId && (int) $transition->from === (int) $startStateId) {
-                $hasAnotherFromStart = $transition->flow->transitions()
-                    ->where('id', '!=', $transition->id)
-                    ->exists();
+                $hasAnotherFromStart = $transition->flow->transitions()->where('id', '!=', $transition->id)->exists();
 
                 if ($hasAnotherFromStart) {
                     throw new RuntimeException(trans('workflow::errors.flow_transition.start_state_last_transition_delete'));
@@ -182,30 +188,51 @@ class FlowTransition extends AbstractCrudService
     }
 
     /**
+     * Ensure the provided task driver is registered for the given flow subject and type.
+     */
+    protected function taskIsRegistered(
+        string $subjectType,
+        string $taskType,
+        FlowTaskModel $task,
+        AbstractTaskDriver $driver
+    ): bool {
+        if ($this->taskRegistry->has($subjectType, $taskType, $driver::class)) {
+            return true;
+        }
+
+        Log::warning('Workflow task driver not registered in FlowTaskRegistry.', [
+            'task_class'         => $driver::class,
+            'subject'            => $subjectType,
+            'type'               => $taskType,
+            'flow_task_id'       => $task->id,
+            'flow_transition_id' => $task->flow_transition_id,
+        ]);
+
+        return false;
+    }
+
+    /**
      * @throws Throwable
      */
     public function runner(int|string $key, array $payload = [], ?Authenticatable $user = null): TransitionResult
     {
-        $transition = FlowTransitionModel::query()
-            ->when(is_string($key), function ($query) use ($key) {
-                $query->where('slug', $key);
-            })
-            ->when(is_int($key), function ($query) use ($key) {
-                $query->where('id', $key);
-            })
-            ->with([
-                'flow',
-                'fromState',
-                'toState',
-                'tasks',
-            ])
-            ->firstOrFail();
+        $transition = FlowTransitionModel::query()->when(is_string($key), function ($query) use ($key) {
+            $query->where('slug', $key);
+        })->when(is_int($key), function ($query) use ($key) {
+            $query->where('id', $key);
+        })->with([
+            'flow',
+            'fromState',
+            'toState',
+            'tasks',
+        ])->firstOrFail();
 
         if (! $transition) {
             throw new TransitionNotFoundException;
         }
 
         $transitionResult = new TransitionResult;
+        $subjectType = (string) $transition->flow->subject_type;
         $context = new FlowTaskContext($transition->flow->subject_type, $transitionResult, $payload, $user);
 
         // Run restrictions tasks
@@ -217,7 +244,14 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_RESTRICTION) {
+            $taskType = FlowTaskModel::determineTaskType($driver);
+
+            if ($taskType == FlowTaskModel::TYPE_RESTRICTION) {
+                /** @var AbstractRestrictionTask $driver */
+                if (! $this->taskIsRegistered($subjectType, $taskType, $item, $driver)) {
+                    continue;
+                }
+
                 $context->replaceConfig($item->config);
 
                 /** @var RestrictionResult $result */
@@ -242,7 +276,14 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_VALIDATION) {
+            $taskType = FlowTaskModel::determineTaskType($driver);
+
+            if ($taskType == FlowTaskModel::TYPE_VALIDATION) {
+                /** @var AbstractValidationTask $driver */
+                if (! $this->taskIsRegistered($subjectType, $taskType, $item, $driver)) {
+                    continue;
+                }
+
                 $context->replaceConfig($item->config);
 
                 $rules = array_merge($rules, $driver->rules($context));
@@ -254,7 +295,7 @@ class FlowTransition extends AbstractCrudService
         $validator = validator($payload, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
-            ValidationException::withMessages($validator->messages());
+            throw ValidationException::withMessages($validator->errors()->toArray());
         }
 
         // Run actions tasks
@@ -266,7 +307,14 @@ class FlowTransition extends AbstractCrudService
                 continue;
             }
 
-            if (FlowTaskModel::determineTaskType($driver) == FlowTaskModel::TYPE_ACTION) {
+            $taskType = FlowTaskModel::determineTaskType($driver);
+
+            if ($taskType == FlowTaskModel::TYPE_ACTION) {
+                /** @var AbstractActionTask $driver */
+                if (! $this->taskIsRegistered($subjectType, $taskType, $item, $driver)) {
+                    continue;
+                }
+
                 $context->replaceConfig($item->config);
 
                 $driver->run($context);
