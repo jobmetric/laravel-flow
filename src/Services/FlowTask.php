@@ -3,8 +3,9 @@
 namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\File;
-use JobMetric\Flow\Abstracts\TaskContract;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use JobMetric\Flow\Contracts\AbstractTaskDriver;
 use JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent;
 use JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent;
@@ -12,13 +13,19 @@ use JobMetric\Flow\Http\Requests\FlowTask\StoreFlowTaskRequest;
 use JobMetric\Flow\Http\Requests\FlowTask\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowTaskResource;
 use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
+use JobMetric\Flow\Support\FlowTaskRegistry;
 use JobMetric\PackageCore\Services\AbstractCrudService;
-use Str;
 use Throwable;
 
 class FlowTask extends AbstractCrudService
 {
     use InvalidatesFlowCache;
+
+    public function __construct(
+        protected FlowTaskRegistry $taskRegistry
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Human-readable entity name key used in response messages.
@@ -94,7 +101,7 @@ class FlowTask extends AbstractCrudService
         $task = $model;
 
         $data = dto($data, UpdateFlowTaskRequest::class, [
-            'flow_id' => $task->flow_id,
+            'flow_id'      => $task->flow_id,
             'flow_task_id' => $task->id,
         ]);
     }
@@ -117,6 +124,7 @@ class FlowTask extends AbstractCrudService
      *
      * @param Model $model
      * @param array<string,mixed> $data
+     *
      * @return void
      */
     protected function afterUpdate(Model $model, array &$data): void
@@ -128,6 +136,7 @@ class FlowTask extends AbstractCrudService
      * Hook after destroy: invalidate caches.
      *
      * @param Model $model
+     *
      * @return void
      */
     protected function afterDestroy(Model $model): void
@@ -136,96 +145,124 @@ class FlowTask extends AbstractCrudService
     }
 
     /**
-     * get all flow task drivers
+     * Retrieve registered flow tasks grouped by subject (model) and optionally filtered by task type(s).
      *
-     * @param string $flow_driver
+     * @param string $taskDriver
+     * @param array|string|null $taskTypes Allowed values: action, validation, restriction
      *
-     * @return array
+     * @return array<int, array<string, mixed>>
+     * @throws Throwable
      */
-    public function drivers(string $flow_driver = ''): array
+    public function drivers(string $taskDriver = '', array|string|null $taskTypes = null): array
     {
-        $output = [];
+        $tasks = collect($this->taskRegistry->all());
 
-        $global_tasks = [];
-        $results = $this->resolveClassesFromDirectory('App\\Flows\\Global');
-        foreach ($results as $result) {
-            $global_tasks[] = $this->getDetailsFromTask($result, false);
+        if ($taskDriver !== '') {
+            $normalized = $this->normalizeDriverKey($taskDriver);
+
+            $tasks = $tasks->filter(function ($_, string $subject) use ($normalized) {
+                return $subject === $normalized;
+            });
         }
-        $output[] = [
-            'key' => 'Global',
-            'title' => __('flow::base.flow_task.global'),
-            'tasks' => $global_tasks
+
+        $result = $tasks->map(function (array $types, string $subject): array {
+            $taskDetails = collect($types)->flatMap(fn (array $taskGroup) => $taskGroup)->map(fn (
+                AbstractTaskDriver $task
+            ) => $this->taskDetails($task))->values()->all();
+
+            return [
+                'subject' => $subject,
+                'title'   => class_basename($subject),
+                'tasks'   => $taskDetails,
+            ];
+        })->values();
+
+        if ($taskTypes !== null) {
+            $filters = array_map(function ($type) {
+                $normalized = Str::lower((string) $type);
+
+                FlowTaskModel::assertValidType($normalized);
+
+                return $normalized;
+            }, array_values((array) $taskTypes));
+
+            $result = $result->map(function (array $group) use ($filters): array {
+                $group['tasks'] = collect($group['tasks'])->filter(fn (array $task
+                ) => in_array($task['type'], $filters, true))->values()->all();
+
+                return $group;
+            })->filter(fn (array $group) => count($group['tasks']) > 0)->values();
+        }
+
+        return $result->all();
+    }
+
+    /**
+     * Get detailed information about a registered task driver.
+     *
+     * @param string $taskDriver
+     * @param string $taskClassName
+     *
+     * @return array<string, mixed>
+     * @throws Throwable
+     */
+    public function details(string $taskDriver, string $taskClassName): array
+    {
+        $subject = $taskDriver !== '' ? $this->normalizeDriverKey($taskDriver) : null;
+        $taskBasename = Str::studly($taskClassName);
+
+        $subjects = $subject !== null ? [$subject => $this->taskRegistry->forSubject($subject)] : $this->taskRegistry->all();
+
+        foreach ($subjects as $types) {
+            foreach ($types as $tasks) {
+                foreach ($tasks as $task) {
+                    if (class_basename($task) === $taskBasename || $task::class === $taskBasename) {
+                        return $this->taskDetails($task);
+                    }
+                }
+            }
+        }
+
+        Log::warning('Workflow task driver not found in registry; skipping details response.', [
+            'task'    => $taskClassName,
+            'subject' => $subject,
+        ]);
+
+        return [];
+    }
+
+    /**
+     * Normalize driver parameter to a subject (model) key.
+     */
+    protected function normalizeDriverKey(string $driver): string
+    {
+        $driver = trim($driver);
+
+        if (class_exists($driver) || str_contains($driver, '\\')) {
+            return $driver;
+        }
+
+        return Str::studly($driver);
+    }
+
+    /**
+     * Transform a task driver into response-friendly details.
+     *
+     * @throws Throwable
+     */
+    protected function taskDetails(AbstractTaskDriver $task): array
+    {
+        $details = [
+            'key'   => class_basename($task),
+            'title' => trans($task::title()),
+            'type'  => FlowTaskModel::determineTaskType($task),
+            'class' => $task::class,
         ];
 
-        if ($flow_driver != '') {
-            $flow_driver = Str::studly($flow_driver);
-            $driver = flowResolve($flow_driver);
-
-            $driver_tasks = [];
-            $results = $this->resolveClassesFromDirectory('App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks');
-            foreach ($results as $result) {
-                $driver_tasks[] = $this->getDetailsFromTask($result, false);
-            }
-
-            $output[] = [
-                'key' => $flow_driver,
-                'title' => $driver->getTitle(),
-                'tasks' => $driver_tasks
-            ];
+        if ($description = $task::description()) {
+            $details['description'] = trans($description);
         }
 
-        return $output;
-    }
-
-    /**
-     * get details flow task drivers
-     *
-     * @param string $flow_driver
-     * @param string $task_driver
-     *
-     * @return array
-     */
-    public function details(string $flow_driver, string $task_driver): array
-    {
-        $flow_driver = Str::studly($flow_driver);
-        $task_driver = Str::studly($task_driver);
-
-        if ('Global' == $flow_driver) {
-            $object = resolve('\\App\\Flows\\Global\\' . $task_driver);
-
-            return $this->getDetailsFromTask($object);
-        }
-
-        $object = resolve('\\App\\Flows\\Drivers\\' . $flow_driver . '\\Tasks\\' . $task_driver);
-
-        return $this->getDetailsFromTask($object);
-    }
-
-    /**
-     * restore flow task driver with namespace
-     *
-     * @param string $namespace
-     *
-     * @return array
-     */
-    private function resolveClassesFromDirectory(string $namespace): array
-    {
-        $files = File::files(base_path($namespace), '*.php');
-
-        $class = [];
-        foreach ($files as $file) {
-            $class[] = resolve($namespace . '\\' . pathinfo($file, PATHINFO_FILENAME));
-        }
-
-        return $class;
-    }
-
-    private function getDetailsFromTask(TaskContract $task, bool $has_field = true): array
-    {
-        return array_merge([
-            'key' => class_basename($task),
-            'title' => $task->getTitle(),
-            'description' => $task->getDescription(),
-        ], $has_field ? ['fields' => $task->getFields()] : []);
+        return $details;
     }
 }
