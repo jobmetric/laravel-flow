@@ -29,8 +29,9 @@ class SetActiveWindowRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function (Validator $v) {
-            $from = $this->input('active_from');
-            $to   = $this->input('active_to');
+            $data = $v->getData();
+            $from = $data['active_from'] ?? null;
+            $to   = $data['active_to'] ?? null;
 
             if ($from && $to && strtotime($from) > strtotime($to)) {
                 $v->errors()->add('active_from', trans('workflow::base.validation.flow.active_from_before_active_to'));

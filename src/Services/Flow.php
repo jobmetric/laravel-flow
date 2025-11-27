@@ -13,8 +13,8 @@ use JobMetric\Flow\Events\Flow\FlowForceDeleteEvent;
 use JobMetric\Flow\Events\Flow\FlowRestoreEvent;
 use JobMetric\Flow\Events\Flow\FlowStoreEvent;
 use JobMetric\Flow\Events\Flow\FlowUpdateEvent;
-use JobMetric\Flow\Exceptions\InvalidActiveWindowException;
 use JobMetric\Flow\Http\Requests\Flow\ReorderFlowRequest;
+use JobMetric\Flow\Http\Requests\Flow\SetActiveWindowRequest;
 use JobMetric\Flow\Http\Requests\Flow\SetRolloutRequest;
 use JobMetric\Flow\Http\Requests\Flow\StoreFlowRequest;
 use JobMetric\Flow\Http\Requests\Flow\UpdateFlowRequest;
@@ -335,13 +335,17 @@ class Flow extends AbstractCrudService
      */
     public function setActiveWindow(int $flowId, ?Carbon $from, ?Carbon $to, array $with = []): Response
     {
+        $validated = dto([
+            'active_from' => $from?->toDateTimeString(),
+            'active_to' => $to?->toDateTimeString(),
+        ], SetActiveWindowRequest::class);
+
+        $from = isset($validated['active_from']) ? Carbon::parse($validated['active_from']) : null;
+        $to = isset($validated['active_to']) ? Carbon::parse($validated['active_to']) : null;
+
         return DB::transaction(function () use ($flowId, $from, $to, $with) {
             /** @var FlowModel $flow */
             $flow = FlowModel::query()->findOrFail($flowId);
-
-            if ($from && $to && $from->greaterThan($to)) {
-                throw new InvalidActiveWindowException;
-            }
 
             $flow->active_from = $from;
             $flow->active_to = $to;

@@ -154,10 +154,12 @@ class FlowServiceTest extends BaseTestCase
     }
 
     /**
-     * @throws Throwable
+     * Invalid range should throw via dto() validation.
      */
     public function test_set_active_window_invalid_range_throws(): void
     {
+        $this->expectException(ValidationException::class);
+
         $service = app(FlowService::class);
         $user = User::factory()->create();
 
@@ -166,7 +168,6 @@ class FlowServiceTest extends BaseTestCase
         $from = Carbon::now('UTC')->addDay();
         $to = Carbon::now('UTC');
 
-        $this->expectException(\JobMetric\Flow\Exceptions\InvalidActiveWindowException::class);
         $service->setActiveWindow($flow->id, $from, $to);
     }
 
