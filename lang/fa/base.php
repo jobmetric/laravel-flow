@@ -70,12 +70,6 @@ return [
         "have_at_least_one_transition_from_the_start_beginning" => "فلو باید حداقل یک انتقال از شروع داشته باشد.",
     ],
 
-    "flow_task" => [
-        "global" => "سراسری",
-        "not_found" => "وظیفه فلو با شناسه [:id] پیدا نشد",
-        "task_driver_not_found" => "درایور وظیفه فلو [:task] پیدا نشد",
-    ],
-
     'fields' => [
         'flow_id' => 'جریان',
         'translation' => 'ترجمه',
@@ -83,6 +77,25 @@ return [
         'from' => 'مبدأ',
         'to' => 'مقصد',
         'slug' => 'نامک',
+        'description' => 'توضیحات',
+        'status' => 'وضعیت',
+        'color' => 'رنگ',
+        'position' => 'موقعیت',
+        'position_x' => 'موقعیت X',
+        'position_y' => 'موقعیت Y',
+        'is_terminal' => 'پایانی است',
+        'subject_type' => 'نوع موضوع',
+        'subject_scope' => 'دامنه موضوع',
+        'subject_collection' => 'مجموعه موضوع',
+        'version' => 'نسخه',
+        'is_default' => 'پیش‌فرض است',
+        'active_from' => 'فعال از',
+        'active_to' => 'فعال تا',
+        'channel' => 'کانال',
+        'ordering' => 'ترتیب',
+        'rollout_pct' => 'درصد رول‌اوت',
+        'environment' => 'محیط',
+        'ordered_ids' => 'شناسه‌های مرتب‌شده',
     ],
 
     "validation" => [
@@ -104,6 +117,20 @@ return [
             'must_connect_two_states'   => 'یک ترنزیشن باید بین دو استیت مشخص برقرار باشد (هر دو مقدار مبدأ و مقصد پس از ویرایش الزامی است).',
         ],
 
-        "check_driver_exists" => "درایور انتخاب شده :driver وجود ندارد",
+        'flow_state' => [
+            'translation_name_required' => 'فیلد نام ترجمه الزامی است.',
+            'cannot_delete_start' => 'استیت شروع قابل حذف نیست.',
+        ],
+
+        'flow' => [
+            'translation_name_required' => 'فیلد نام ترجمه الزامی است.',
+            'active_from_before_active_to' => 'تاریخ شروع باید قبل یا برابر با تاریخ پایان باشد.',
+        ],
+    ],
+
+    'errors' => [
+        'flow_transition' => [
+            'start_state_last_transition_delete' => 'امکان حذف آخرین ترنزیشن از استیت شروع وجود ندارد.',
+        ],
     ],
 ];

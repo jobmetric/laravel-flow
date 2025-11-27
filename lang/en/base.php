@@ -70,12 +70,6 @@ return [
         "have_at_least_one_transition_from_the_start_beginning" => "Flow have at least one transition from the start beginning.",
     ],
 
-    "flow_task" => [
-        "global" => "Global",
-        "not_found" => "flow task with id [:id] not found",
-        "task_driver_not_found" => "flow task driver [:task] not found",
-    ],
-
     'fields' => [
         'flow_id' => 'Flow',
         'translation' => 'Translation',
@@ -83,6 +77,25 @@ return [
         'from' => 'From',
         'to' => 'To',
         'slug' => 'Slug',
+        'description' => 'Description',
+        'status' => 'Status',
+        'color' => 'Color',
+        'position' => 'Position',
+        'position_x' => 'Position X',
+        'position_y' => 'Position Y',
+        'is_terminal' => 'Is Terminal',
+        'subject_type' => 'Subject Type',
+        'subject_scope' => 'Subject Scope',
+        'subject_collection' => 'Subject Collection',
+        'version' => 'Version',
+        'is_default' => 'Is Default',
+        'active_from' => 'Active From',
+        'active_to' => 'Active To',
+        'channel' => 'Channel',
+        'ordering' => 'Ordering',
+        'rollout_pct' => 'Rollout Percentage',
+        'environment' => 'Environment',
+        'ordered_ids' => 'Ordered IDs',
     ],
 
     "validation" => [
@@ -104,6 +117,20 @@ return [
             'must_connect_two_states'   => 'A transition must connect two concrete states (both from and to are required after update).',
         ],
 
-        "check_driver_exists" => "The selected driver :driver does not exists",
+        'flow_state' => [
+            'translation_name_required' => 'The translation name field is required.',
+            'cannot_delete_start' => 'The START state cannot be deleted.',
+        ],
+
+        'flow' => [
+            'translation_name_required' => 'The translation name field is required.',
+            'active_from_before_active_to' => 'The start date must be before or equal to the end date.',
+        ],
+    ],
+
+    'errors' => [
+        'flow_transition' => [
+            'start_state_last_transition_delete' => 'Cannot delete the last transition from the START state.',
+        ],
     ],
 ];

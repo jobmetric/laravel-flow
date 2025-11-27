@@ -34,6 +34,7 @@ class StoreFlowStateRequest extends FormRequest
         $data['is_terminal'] = isset($data['is_terminal']) && (bool)$data['is_terminal'];
         $data['config'] = is_array($data['config'] ?? null) ? $data['config'] : [];
         $data['color'] = $data['color'] ?? ($data['is_terminal'] ? config('workflow.state.end.color') : config('workflow.state.middle.color'));
+        $data['icon'] = $data['icon'] ?? ($data['is_terminal'] ? config('workflow.state.end.icon') : config('workflow.state.middle.icon'));
         $data['position'] = $data['position'] ?? [
             'x' => ($data['is_terminal'] ? config('workflow.state.end.position.x') : config('workflow.state.middle.position.x')),
             'y' => ($data['is_terminal'] ? config('workflow.state.end.position.y') : config('workflow.state.middle.position.y')),
