@@ -2,6 +2,7 @@
 
 namespace JobMetric\Flow\Contracts;
 
+use JobMetric\Flow\Support\FlowTaskDefinition;
 use JobMetric\Form\FormBuilder;
 
 abstract class AbstractTaskDriver
@@ -14,21 +15,11 @@ abstract class AbstractTaskDriver
     abstract public static function subject(): string;
 
     /**
-     * Returns the translation key that represents the display title of the task.
+     * Returns the full metadata definition for this flow task.
      *
-     * @return string
+     * @return FlowTaskDefinition
      */
-    abstract public static function title(): string;
-
-    /**
-     * Returns the translation key that represents the human-readable description of the task.
-     *
-     * @return string|null
-     */
-    public static function description(): ?string
-    {
-        return null;
-    }
+    abstract public static function definition(): FlowTaskDefinition;
 
     /**
      * Registers configuration fields for this task using the provided form builder instance.

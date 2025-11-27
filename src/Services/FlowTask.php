@@ -252,15 +252,17 @@ class FlowTask extends AbstractCrudService
      */
     protected function taskDetails(AbstractTaskDriver $task): array
     {
+        $definition = $task::definition();
+        
         $details = [
             'key'   => class_basename($task),
-            'title' => trans($task::title()),
+            'title' => trans($definition->title),
             'type'  => FlowTaskModel::determineTaskType($task),
             'class' => $task::class,
         ];
 
-        if ($description = $task::description()) {
-            $details['description'] = trans($description);
+        if ($definition->description) {
+            $details['description'] = trans($definition->description);
         }
 
         return $details;

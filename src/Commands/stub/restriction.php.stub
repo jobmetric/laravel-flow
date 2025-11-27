@@ -4,6 +4,7 @@ namespace {{namespace}};
 
 use JobMetric\Flow\Contracts\AbstractRestrictionTask;
 use JobMetric\Flow\Support\FlowTaskContext;
+use JobMetric\Flow\Support\FlowTaskDefinition;
 use JobMetric\Flow\Support\RestrictionResult;
 use JobMetric\Form\FormBuilder;
 
@@ -20,23 +21,18 @@ class {{task}}Task extends AbstractRestrictionTask
     }
 
     /**
-     * Returns the translation key that represents the display title of the task.
+     * Returns the full metadata definition for this flow task.
      *
-     * @return string
+     * @return FlowTaskDefinition
      */
-    public static function title(): string
+    public static function definition(): FlowTaskDefinition
     {
-        return '{{title}}';
-    }
-
-    /**
-     * Returns the translation key that represents the human-readable description of the task.
-     *
-     * @return string|null
-     */
-    public static function description(): ?string
-    {
-        return null;
+        return new FlowTaskDefinition(
+            title: '{{title}}',
+            description: null,
+            icon: null,
+            tags: null,
+        );
     }
 
     /**
