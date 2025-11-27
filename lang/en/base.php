@@ -30,7 +30,6 @@ return [
     ],
 
     "exceptions" => [
-        "invalid_active_window" => "Invalid active window: `from` must be before or equal to `to`.",
         "invalid_rollout" => "Invalid rollout percentage. It must be between 0 and 100.",
         "transition_not_found" => "Flow transition not found.",
         "task_restriction" => "Flow transition execution is restricted.",
