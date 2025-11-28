@@ -258,17 +258,26 @@ class Flow extends AbstractCrudService
             /** @var FlowModel $flow */
             $flow = FlowModel::query()->lockForUpdate()->findOrFail($flowId);
 
-            $scopeQuery = FlowModel::query()
-                ->where('subject_type', $flow->subject_type)
-                ->where('version', $flow->version)
-                ->when(is_null($flow->subject_scope), function ($query) {
-                    return $query->whereNull('subject_scope');
-                }, function ($query) use ($flow) {
-                    return $query->where('subject_scope', $flow->subject_scope);
-                });
+            // Build scope query base to lock all flows in the same scope
+            $scopeQueryBuilder = function () use ($flow) {
+                return FlowModel::query()
+                    ->where('subject_type', $flow->subject_type)
+                    ->where('version', $flow->version)
+                    ->when(is_null($flow->subject_scope), function ($query) {
+                        return $query->whereNull('subject_scope');
+                    }, function ($query) use ($flow) {
+                        return $query->where('subject_scope', $flow->subject_scope);
+                    });
+            };
 
-            $scopeQuery->whereKeyNot($flow->getKey())->update(['is_default' => false]);
+            // Lock all flows in the same scope to prevent race conditions
+            // when multiple requests try to set different flows as default simultaneously
+            $scopeQueryBuilder()->lockForUpdate()->get();
 
+            // Update all other flows in scope to non-default
+            $scopeQueryBuilder()->whereKeyNot($flow->getKey())->update(['is_default' => false]);
+
+            // Set current flow as default
             FlowModel::query()->whereKey($flow->getKey())->update(['is_default' => true]);
 
             $flow->refresh();
