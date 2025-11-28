@@ -19,11 +19,11 @@ use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the binding row.
- * @property int $flow_id The bound flow identifier.
+ * @property int $id               The primary identifier of the binding row.
+ * @property int $flow_id          The bound flow identifier.
  * @property string $flowable_type The class name of the bound model.
- * @property int $flowable_id The ID of the bound model instance.
- * @property Carbon $used_at The timestamp when this binding was created.
+ * @property int $flowable_id      The ID of the bound model instance.
+ * @property Carbon $used_at       The timestamp when this binding was created.
  *
  * @property-read Flow $flow
  * @property-read Model|MorphTo $flowable
@@ -40,8 +40,7 @@ use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
  */
 class FlowUse extends Model
 {
-    use HasFactory,
-        HasMorphResourceAttributes;
+    use HasFactory, HasMorphResourceAttributes;
 
     /**
      * This table does not have Laravel's created_at/updated_at columns.
@@ -75,10 +74,10 @@ class FlowUse extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'flow_id' => 'integer',
+        'flow_id'       => 'integer',
         'flowable_type' => 'string',
-        'flowable_id' => 'integer',
-        'used_at' => 'datetime',
+        'flowable_id'   => 'integer',
+        'used_at'       => 'datetime',
     ];
 
     /**
@@ -152,7 +151,7 @@ class FlowUse extends Model
     {
         return $query->where([
             'flowable_type' => $type,
-            'flowable_id' => $id,
+            'flowable_id'   => $id,
         ]);
     }
 
