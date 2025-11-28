@@ -44,7 +44,6 @@ return [
 
     "flow_transition" => [
         "slug_is_exist" => "Flow transition slug `:slug` is exist.",
-        "invalid" => "Flow transition is invalid.",
         "state_start_not_in_to" => "Flow state start not in transition to.",
         "state_end_not_in_from" => "Flow state end not in transition from.",
         "to_not_set" => "Flow transition to is not set.",
