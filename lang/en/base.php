@@ -42,10 +42,6 @@ return [
         ]
     ],
 
-    "flow_state" => [
-        "start_type_is_not_delete" => "Flow state `start` type is not deletable.",
-    ],
-
     "flow_transition" => [
         "slug_is_exist" => "Flow transition slug `:slug` is exist.",
         "invalid" => "Flow transition is invalid.",

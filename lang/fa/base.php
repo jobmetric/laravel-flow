@@ -42,10 +42,6 @@ return [
         ]
     ],
 
-    "flow_state" => [
-        "start_type_is_not_delete" => "نوع فلو استیت `start` قابل حذف نیست.",
-    ],
-
     "flow_transition" => [
         "slug_is_exist" => "اسلاگ انتقال فلو `:slug` وجود دارد.",
         "invalid" => "انتقال فلو نامعتبر است.",
