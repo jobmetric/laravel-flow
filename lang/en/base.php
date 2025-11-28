@@ -182,5 +182,11 @@ return [
             'title' => 'Flow Transition Stored',
             'description' => 'This event is triggered when a Flow Transition is stored.',
         ],
+
+        'flow_transition_updated' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Updated',
+            'description' => 'This event is triggered when a Flow Transition is updated.',
+        ],
     ],
 ];
