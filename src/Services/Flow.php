@@ -261,10 +261,14 @@ class Flow extends AbstractCrudService
             $scopeQuery = FlowModel::query()
                 ->where('subject_type', $flow->subject_type)
                 ->where('version', $flow->version)
-                ->when(is_null($flow->subject_scope), fn ($q) => $q->whereNull('subject_scope'), fn ($q
-                ) => $q->where('subject_scope', $flow->subject_scope));
+                ->when(is_null($flow->subject_scope), function ($query) {
+                    return $query->whereNull('subject_scope');
+                }, function ($query) use ($flow) {
+                    return $query->where('subject_scope', $flow->subject_scope);
+                });
 
             $scopeQuery->whereKeyNot($flow->getKey())->update(['is_default' => false]);
+
             FlowModel::query()->whereKey($flow->getKey())->update(['is_default' => true]);
 
             $flow->refresh();
@@ -334,6 +338,7 @@ class Flow extends AbstractCrudService
         return DB::transaction(function () use ($flowId, $pct, $with) {
             /** @var FlowModel $flow */
             $flow = FlowModel::query()->findOrFail($flowId);
+
             $flow->rollout_pct = $pct;
             $flow->save();
 
@@ -446,6 +451,8 @@ class Flow extends AbstractCrudService
                             'to'   => $transition->to ? ($mapStateId[$transition->to] ?? null) : null,
                             'slug' => $transition->slug,
                         ]);
+
+                        // added task for transition
                     }
                 }
             }
@@ -516,8 +523,7 @@ class Flow extends AbstractCrudService
 
             if ($flow && method_exists($flow, 'transitions')) {
                 $incomingCount = (int) $flow->transitions()->where('to', $startId)->count();
-            }
-            else {
+            } else {
                 $incomingCount = (int) FlowTransition::query()
                     ->where('flow_id', $flowId)
                     ->where('to', $startId)
@@ -550,8 +556,7 @@ class Flow extends AbstractCrudService
 
         if (method_exists($subject, 'buildFlowPicker')) {
             $subject->buildFlowPicker($builder);
-        }
-        else {
+        } else {
             $builder->subjectType(get_class($subject))
                 ->subjectCollection(method_exists($subject, 'flowSubjectCollection') ? $subject->flowSubjectCollection() : null)
                 ->onlyActive(true)
@@ -579,7 +584,7 @@ class Flow extends AbstractCrudService
     {
         /** @var FlowModel $flow */
         $flow = FlowModel::query()
-            ->when($withGraph, fn ($q) => $q->with(['states', 'transitions']))
+            ->when($withGraph, fn ($q) => $q->with(['states', 'transitions.tasks']))
             ->findOrFail($flowId);
 
         return [
