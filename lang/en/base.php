@@ -164,5 +164,11 @@ return [
             'title' => 'Flow Task Stored',
             'description' => 'This event is triggered when a Flow Task is stored.',
         ],
+
+        'flow_task_updated' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Updated',
+            'description' => 'This event is triggered when a Flow Task is updated.',
+        ],
     ],
 ];
