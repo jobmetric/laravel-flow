@@ -2,9 +2,11 @@
 
 namespace JobMetric\Flow\Events\Flow;
 
+use JobMetric\EventSystem\Contracts\DomainEvent;
+use JobMetric\EventSystem\Support\DomainEventDefinition;
 use JobMetric\Flow\Models\Flow;
 
-readonly class FlowDeleteEvent
+readonly class FlowDeleteEvent implements DomainEvent
 {
     /**
      * Create a new event instance.
@@ -13,5 +15,29 @@ readonly class FlowDeleteEvent
         public Flow $flow
     )
     {
+    }
+
+    /**
+     * Returns the stable technical key for the domain event.
+     *
+     * @return string
+     */
+    public static function key(): string
+    {
+        return 'flow.deleted';
+    }
+
+    /**
+     * Returns the full metadata definition for this domain event.
+     *
+     * @return DomainEventDefinition
+     */
+    public static function definition(): DomainEventDefinition
+    {
+        return new DomainEventDefinition(self::key(), 'flow::base.events.flow_deleted.group', 'flow::base.events.flow_deleted.title', 'flow::base.events.flow_deleted.description', 'fas fa-trash-alt', [
+            'flow',
+            'storage',
+            'management',
+        ]);
     }
 }

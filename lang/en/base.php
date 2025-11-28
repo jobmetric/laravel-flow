@@ -103,4 +103,12 @@ return [
             'start_state_last_transition_delete' => 'Cannot delete the last transition from the START state.',
         ],
     ],
+
+    'events' => [
+        'flow_deleted' => [
+            'group' => 'Flow',
+            'title' => 'Flow Deleted',
+            'description' => 'This event is triggered when a Flow is deleted.',
+        ],
+    ],
 ];
