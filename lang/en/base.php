@@ -47,7 +47,6 @@ return [
         "invalid" => "Flow transition is invalid.",
         "state_start_not_in_to" => "Flow state start not in transition to.",
         "state_end_not_in_from" => "Flow state end not in transition from.",
-        "from_not_set" => "Flow transition from is not set.",
         "to_not_set" => "Flow transition to is not set.",
         "state_driver_from_and_to_not_equal" => "Flow transition state driver from and to must be equal.",
         "from_state_start_not_move" => "Flow transition from state start not move.",
