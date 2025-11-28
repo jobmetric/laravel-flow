@@ -158,5 +158,11 @@ return [
             'title' => 'Flow Task Deleted',
             'description' => 'This event is triggered when a Flow Task is deleted.',
         ],
+
+        'flow_task_stored' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Stored',
+            'description' => 'This event is triggered when a Flow Task is stored.',
+        ],
     ],
 ];
