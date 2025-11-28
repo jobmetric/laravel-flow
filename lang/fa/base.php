@@ -30,7 +30,6 @@ return [
     ],
 
     "exceptions" => [
-        "invalid_rollout" => "درصد رول‌اوت نامعتبر است. عدد باید بین ۰ تا ۱۰۰ باشد.",
         "transition_not_found" => "انتقال جریان پیدا نشد.",
         "task_restriction" => "اجرای انتقال جریان محدود شده است.",
     ],
