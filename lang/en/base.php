@@ -140,5 +140,11 @@ return [
             'title' => 'Flow State Deleted',
             'description' => 'This event is triggered when a Flow State is deleted.',
         ],
+
+        'flow_state_stored' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Stored',
+            'description' => 'This event is triggered when a Flow State is stored.',
+        ],
     ],
 ];
