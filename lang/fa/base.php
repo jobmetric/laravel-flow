@@ -30,7 +30,6 @@ return [
     ],
 
     "exceptions" => [
-        "transition_not_found" => "انتقال جریان پیدا نشد.",
         "task_restriction" => "اجرای انتقال جریان محدود شده است.",
     ],
 

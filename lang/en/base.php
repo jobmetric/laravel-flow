@@ -30,7 +30,6 @@ return [
     ],
 
     "exceptions" => [
-        "transition_not_found" => "Flow transition not found.",
         "task_restriction" => "Flow transition execution is restricted.",
     ],
 

@@ -16,7 +16,6 @@ use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
 use JobMetric\Flow\Exceptions\TaskRestrictionException;
-use JobMetric\Flow\Exceptions\TransitionNotFoundException;
 use JobMetric\Flow\Http\Requests\FlowTransition\StoreFlowTransitionRequest;
 use JobMetric\Flow\Http\Requests\FlowTransition\UpdateFlowTransitionRequest;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
@@ -215,12 +214,10 @@ class FlowTransition extends AbstractCrudService
             'flow',
             'fromState',
             'toState',
-            'tasks',
+            'tasks' => function ($query) {
+                $query->where('status', true)->orderBy('ordering');
+            },
         ])->firstOrFail();
-
-        if (! $transition) {
-            throw new TransitionNotFoundException;
-        }
 
         $transitionResult = new TransitionResult;
         $subjectType = (string) $transition->flow->subject_type;
