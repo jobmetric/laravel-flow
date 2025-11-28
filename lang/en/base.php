@@ -110,5 +110,11 @@ return [
             'title' => 'Flow Deleted',
             'description' => 'This event is triggered when a Flow is deleted.',
         ],
+
+        'flow_force_deleted' => [
+            'group' => 'Flow',
+            'title' => 'Flow Force Deleted',
+            'description' => 'This event is triggered when a Flow is force deleted.',
+        ],
     ],
 ];
