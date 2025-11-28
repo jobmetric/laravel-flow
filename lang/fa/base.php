@@ -44,7 +44,6 @@ return [
 
     "flow_state" => [
         "start_type_is_exist" => "نوع فلو استیت `start` در `:driver` وجود دارد.",
-        "invalid_type" => "نوع فلو استیت `:type` معتبر نیست.",
         "start_type_is_not_delete" => "نوع فلو استیت `start` قابل حذف نیست.",
         "start_type_is_not_change" => "نوع فلو استیت `start` قابل تغییر نیست.",
     ],
