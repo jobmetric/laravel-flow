@@ -42,10 +42,6 @@ return [
         ]
     ],
 
-    "flow_transition" => [
-        "to_not_set" => "انتقال فلو به تنظیم نشده است.",
-    ],
-
     'fields' => [
         'flow_id' => 'جریان',
         'translation' => 'ترجمه',

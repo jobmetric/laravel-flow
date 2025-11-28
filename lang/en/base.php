@@ -42,10 +42,6 @@ return [
         ]
     ],
 
-    "flow_transition" => [
-        "to_not_set" => "Flow transition to is not set.",
-    ],
-
     'fields' => [
         'flow_id' => 'Flow',
         'translation' => 'Translation',
