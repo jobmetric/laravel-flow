@@ -46,7 +46,6 @@ return [
         "state_start_not_in_to" => "فلو استیت شروع در انتقال به وجود ندارد.",
         "state_end_not_in_from" => "فلو استیت پایان در انتقال از وجود ندارد.",
         "to_not_set" => "انتقال فلو به تنظیم نشده است.",
-        "state_driver_from_and_to_not_equal" => "درایور استیت فلو از و به باید برابر باشند.",
     ],
 
     'fields' => [
