@@ -42,10 +42,6 @@ return [
         ]
     ],
 
-    "flow" => [
-        "inactive" => "فلو `:driver` غیرفعال است.",
-    ],
-
     "flow_state" => [
         "start_type_is_exist" => "نوع فلو استیت `start` در `:driver` وجود دارد.",
         "invalid_type" => "نوع فلو استیت `:type` معتبر نیست.",

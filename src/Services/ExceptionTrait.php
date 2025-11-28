@@ -4,8 +4,6 @@ namespace JobMetric\Flow\Services;
 
 use Illuminate\Database\Eloquent\Builder;
 use JobMetric\Flow\Enums\FlowStateTypeEnum;
-use JobMetric\Flow\Exceptions\FlowTransitionNotStoreBeforeFirstTransitionException;
-use JobMetric\Flow\Exceptions\Old\FlowInactiveException;
 use JobMetric\Flow\Exceptions\Old\FlowTransitionExistException;
 use JobMetric\Flow\Exceptions\Old\FlowTransitionFromNotSetException;
 use JobMetric\Flow\Exceptions\Old\FlowTransitionFromStateStartNotMoveException;
@@ -24,21 +22,6 @@ use JobMetric\Flow\Models\FlowTransition;
 
 trait ExceptionTrait
 {
-    /**
-     * check flow inactive
-     *
-     * @param Flow $flow
-     *
-     * @return void
-     * @throws \JobMetric\Flow\Exceptions\Old\FlowInactiveException
-     */
-    private function checkFlowInactive(Flow $flow): void
-    {
-        if (!$flow->status) {
-            throw new FlowInactiveException($flow->driver);
-        }
-    }
-
     /**
      * check slug exist
      *
