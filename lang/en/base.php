@@ -146,5 +146,11 @@ return [
             'title' => 'Flow State Stored',
             'description' => 'This event is triggered when a Flow State is stored.',
         ],
+
+        'flow_state_updated' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Updated',
+            'description' => 'This event is triggered when a Flow State is updated.',
+        ],
     ],
 ];
