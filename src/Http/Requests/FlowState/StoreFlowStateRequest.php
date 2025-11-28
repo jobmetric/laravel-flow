@@ -76,9 +76,7 @@ class StoreFlowStateRequest extends FormRequest
             'is_terminal' => 'sometimes|boolean',
         ];
 
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
 
         foreach ($locales as $locale) {
             $rules["translation.$locale"] = 'required|array';

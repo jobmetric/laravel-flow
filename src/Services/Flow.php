@@ -138,9 +138,10 @@ class Flow extends AbstractCrudService
      * Common hook executed after all mutation operations.
      * Invalidates flow-related caches.
      *
-     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'|'toggleStatus'|'setDefault'|'setActiveWindow'|'setRollout'|'reorder'|'duplicate'|'import'
-     * @param Model $model The model instance
-     * @param array $data The data payload (empty for destroy/restore/forceDelete)
+     * @param string $operation The operation being performed:
+     *                          'store'|'update'|'destroy'|'restore'|'forceDelete'|'toggleStatus'|'setDefault'|'setActiveWindow'|'setRollout'|'reorder'|'duplicate'|'import'
+     * @param Model $model      The model instance
+     * @param array $data       The data payload (empty for destroy/restore/forceDelete)
      *
      * @return void
      */
@@ -163,14 +164,12 @@ class Flow extends AbstractCrudService
         $flow = $model;
 
         // Build default START translations for active locales.
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
 
         $translations = [];
         foreach ($locales as $locale) {
             $translations[$locale] = [
-                'name' => trans('workflow::base.states.start.name', [], $locale),
+                'name'        => trans('workflow::base.states.start.name', [], $locale),
                 'description' => trans('workflow::base.states.start.description', [], $locale),
             ];
         }
@@ -178,12 +177,12 @@ class Flow extends AbstractCrudService
         // Ensure one START node exists.
         $flow->states()->create([
             'translation' => $translations,
-            'type' => FlowStateTypeEnum::START(),
-            'config' => [
+            'type'        => FlowStateTypeEnum::START(),
+            'config'      => [
                 'is_terminal' => false,
-                'color' => config('flow.state.start.color', '#fff'),
-                'icon' => config('flow.state.start.icon', 'play'),
-                'position' => [
+                'color'       => config('flow.state.start.color', '#fff'),
+                'icon'        => config('flow.state.start.icon', 'play'),
+                'position'    => [
                     'x' => config('flow.state.start.position.x', 0),
                     'y' => config('flow.state.start.position.y', 0),
                 ],
@@ -208,13 +207,13 @@ class Flow extends AbstractCrudService
             /** @var FlowModel $flow */
             $flow = FlowModel::query()->findOrFail($flowId);
 
-            $flow->status = !$flow->status;
+            $flow->status = ! $flow->status;
             $flow->save();
 
             $this->afterCommon('toggleStatus', $flow);
 
             return Response::make(true, trans('workflow::base.messages.toggle_status', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]), FlowResource::make($flow->load($with)));
         });
     }
@@ -228,9 +227,7 @@ class Flow extends AbstractCrudService
      */
     public function getStartState(int $flowId): ?FlowState
     {
-        return FlowState::start()
-            ->where('flow_id', $flowId)
-            ->first();
+        return FlowState::start()->where('flow_id', $flowId)->first();
     }
 
     /**
@@ -242,9 +239,7 @@ class Flow extends AbstractCrudService
      */
     public function getEndState(int $flowId): Collection
     {
-        return FlowState::end()
-            ->where('flow_id', $flowId)
-            ->get();
+        return FlowState::end()->where('flow_id', $flowId)->get();
     }
 
     /**
@@ -266,11 +261,8 @@ class Flow extends AbstractCrudService
             $scopeQuery = FlowModel::query()
                 ->where('subject_type', $flow->subject_type)
                 ->where('version', $flow->version)
-                ->when(
-                    is_null($flow->subject_scope),
-                    fn($q) => $q->whereNull('subject_scope'),
-                    fn($q) => $q->where('subject_scope', $flow->subject_scope)
-                );
+                ->when(is_null($flow->subject_scope), fn ($q) => $q->whereNull('subject_scope'), fn ($q
+                ) => $q->where('subject_scope', $flow->subject_scope));
 
             $scopeQuery->whereKeyNot($flow->getKey())->update(['is_default' => false]);
             FlowModel::query()->whereKey($flow->getKey())->update(['is_default' => true]);
@@ -279,7 +271,7 @@ class Flow extends AbstractCrudService
             $this->afterCommon('setDefault', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_default', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]), FlowResource::make($flow->load($with)));
         });
     }
@@ -299,7 +291,7 @@ class Flow extends AbstractCrudService
     {
         $validated = dto([
             'active_from' => $from?->toDateTimeString(),
-            'active_to' => $to?->toDateTimeString(),
+            'active_to'   => $to?->toDateTimeString(),
         ], SetActiveWindowRequest::class);
 
         $from = isset($validated['active_from']) ? Carbon::parse($validated['active_from']) : null;
@@ -316,7 +308,7 @@ class Flow extends AbstractCrudService
             $this->afterCommon('setActiveWindow', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_active_window', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]), FlowResource::make($flow->load($with)));
         });
     }
@@ -334,7 +326,7 @@ class Flow extends AbstractCrudService
     public function setRollout(int $flowId, ?int $pct, array $with = []): Response
     {
         $validated = dto([
-            'rollout_pct' => $pct
+            'rollout_pct' => $pct,
         ], SetRolloutRequest::class);
 
         $pct = $validated['rollout_pct'] ?? null;
@@ -348,7 +340,7 @@ class Flow extends AbstractCrudService
             $this->afterCommon('setRollout', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_rollout', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]), FlowResource::make($flow->load($with)));
         });
     }
@@ -364,7 +356,7 @@ class Flow extends AbstractCrudService
     public function reorder(array $orderedIds): Response
     {
         $validated = dto([
-            'ordered_ids' => $orderedIds
+            'ordered_ids' => $orderedIds,
         ], ReorderFlowRequest::class);
 
         $orderedIds = $validated['ordered_ids'];
@@ -374,7 +366,7 @@ class Flow extends AbstractCrudService
             $firstModel = null;
             foreach ($orderedIds as $id) {
                 FlowModel::query()->whereKey($id)->update([
-                    'ordering' => $position++
+                    'ordering' => $position++,
                 ]);
                 if ($firstModel === null) {
                     $firstModel = FlowModel::query()->find($id);
@@ -386,7 +378,7 @@ class Flow extends AbstractCrudService
             }
 
             return Response::make(true, trans('workflow::base.messages.reordered', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]));
         });
     }
@@ -410,10 +402,10 @@ class Flow extends AbstractCrudService
             $flow = FlowModel::query()->with(['states', 'transitions'])->findOrFail($flowId);
 
             $data = array_merge($flow->toArray(), $overrides, [
-                'id' => null,
+                'id'         => null,
                 'is_default' => false,
-                'status' => false,
-                'version' => ($flow->version ?? 1) + 1,
+                'status'     => false,
+                'version'    => ($flow->version ?? 1) + 1,
             ]);
 
             /** @var FlowModel $copy */
@@ -439,9 +431,9 @@ class Flow extends AbstractCrudService
                     /** @var FlowState $newState */
                     $newState = $copy->states()->create([
                         'translation' => $state->getTranslations(),
-                        'type' => $state->type,
-                        'config' => $state->config,
-                        'status' => $state->status,
+                        'type'        => $state->type,
+                        'config'      => $state->config,
+                        'status'      => $state->status,
                     ]);
 
                     $mapStateId[$state->id] = $newState->id;
@@ -451,7 +443,7 @@ class Flow extends AbstractCrudService
                     foreach ($flow->transitions as $transition) {
                         $copy->transitions()->create([
                             'from' => $transition->from ? ($mapStateId[$transition->from] ?? null) : null,
-                            'to' => $transition->to ? ($mapStateId[$transition->to] ?? null) : null,
+                            'to'   => $transition->to ? ($mapStateId[$transition->to] ?? null) : null,
                             'slug' => $transition->slug,
                         ]);
                     }
@@ -461,7 +453,7 @@ class Flow extends AbstractCrudService
             $this->afterCommon('duplicate', $copy);
 
             return Response::make(true, trans('workflow::base.messages.duplicated', [
-                'entity' => trans($this->entityName)
+                'entity' => trans($this->entityName),
             ]), FlowResource::make($copy->load($with)));
         });
     }
@@ -475,10 +467,7 @@ class Flow extends AbstractCrudService
      */
     public function getStates(int $flowId): Collection
     {
-        return FlowState::query()
-            ->where('flow_id', $flowId)
-            ->orderBy('id')
-            ->get();
+        return FlowState::query()->where('flow_id', $flowId)->orderBy('id')->get();
     }
 
     /**
@@ -526,9 +515,10 @@ class Flow extends AbstractCrudService
             $flow = FlowModel::query()->find($flowId);
 
             if ($flow && method_exists($flow, 'transitions')) {
-                $incomingCount = (int)$flow->transitions()->where('to', $startId)->count();
-            } else {
-                $incomingCount = (int)FlowTransition::query()
+                $incomingCount = (int) $flow->transitions()->where('to', $startId)->count();
+            }
+            else {
+                $incomingCount = (int) FlowTransition::query()
                     ->where('flow_id', $flowId)
                     ->where('to', $startId)
                     ->count();
@@ -560,9 +550,9 @@ class Flow extends AbstractCrudService
 
         if (method_exists($subject, 'buildFlowPicker')) {
             $subject->buildFlowPicker($builder);
-        } else {
-            $builder
-                ->subjectType(get_class($subject))
+        }
+        else {
+            $builder->subjectType(get_class($subject))
                 ->subjectCollection(method_exists($subject, 'flowSubjectCollection') ? $subject->flowSubjectCollection() : null)
                 ->onlyActive(true)
                 ->timeNow(Carbon::now('UTC'))
@@ -589,11 +579,11 @@ class Flow extends AbstractCrudService
     {
         /** @var FlowModel $flow */
         $flow = FlowModel::query()
-            ->when($withGraph, fn($q) => $q->with(['states', 'transitions']))
+            ->when($withGraph, fn ($q) => $q->with(['states', 'transitions']))
             ->findOrFail($flowId);
 
         return [
-            'flow' => collect($flow->toArray())->only([
+            'flow'        => collect($flow->toArray())->only([
                 'subject_type',
                 'subject_scope',
                 'subject_collection',
@@ -607,7 +597,7 @@ class Flow extends AbstractCrudService
                 'rollout_pct',
                 'environment',
             ])->all(),
-            'states' => $withGraph ? $flow->states->toArray() : [],
+            'states'      => $withGraph ? $flow->states->toArray() : [],
             'transitions' => $withGraph && method_exists($flow, 'transitions') ? $flow->transitions->toArray() : [],
         ];
     }
@@ -627,7 +617,7 @@ class Flow extends AbstractCrudService
         return DB::transaction(function () use ($payload, $overrides) {
             $flowData = array_merge($payload['flow'] ?? [], $overrides, [
                 'is_default' => $overrides['is_default'] ?? false,
-                'status' => $overrides['status'] ?? false,
+                'status'     => $overrides['status'] ?? false,
             ]);
 
             /** @var FlowModel $flow */
@@ -647,7 +637,7 @@ class Flow extends AbstractCrudService
                 }
             }
 
-            if (!empty($payload['transitions']) && method_exists($flow, 'transitions')) {
+            if (! empty($payload['transitions']) && method_exists($flow, 'transitions')) {
                 foreach ($payload['transitions'] as $transition) {
                     unset($transition['id'], $transition['flow_id'], $transition['created_at'], $transition['updated_at']);
 
