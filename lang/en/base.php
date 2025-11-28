@@ -45,7 +45,6 @@ return [
     "flow" => [
         "exist" => "Flow driver `:driver` already exist.",
         "inactive" => "Flow `:driver` is inactive.",
-        "not_found" => "Flow driver `:driver` does not exist.",
     ],
 
     "flow_state" => [

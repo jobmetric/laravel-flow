@@ -45,7 +45,6 @@ return [
     "flow" => [
         "exist" => "درایور فلو `:driver` قبلاً وجود دارد.",
         "inactive" => "فلو `:driver` غیرفعال است.",
-        "not_found" => "درایور فلو `:driver` وجود ندارد.",
     ],
 
     "flow_state" => [
