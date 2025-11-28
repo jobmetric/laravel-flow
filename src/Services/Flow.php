@@ -587,6 +587,32 @@ class Flow extends AbstractCrudService
             ->when($withGraph, fn ($q) => $q->with(['states', 'transitions.tasks']))
             ->findOrFail($flowId);
 
+        $transitions = [];
+        if ($withGraph && method_exists($flow, 'transitions')) {
+            foreach ($flow->transitions as $transition) {
+                $transitionData = collect($transition->toArray())->only([
+                    'id',
+                    'from',
+                    'to',
+                    'slug',
+                ])->all();
+
+                // Include tasks if loaded
+                if ($transition->relationLoaded('tasks')) {
+                    $transitionData['tasks'] = $transition->tasks->map(function ($task) {
+                        return collect($task->toArray())->only([
+                            'driver',
+                            'config',
+                            'ordering',
+                            'status',
+                        ])->all();
+                    })->toArray();
+                }
+
+                $transitions[] = $transitionData;
+            }
+        }
+
         return [
             'flow'        => collect($flow->toArray())->only([
                 'subject_type',
@@ -603,7 +629,7 @@ class Flow extends AbstractCrudService
                 'environment',
             ])->all(),
             'states'      => $withGraph ? $flow->states->toArray() : [],
-            'transitions' => $withGraph && method_exists($flow, 'transitions') ? $flow->transitions->toArray() : [],
+            'transitions' => $transitions,
         ];
     }
 
@@ -644,7 +670,10 @@ class Flow extends AbstractCrudService
 
             if (! empty($payload['transitions']) && method_exists($flow, 'transitions')) {
                 foreach ($payload['transitions'] as $transition) {
-                    unset($transition['id'], $transition['flow_id'], $transition['created_at'], $transition['updated_at']);
+                    // Extract tasks before unsetting fields
+                    $tasks = $transition['tasks'] ?? [];
+
+                    unset($transition['id'], $transition['flow_id'], $transition['created_at'], $transition['updated_at'], $transition['tasks']);
 
                     if (array_key_exists('from', $transition)) {
                         $transition['from'] = $transition['from'] ? ($stateIdMap[$transition['from']] ?? null) : null;
@@ -656,7 +685,22 @@ class Flow extends AbstractCrudService
 
                     $payloadTransition = collect($transition)->only(['from', 'to', 'slug'])->all();
 
-                    $flow->transitions()->create($payloadTransition);
+                    /** @var FlowTransition $newTransition */
+                    $newTransition = $flow->transitions()->create($payloadTransition);
+
+                    // Create tasks for this transition
+                    if (! empty($tasks)) {
+                        foreach ($tasks as $task) {
+                            unset($task['id'], $task['flow_transition_id'], $task['created_at'], $task['updated_at']);
+
+                            $newTransition->tasks()->create(collect($task)->only([
+                                'driver',
+                                'config',
+                                'ordering',
+                                'status',
+                            ])->all());
+                        }
+                    }
                 }
             }
 
