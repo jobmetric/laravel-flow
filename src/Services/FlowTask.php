@@ -99,7 +99,7 @@ class FlowTask extends AbstractCrudService
         $task = $model;
 
         $data = dto($data, UpdateFlowTaskRequest::class, [
-            'flow_id'      => $task->flow_id,
+            'flow_id'      => $task->transition->flow_id,
             'flow_task_id' => $task->id,
         ]);
     }
@@ -109,8 +109,8 @@ class FlowTask extends AbstractCrudService
      * Invalidates flow-related caches.
      *
      * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
-     * @param Model $model The model instance
-     * @param array $data The data payload (empty for destroy/restore/forceDelete)
+     * @param Model $model      The model instance
+     * @param array $data       The data payload (empty for destroy/restore/forceDelete)
      *
      * @return void
      */
@@ -228,7 +228,7 @@ class FlowTask extends AbstractCrudService
     protected function taskDetails(AbstractTaskDriver $task): array
     {
         $definition = $task::definition();
-        
+
         $details = [
             'key'   => class_basename($task),
             'title' => trans($definition->title),
