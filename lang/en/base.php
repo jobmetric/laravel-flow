@@ -44,7 +44,6 @@ return [
 
     "flow_state" => [
         "start_type_is_not_delete" => "Flow state `start` type is not deletable.",
-        "start_type_is_not_change" => "Flow state `start` type is not changeable.",
     ],
 
     "flow_transition" => [
