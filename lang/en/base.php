@@ -152,5 +152,11 @@ return [
             'title' => 'Flow State Updated',
             'description' => 'This event is triggered when a Flow State is updated.',
         ],
+
+        'flow_task_deleted' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Deleted',
+            'description' => 'This event is triggered when a Flow Task is deleted.',
+        ],
     ],
 ];
