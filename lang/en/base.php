@@ -176,5 +176,11 @@ return [
             'title' => 'Flow Transition Deleted',
             'description' => 'This event is triggered when a Flow Transition is deleted.',
         ],
+
+        'flow_transition_stored' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Stored',
+            'description' => 'This event is triggered when a Flow Transition is stored.',
+        ],
     ],
 ];
