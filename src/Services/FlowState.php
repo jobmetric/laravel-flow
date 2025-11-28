@@ -25,8 +25,6 @@ use Throwable;
  */
 class FlowState extends AbstractCrudService
 {
-    use InvalidatesFlowCache;
-
     /**
      * Human-readable entity name key used in response messages.
      *
@@ -160,6 +158,21 @@ class FlowState extends AbstractCrudService
     }
 
     /**
+     * Common hook executed after all mutation operations.
+     * Invalidates flow-related caches.
+     *
+     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
+     * @param Model $model The model instance
+     * @param array $data The data payload (empty for destroy/restore/forceDelete)
+     *
+     * @return void
+     */
+    protected function afterCommon(string $operation, Model $model, array $data = []): void
+    {
+        forgetFlowCache();
+    }
+
+    /**
      * Delete a state after enforcing invariants.
      *
      * @param int $id
@@ -180,41 +193,5 @@ class FlowState extends AbstractCrudService
         }
 
         return parent::destroy($id, $with);
-    }
-
-    /**
-     * Hook after store: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     *
-     * @return void
-     */
-    protected function afterStore(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after update: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     * @return void
-     */
-    protected function afterUpdate(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after destroy: invalidate caches.
-     *
-     * @param Model $model
-     * @return void
-     */
-    protected function afterDestroy(Model $model): void
-    {
-        $this->forgetCache();
     }
 }

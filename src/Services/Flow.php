@@ -41,8 +41,6 @@ use Throwable;
  */
 class Flow extends AbstractCrudService
 {
-    use InvalidatesFlowCache;
-
     /**
      * Enable soft-deletes + restore/forceDelete APIs.
      *
@@ -137,6 +135,21 @@ class Flow extends AbstractCrudService
     }
 
     /**
+     * Common hook executed after all mutation operations.
+     * Invalidates flow-related caches.
+     *
+     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'|'toggleStatus'|'setDefault'|'setActiveWindow'|'setRollout'|'reorder'|'duplicate'|'import'
+     * @param Model $model The model instance
+     * @param array $data The data payload (empty for destroy/restore/forceDelete)
+     *
+     * @return void
+     */
+    protected function afterCommon(string $operation, Model $model, array $data = []): void
+    {
+        forgetFlowCache();
+    }
+
+    /**
      * Hook after create: ensure one START state and invalidate caches.
      *
      * @param Model $model
@@ -176,57 +189,6 @@ class Flow extends AbstractCrudService
                 ],
             ],
         ]);
-
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after update: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     *
-     * @return void
-     */
-    protected function afterUpdate(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after soft-delete: invalidate caches.
-     *
-     * @param Model $model
-     *
-     * @return void
-     */
-    protected function afterDestroy(Model $model): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after restore: invalidate caches.
-     *
-     * @param Model $model
-     *
-     * @return void
-     */
-    protected function afterRestore(Model $model): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after force-delete: invalidate caches.
-     *
-     * @param Model $model
-     *
-     * @return void
-     */
-    protected function afterForceDelete(Model $model): void
-    {
-        $this->forgetCache();
     }
 
     /**
@@ -249,7 +211,7 @@ class Flow extends AbstractCrudService
             $flow->status = !$flow->status;
             $flow->save();
 
-            $this->forgetCache();
+            $this->afterCommon('toggleStatus', $flow);
 
             return Response::make(true, trans('workflow::base.messages.toggle_status', [
                 'entity' => trans($this->entityName)
@@ -313,8 +275,8 @@ class Flow extends AbstractCrudService
             $scopeQuery->whereKeyNot($flow->getKey())->update(['is_default' => false]);
             FlowModel::query()->whereKey($flow->getKey())->update(['is_default' => true]);
 
-            $this->forgetCache();
             $flow->refresh();
+            $this->afterCommon('setDefault', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_default', [
                 'entity' => trans($this->entityName)
@@ -351,7 +313,7 @@ class Flow extends AbstractCrudService
             $flow->active_to = $to;
             $flow->save();
 
-            $this->forgetCache();
+            $this->afterCommon('setActiveWindow', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_active_window', [
                 'entity' => trans($this->entityName)
@@ -383,7 +345,7 @@ class Flow extends AbstractCrudService
             $flow->rollout_pct = $pct;
             $flow->save();
 
-            $this->forgetCache();
+            $this->afterCommon('setRollout', $flow);
 
             return Response::make(true, trans('workflow::base.messages.set_rollout', [
                 'entity' => trans($this->entityName)
@@ -409,13 +371,19 @@ class Flow extends AbstractCrudService
 
         return DB::transaction(function () use ($orderedIds) {
             $position = 1;
+            $firstModel = null;
             foreach ($orderedIds as $id) {
                 FlowModel::query()->whereKey($id)->update([
                     'ordering' => $position++
                 ]);
+                if ($firstModel === null) {
+                    $firstModel = FlowModel::query()->find($id);
+                }
             }
 
-            $this->forgetCache();
+            if ($firstModel) {
+                $this->afterCommon('reorder', $firstModel);
+            }
 
             return Response::make(true, trans('workflow::base.messages.reordered', [
                 'entity' => trans($this->entityName)
@@ -490,7 +458,7 @@ class Flow extends AbstractCrudService
                 }
             }
 
-            $this->forgetCache();
+            $this->afterCommon('duplicate', $copy);
 
             return Response::make(true, trans('workflow::base.messages.duplicated', [
                 'entity' => trans($this->entityName)
@@ -697,7 +665,7 @@ class Flow extends AbstractCrudService
                 }
             }
 
-            $this->forgetCache();
+            $this->afterCommon('import', $flow);
 
             return $flow;
         });

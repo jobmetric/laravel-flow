@@ -19,8 +19,6 @@ use Throwable;
 
 class FlowTask extends AbstractCrudService
 {
-    use InvalidatesFlowCache;
-
     public function __construct(
         protected FlowTaskRegistry $taskRegistry
     ) {
@@ -107,41 +105,18 @@ class FlowTask extends AbstractCrudService
     }
 
     /**
-     * Hook after store: invalidate caches.
+     * Common hook executed after all mutation operations.
+     * Invalidates flow-related caches.
      *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     *
-     * @return void
-     */
-    protected function afterStore(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after update: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
+     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
+     * @param Model $model The model instance
+     * @param array $data The data payload (empty for destroy/restore/forceDelete)
      *
      * @return void
      */
-    protected function afterUpdate(Model $model, array &$data): void
+    protected function afterCommon(string $operation, Model $model, array $data = []): void
     {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after destroy: invalidate caches.
-     *
-     * @param Model $model
-     *
-     * @return void
-     */
-    protected function afterDestroy(Model $model): void
-    {
-        $this->forgetCache();
+        forgetFlowCache();
     }
 
     /**
