@@ -50,7 +50,6 @@ return [
         "to_not_set" => "انتقال فلو به تنظیم نشده است.",
         "state_driver_from_and_to_not_equal" => "درایور استیت فلو از و به باید برابر باشند.",
         "not_store_before_first_state" => "انتقال فلو ذخیره نمی‌شود، زیرا هیچ انتقالی از استیت شروع وجود ندارد.",
-        "have_at_least_one_transition_from_the_start_beginning" => "فلو باید حداقل یک انتقال از شروع داشته باشد.",
     ],
 
     'fields' => [
