@@ -122,5 +122,11 @@ return [
             'title' => 'Flow Restored',
             'description' => 'This event is triggered when a Flow is restored.',
         ],
+
+        'flow_stored' => [
+            'group' => 'Flow',
+            'title' => 'Flow Stored',
+            'description' => 'This event is triggered when a Flow is stored.',
+        ],
     ],
 ];
