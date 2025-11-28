@@ -6,7 +6,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
 use JobMetric\Flow\Contracts\AbstractActionTask;
 use JobMetric\Flow\Contracts\AbstractRestrictionTask;
 use JobMetric\Flow\Contracts\AbstractTaskDriver;
@@ -152,8 +151,8 @@ class FlowTransition extends AbstractCrudService
      * Invalidates flow-related caches.
      *
      * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
-     * @param Model $model The model instance
-     * @param array $data The data payload (empty for destroy/restore/forceDelete)
+     * @param Model $model      The model instance
+     * @param array $data       The data payload (empty for destroy/restore/forceDelete)
      *
      * @return void
      */
@@ -164,6 +163,14 @@ class FlowTransition extends AbstractCrudService
 
     /**
      * Ensure the provided task driver is registered for the given flow subject and type.
+     *
+     * @param string $subjectType
+     * @param string $taskType
+     * @param FlowTaskModel $task
+     * @param AbstractTaskDriver $driver
+     *
+     * @return bool
+     * @throws Throwable
      */
     protected function taskIsRegistered(
         string $subjectType,
@@ -171,22 +178,31 @@ class FlowTransition extends AbstractCrudService
         FlowTaskModel $task,
         AbstractTaskDriver $driver
     ): bool {
-        if ($this->taskRegistry->has($subjectType, $taskType, $driver::class)) {
-            return true;
+        try {
+            if ($this->taskRegistry->has($subjectType, $taskType, $driver::class)) {
+                return true;
+            }
+        } catch (Throwable $e) {
+            logs()->warning('Workflow task driver not registered in FlowTaskRegistry.', [
+                'task_class'         => $driver::class,
+                'subject'            => $subjectType,
+                'type'               => $taskType,
+                'flow_task_id'       => $task->id,
+                'flow_transition_id' => $task->flow_transition_id,
+            ]);
         }
-
-        Log::warning('Workflow task driver not registered in FlowTaskRegistry.', [
-            'task_class'         => $driver::class,
-            'subject'            => $subjectType,
-            'type'               => $taskType,
-            'flow_task_id'       => $task->id,
-            'flow_transition_id' => $task->flow_transition_id,
-        ]);
 
         return false;
     }
 
     /**
+     * Execute a flow transition by its key (ID or slug).
+     *
+     * @param int|string $key            Transition ID or slug
+     * @param array $payload             Data payload for the transition
+     * @param Authenticatable|null $user Optional user context
+     *
+     * @return TransitionResult
      * @throws Throwable
      */
     public function runner(int|string $key, array $payload = [], ?Authenticatable $user = null): TransitionResult
