@@ -404,7 +404,7 @@ class Flow extends AbstractCrudService
     {
         return DB::transaction(function () use ($flowId, $overrides, $withGraph, $with) {
             /** @var FlowModel $flow */
-            $flow = FlowModel::query()->with(['states', 'transitions'])->findOrFail($flowId);
+            $flow = FlowModel::query()->with(['states', 'transitions.tasks'])->findOrFail($flowId);
 
             $data = array_merge($flow->toArray(), $overrides, [
                 'id'         => null,
@@ -446,13 +446,24 @@ class Flow extends AbstractCrudService
 
                 if (method_exists($flow, 'transitions')) {
                     foreach ($flow->transitions as $transition) {
-                        $copy->transitions()->create([
+                        /** @var FlowTransition $newTransition */
+                        $newTransition = $copy->transitions()->create([
                             'from' => $transition->from ? ($mapStateId[$transition->from] ?? null) : null,
                             'to'   => $transition->to ? ($mapStateId[$transition->to] ?? null) : null,
                             'slug' => $transition->slug,
                         ]);
 
-                        // added task for transition
+                        // Copy tasks for this transition
+                        if ($transition->relationLoaded('tasks')) {
+                            foreach ($transition->tasks as $task) {
+                                $newTransition->tasks()->create([
+                                    'driver' => $task->driver,
+                                    'config' => $task->config,
+                                    'ordering' => $task->ordering,
+                                    'status' => $task->status,
+                                ]);
+                            }
+                        }
                     }
                 }
             }
