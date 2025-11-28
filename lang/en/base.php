@@ -43,7 +43,6 @@ return [
     ],
 
     "flow_state" => [
-        "start_type_is_exist" => "Flow state `start` type in `:driver` is exist.",
         "start_type_is_not_delete" => "Flow state `start` type is not deletable.",
         "start_type_is_not_change" => "Flow state `start` type is not changeable.",
     ],
