@@ -93,7 +93,6 @@ return [
         'status_column_missing' => 'ستون وضعیت (status) در جدول مدل موضوع وجود ندارد.',
         'status_enum_error' => 'امکان تشخیص enum وضعیت برای مدل موضوع وجود ندارد.',
         'status_enum_missing' => 'هیچ مقدار مجازِ وضعیت برای مدل موضوع یافت نشد.',
-        'check_status_in_driver' => 'وضعیت نامعتبر است. مقادیر مجاز: :status',
         'flow_transition' => [
             'translation_name_required' => 'فیلد نام ترجمه الزامی است.',
             'from_cannot_equal_to' => 'مبدأ و مقصد ترنزیشن نمی‌توانند یکسان باشند.',

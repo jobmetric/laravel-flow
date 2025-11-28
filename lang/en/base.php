@@ -93,7 +93,6 @@ return [
         'status_column_missing' => 'The required status column is missing on the subject model table.',
         'status_enum_error' => 'Could not resolve the status enum for the subject model.',
         'status_enum_missing' => 'No allowed status values were found for the subject model.',
-        'check_status_in_driver' => 'Invalid status. Allowed values: :status',
         'flow_transition' => [
             'translation_name_required' => 'The translation name field is required.',
             'from_cannot_equal_to' => 'The transition’s source and destination cannot be the same.',
