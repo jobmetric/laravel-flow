@@ -134,5 +134,11 @@ return [
             'title' => 'Flow Updated',
             'description' => 'This event is triggered when a Flow is updated.',
         ],
+
+        'flow_state_deleted' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Deleted',
+            'description' => 'This event is triggered when a Flow State is deleted.',
+        ],
     ],
 ];
