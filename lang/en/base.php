@@ -170,5 +170,11 @@ return [
             'title' => 'Flow Task Updated',
             'description' => 'This event is triggered when a Flow Task is updated.',
         ],
+
+        'flow_transition_deleted' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Deleted',
+            'description' => 'This event is triggered when a Flow Transition is deleted.',
+        ],
     ],
 ];
