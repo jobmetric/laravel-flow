@@ -43,7 +43,6 @@ return [
     ],
 
     "flow_transition" => [
-        "state_start_not_in_to" => "Flow state start not in transition to.",
         "to_not_set" => "Flow transition to is not set.",
     ],
 

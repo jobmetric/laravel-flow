@@ -43,7 +43,6 @@ return [
     ],
 
     "flow_transition" => [
-        "state_start_not_in_to" => "فلو استیت شروع در انتقال به وجود ندارد.",
         "to_not_set" => "انتقال فلو به تنظیم نشده است.",
     ],
 
