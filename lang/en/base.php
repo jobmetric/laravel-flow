@@ -43,7 +43,6 @@ return [
     ],
 
     "flow" => [
-        "exist" => "Flow driver `:driver` already exist.",
         "inactive" => "Flow `:driver` is inactive.",
     ],
 
