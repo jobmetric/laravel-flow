@@ -42,6 +42,7 @@ return [
 
     'fields' => [
         'flow_id' => 'جریان',
+        'flow_transition_id' => 'انتقال جریان',
         'translation' => 'ترجمه',
         'name' => 'نام',
         'from' => 'مبدأ',
@@ -66,6 +67,8 @@ return [
         'rollout_pct' => 'درصد رول‌اوت',
         'environment' => 'محیط',
         'ordered_ids' => 'شناسه‌های مرتب‌شده',
+        'driver' => 'درایور',
+        'config' => 'پیکربندی',
     ],
 
     "validation" => [
@@ -94,6 +97,13 @@ return [
         'flow' => [
             'translation_name_required' => 'فیلد نام ترجمه الزامی است.',
             'active_from_before_active_to' => 'تاریخ شروع باید قبل یا برابر با تاریخ پایان باشد.',
+        ],
+
+        'flow_task' => [
+            'driver_not_exists' => 'کلاس درایور تسک مشخص شده وجود ندارد.',
+            'driver_invalid' => 'درایور تسک مشخص شده باید از AbstractTaskDriver ارث‌بری کند.',
+            'driver_not_registered' => 'درایور تسک مشخص شده در سیستم ثبت نشده است.',
+            'transition_not_found' => 'انتقال جریان مشخص شده یافت نشد.',
         ],
     ],
 

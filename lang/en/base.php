@@ -42,6 +42,7 @@ return [
 
     'fields' => [
         'flow_id' => 'Flow',
+        'flow_transition_id' => 'Flow Transition',
         'translation' => 'Translation',
         'name' => 'Name',
         'from' => 'From',
@@ -66,6 +67,8 @@ return [
         'rollout_pct' => 'Rollout Percentage',
         'environment' => 'Environment',
         'ordered_ids' => 'Ordered IDs',
+        'driver' => 'Driver',
+        'config' => 'Configuration',
     ],
 
     "validation" => [
@@ -94,6 +97,13 @@ return [
         'flow' => [
             'translation_name_required' => 'The translation name field is required.',
             'active_from_before_active_to' => 'The start date must be before or equal to the end date.',
+        ],
+
+        'flow_task' => [
+            'driver_not_exists' => 'The specified task driver class does not exist.',
+            'driver_invalid' => 'The specified task driver must extend AbstractTaskDriver.',
+            'driver_not_registered' => 'The specified task driver is not registered in the system.',
+            'transition_not_found' => 'The specified flow transition was not found.',
         ],
     ],
 
