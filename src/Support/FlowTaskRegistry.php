@@ -123,4 +123,48 @@ class FlowTaskRegistry
 
         return isset($this->tasks[$subject][$type][$taskClass]);
     }
+
+    /**
+     * Determine whether a task class has been registered (regardless of subject/type).
+     *
+     * @param string $taskClass
+     *
+     * @return bool
+     */
+    public function hasClass(string $taskClass): bool
+    {
+        $taskClass = trim(str_replace('/', '\\', $taskClass));
+
+        foreach ($this->tasks as $types) {
+            foreach ($types as $tasks) {
+                if (isset($tasks[$taskClass])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get a registered task driver instance by class name.
+     *
+     * @param string $taskClass
+     *
+     * @return AbstractTaskDriver|null
+     */
+    public function get(string $taskClass): ?AbstractTaskDriver
+    {
+        $taskClass = trim(str_replace('/', '\\', $taskClass));
+
+        foreach ($this->tasks as $types) {
+            foreach ($types as $tasks) {
+                if (isset($tasks[$taskClass])) {
+                    return $tasks[$taskClass];
+                }
+            }
+        }
+
+        return null;
+    }
 }
