@@ -14,6 +14,8 @@ use JobMetric\Flow\Http\Requests\FlowTask\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowTaskResource;
 use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
 use JobMetric\Flow\Support\FlowTaskRegistry;
+use JobMetric\Form\FormBuilder;
+use JobMetric\Form\Support\IOForm;
 use JobMetric\PackageCore\Services\AbstractCrudService;
 use Throwable;
 
@@ -69,6 +71,7 @@ class FlowTask extends AbstractCrudService
      * Validate & normalize payload before create.
      *
      * Role: ensures a clean, validated input for store().
+     * Uses FormBuilder from the task driver to validate and normalize config data via IOForm.
      *
      * @param array<string,mixed> $data
      *
@@ -77,15 +80,26 @@ class FlowTask extends AbstractCrudService
      */
     protected function changeFieldStore(array &$data): void
     {
+        // First validate using StoreFlowTaskRequest
         $data = dto($data, StoreFlowTaskRequest::class, [
-            'flow_id' => $data['flow_id'] ?? null,
+            'flow_transition_id' => $data['flow_transition_id'] ?? null,
         ]);
+
+        // Normalize config using IOForm if driver is provided
+        if (isset($data['driver']) && isset($data['config'])) {
+            $formBuilder = $this->resolveFormBuilder($data['driver']);
+
+            if (! is_null($formBuilder)) {
+                $data['config'] = IOForm::forStore($formBuilder, $data['config']);
+            }
+        }
     }
 
     /**
      * Validate & normalize payload before update.
      *
      * Role: aligns input with update rules for the specific FlowTask.
+     * Uses FormBuilder from the task driver to validate and normalize config data via IOForm.
      *
      * @param Model $model
      * @param array<string,mixed> $data
@@ -102,6 +116,47 @@ class FlowTask extends AbstractCrudService
             'flow_id'      => $task->transition->flow_id,
             'flow_task_id' => $task->id,
         ]);
+
+        // Determine driver class: use updated value if provided, otherwise use existing
+        $driverClass = $data['driver'] ?? null;
+        if (is_null($driverClass) && ! is_null($task->driver)) {
+            $driverClass = is_object($task->driver) ? get_class($task->driver) : $task->driver;
+        }
+
+        // Normalize config using IOForm if driver is available
+        if (! is_null($driverClass) && isset($data['config'])) {
+            $formBuilder = $this->resolveFormBuilder($driverClass);
+
+            if (! is_null($formBuilder)) {
+                $data['config'] = IOForm::forStore($formBuilder, $data['config']);
+            }
+        }
+    }
+
+    /**
+     * Resolve a task driver instance from the registry by class name.
+     *
+     * @param string $driverClass
+     *
+     * @return AbstractTaskDriver|null
+     */
+    public function resolveDriver(string $driverClass): ?AbstractTaskDriver
+    {
+        return $this->taskRegistry->get($driverClass);
+    }
+
+    /**
+     * Resolve FormBuilder from a task driver class using the registry.
+     *
+     * @param string $driverClass
+     *
+     * @return FormBuilder|null
+     */
+    public function resolveFormBuilder(string $driverClass): ?FormBuilder
+    {
+        $driver = $this->resolveDriver($driverClass);
+
+        return $driver?->form();
     }
 
     /**
@@ -152,7 +207,7 @@ class FlowTask extends AbstractCrudService
             ];
         })->values();
 
-        if ($taskTypes !== null) {
+        if (! is_null($taskTypes)) {
             $filters = array_map(function ($type) {
                 $normalized = Str::lower((string) $type);
 
@@ -186,7 +241,7 @@ class FlowTask extends AbstractCrudService
         $subject = $taskDriver !== '' ? $this->normalizeDriverKey($taskDriver) : null;
         $taskBasename = Str::studly($taskClassName);
 
-        $subjects = $subject !== null ? [$subject => $this->taskRegistry->forSubject($subject)] : $this->taskRegistry->all();
+        $subjects = ! is_null($subject) ? [$subject => $this->taskRegistry->forSubject($subject)] : $this->taskRegistry->all();
 
         foreach ($subjects as $types) {
             foreach ($types as $tasks) {
