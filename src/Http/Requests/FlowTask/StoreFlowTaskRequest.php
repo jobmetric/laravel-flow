@@ -53,7 +53,7 @@ class StoreFlowTaskRequest extends FormRequest
     public static function rulesFor(array $input, array $context = []): array
     {
         /** @var FlowTaskRegistry $registry */
-        $registry = app(FlowTaskRegistry::class);
+        $registry = app('FlowTaskRegistry');
 
         $rules = [
             'flow_transition_id' => [

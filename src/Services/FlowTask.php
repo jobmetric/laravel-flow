@@ -20,12 +20,6 @@ use Throwable;
 
 class FlowTask extends AbstractCrudService
 {
-    public function __construct(
-        protected FlowTaskRegistry $taskRegistry
-    ) {
-        parent::__construct();
-    }
-
     /**
      * Human-readable entity name key used in response messages.
      *
@@ -141,7 +135,10 @@ class FlowTask extends AbstractCrudService
      */
     public function resolveDriver(string $driverClass): ?AbstractTaskDriver
     {
-        return $this->taskRegistry->get($driverClass);
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
+        return $registry->get($driverClass);
     }
 
     /**
@@ -170,7 +167,10 @@ class FlowTask extends AbstractCrudService
      */
     public function drivers(string $taskDriver = '', array|string|null $taskTypes = null): array
     {
-        $tasks = collect($this->taskRegistry->all());
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
+        $tasks = collect($registry->all());
 
         if ($taskDriver !== '') {
             $normalized = $this->normalizeDriverKey($taskDriver);
@@ -223,10 +223,13 @@ class FlowTask extends AbstractCrudService
      */
     public function details(string $taskDriver, string $taskClassName): array
     {
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
         $subject = $taskDriver !== '' ? $this->normalizeDriverKey($taskDriver) : null;
         $taskBasename = Str::studly($taskClassName);
 
-        $subjects = ! is_null($subject) ? [$subject => $this->taskRegistry->forSubject($subject)] : $this->taskRegistry->all();
+        $subjects = ! is_null($subject) ? [$subject => $registry->forSubject($subject)] : $registry->all();
 
         foreach ($subjects as $types) {
             foreach ($types as $tasks) {

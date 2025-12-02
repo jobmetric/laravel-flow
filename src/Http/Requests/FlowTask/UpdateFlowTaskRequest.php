@@ -55,7 +55,7 @@ class UpdateFlowTaskRequest extends FormRequest
         $flowTaskId = (int) ($context['flow_task_id'] ?? null);
 
         /** @var FlowTaskRegistry $registry */
-        $registry = app(FlowTaskRegistry::class);
+        $registry = app('FlowTaskRegistry');
 
         $rules = [
             'driver'   => [
