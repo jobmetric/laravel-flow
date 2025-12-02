@@ -3,8 +3,10 @@
 namespace JobMetric\Flow\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use JobMetric\CustomField\CustomFieldServiceProvider;
 use JobMetric\EventSystem\EventSystemServiceProvider;
 use JobMetric\Flow\FlowServiceProvider;
+use JobMetric\Form\FormServiceProvider;
 use JobMetric\Language\LanguageServiceProvider;
 use JobMetric\Language\Models\Language;
 use JobMetric\Translation\TranslationServiceProvider;
@@ -17,7 +19,9 @@ class TestCase extends BaseTestCase
     protected function getPackageProviders($app): array
     {
         return [
+            CustomFieldServiceProvider::class,
             EventSystemServiceProvider::class,
+            FormServiceProvider::class,
             LanguageServiceProvider::class,
             TranslationServiceProvider::class,
             FlowServiceProvider::class,
