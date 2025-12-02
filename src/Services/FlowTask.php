@@ -14,7 +14,6 @@ use JobMetric\Flow\Http\Requests\FlowTask\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowTaskResource;
 use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
 use JobMetric\Flow\Support\FlowTaskRegistry;
-use JobMetric\Form\FormBuilder;
 use JobMetric\Form\Support\IOForm;
 use JobMetric\PackageCore\Services\AbstractCrudService;
 use Throwable;
@@ -87,10 +86,10 @@ class FlowTask extends AbstractCrudService
 
         // Normalize config using IOForm if driver is provided
         if (isset($data['driver']) && isset($data['config'])) {
-            $formBuilder = $this->resolveFormBuilder($data['driver']);
+            $driver = $this->resolveDriver($data['driver']);
 
-            if (! is_null($formBuilder)) {
-                $data['config'] = IOForm::forStore($formBuilder, $data['config']);
+            if (! is_null($driver)) {
+                $data['config'] = IOForm::forStore($driver->form(), $data['config']);
             }
         }
     }
@@ -125,10 +124,10 @@ class FlowTask extends AbstractCrudService
 
         // Normalize config using IOForm if driver is available
         if (! is_null($driverClass) && isset($data['config'])) {
-            $formBuilder = $this->resolveFormBuilder($driverClass);
+            $driver = $this->resolveDriver($driverClass);
 
-            if (! is_null($formBuilder)) {
-                $data['config'] = IOForm::forStore($formBuilder, $data['config']);
+            if (! is_null($driver)) {
+                $data['config'] = IOForm::forStore($driver->form(), $data['config']);
             }
         }
     }
@@ -143,20 +142,6 @@ class FlowTask extends AbstractCrudService
     public function resolveDriver(string $driverClass): ?AbstractTaskDriver
     {
         return $this->taskRegistry->get($driverClass);
-    }
-
-    /**
-     * Resolve FormBuilder from a task driver class using the registry.
-     *
-     * @param string $driverClass
-     *
-     * @return FormBuilder|null
-     */
-    public function resolveFormBuilder(string $driverClass): ?FormBuilder
-    {
-        $driver = $this->resolveDriver($driverClass);
-
-        return $driver?->form();
     }
 
     /**

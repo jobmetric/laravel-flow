@@ -13,7 +13,6 @@ use JobMetric\Flow\Services\FlowTask as FlowTaskService;
  * @method static array drivers(string $taskDriver = '', array|string|null $taskTypes = null)
  * @method static array details(string $taskDriver, string $taskClassName)
  * @method static \JobMetric\Flow\Contracts\AbstractTaskDriver|null resolveDriver(string $driverClass)
- * @method static \JobMetric\Form\FormBuilder|null resolveFormBuilder(string $driverClass)
  *
  * @see \JobMetric\Flow\Services\FlowTaskService
  */
