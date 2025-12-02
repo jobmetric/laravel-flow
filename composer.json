@@ -29,6 +29,11 @@
             "JobMetric\\Flow\\Factories\\": "database/factories/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "JobMetric\\Flow\\Tests\\": "tests/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [
