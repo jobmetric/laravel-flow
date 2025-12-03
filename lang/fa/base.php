@@ -27,6 +27,7 @@ return [
         "reordered" => ":entity با موفقیت بازچینی شد.",
         "duplicated" => ":entity با موفقیت تکثیر شد.",
         "flow_valid" => ":entity معتبر است.",
+        "transition_executed_successfully" => "انتقال با موفقیت اجرا شد.",
     ],
 
     "exceptions" => [
@@ -110,6 +111,10 @@ return [
     'errors' => [
         'flow_transition' => [
             'start_state_last_transition_delete' => 'امکان حذف آخرین ترنزیشن از استیت شروع وجود ندارد.',
+            'subject_model_required' => 'مدل موضوع برای اجرای انتقال الزامی است. یا آن را مستقیماً ارائه دهید یا مطمئن شوید که یک FlowInstance برای این انتقال وجود دارد.',
+            'subject_model_type_mismatch' => 'عدم تطابق نوع مدل موضوع. انتظار می‌رفت: :expected، دریافت شده: :got.',
+            'transition_restriction_failed' => 'محدودیت انتقال با شکست مواجه شد.',
+            'transition_execution_failed' => 'اجرای انتقال جریان با شکست مواجه شد.',
         ],
     ],
 

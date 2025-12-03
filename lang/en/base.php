@@ -27,6 +27,7 @@ return [
         "reordered" => ":entity reordered successfully.",
         "duplicated" => ":entity duplicated successfully.",
         "flow_valid" => ":entity is valid.",
+        "transition_executed_successfully" => "Transition executed successfully.",
     ],
 
     "exceptions" => [
@@ -110,6 +111,10 @@ return [
     'errors' => [
         'flow_transition' => [
             'start_state_last_transition_delete' => 'Cannot delete the last transition from the START state.',
+            'subject_model_required' => 'Subject model is required to execute transition. Either provide it directly or ensure a FlowInstance exists for this transition.',
+            'subject_model_type_mismatch' => 'Subject model type mismatch. Expected: :expected, Got: :got.',
+            'transition_restriction_failed' => 'Transition restriction failed.',
+            'transition_execution_failed' => 'Flow transition execution failed.',
         ],
     ],
 
