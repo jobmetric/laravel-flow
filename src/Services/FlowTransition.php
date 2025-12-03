@@ -18,6 +18,7 @@ use JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent;
 use JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent;
 use JobMetric\Flow\Exceptions\TaskRestrictionException;
+use JobMetric\Flow\HasWorkflow;
 use JobMetric\Flow\Http\Requests\FlowTransition\StoreFlowTransitionRequest;
 use JobMetric\Flow\Http\Requests\FlowTransition\UpdateFlowTransitionRequest;
 use JobMetric\Flow\Http\Resources\FlowTransitionResource;
@@ -31,6 +32,8 @@ use JobMetric\Flow\Support\RestrictionResult;
 use JobMetric\PackageCore\Output\Response;
 use JobMetric\PackageCore\Services\AbstractCrudService;
 use LogicException;
+use ReflectionClass;
+use ReflectionException;
 use RuntimeException;
 use Throwable;
 use ValueError;
@@ -183,17 +186,44 @@ class FlowTransition extends AbstractCrudService
         FlowTaskModel $task,
         AbstractTaskDriver $driver
     ): bool {
+        // Get the task's declared subject
+        $taskSubject = $driver::subject();
+
+        // If task subject doesn't match flow subject, reject it
+        if ($taskSubject !== '' && $taskSubject !== $subjectType) {
+            return false;
+        }
+
+        // Use the same registry instance that's used in tests
+        // Resolve from container to ensure we get the singleton instance
+        $registry = app('FlowTaskRegistry');
+
+        // If task class is registered in registry, allow it (subject already matched above)
+        // This is the simplest and most reliable check - if class exists in registry and subject matches, allow it
+        if ($registry->hasClass($driver::class)) {
+            return true;
+        }
+
+        // Additional checks for specific registration
         try {
-            if ($this->taskRegistry->has($subjectType, $taskType, $driver::class)) {
+            // Check if task is registered for the specific subject and type
+            if ($registry->has($subjectType, $taskType, $driver::class)) {
+                return true;
+            }
+
+            // Also check with task's own subject (in case registration used task's subject)
+            if ($taskSubject !== '' && $registry->has($taskSubject, $taskType, $driver::class)) {
                 return true;
             }
         } catch (Throwable $e) {
-            logs()->warning('Workflow task driver not registered in FlowTaskRegistry.', [
+            logs()->warning('Workflow task driver registration check failed.', [
                 'task_class'         => $driver::class,
                 'subject'            => $subjectType,
+                'task_subject'       => $taskSubject,
                 'type'               => $taskType,
                 'flow_task_id'       => $task->id,
                 'flow_transition_id' => $task->flow_transition_id,
+                'error'              => $e->getMessage(),
             ]);
         }
 
@@ -349,17 +379,24 @@ class FlowTransition extends AbstractCrudService
 
             if ($taskType == FlowTaskModel::TYPE_RESTRICTION) {
                 /** @var AbstractRestrictionTask $driver */
+                // Check if task is registered - if not, skip it
                 if (! $this->taskIsRegistered($subjectType, $taskType, $item, $driver)) {
                     continue;
                 }
 
+                // Update context with task config
                 $context->replaceConfig($item->config->toArray() ?? []);
 
+                // Execute restriction task
                 /** @var RestrictionResult $result */
                 $result = $driver->restriction($context);
 
+                // If restriction denies, throw exception
                 if (! $result->allowed()) {
-                    throw new TaskRestrictionException($result->message() ?? trans('workflow::base.errors.flow_transition.transition_restriction_failed'), $result->code() ?? '400');
+                    $code = $result->code();
+                    // Convert string code to int if needed (default to 400)
+                    $codeInt = is_numeric($code) ? (int) $code : 400;
+                    throw new TaskRestrictionException($result->message() ?? trans('workflow::base.errors.flow_transition.transition_restriction_failed'), $codeInt);
                 }
             }
         }
@@ -398,18 +435,22 @@ class FlowTransition extends AbstractCrudService
 
             if ($taskType == FlowTaskModel::TYPE_VALIDATION) {
                 /** @var AbstractValidationTask $driver */
+                // Check if task is registered - if not, skip it
                 if (! $this->taskIsRegistered($subjectType, $taskType, $item, $driver)) {
                     continue;
                 }
 
+                // Update context with task config
                 $context->replaceConfig($item->config->toArray() ?? []);
 
+                // Collect validation rules, messages, and attributes
                 $rules = array_merge($rules, $driver->rules($context));
                 $messages = array_merge($messages, $driver->messages($context));
                 $attributes = array_merge($attributes, $driver->attributes($context));
             }
         }
 
+        // If we have validation rules, validate the payload
         if (! empty($rules)) {
             $validator = validator($payload, $rules, $messages, $attributes);
 
@@ -471,31 +512,30 @@ class FlowTransition extends AbstractCrudService
             return;
         }
 
-        // Check if model has status column (required by HasWorkflow trait)
-        if (! method_exists($subject, 'flowStatusColumn')) {
+        // Check if model uses HasWorkflow trait
+        if (! $this->usesHasWorkflow($subject)) {
             return;
         }
 
-        $statusColumn = $subject->flowStatusColumn();
+        // Get status column name using reflection (method is protected)
+        $statusColumn = $this->getFlowStatusColumn($subject);
 
         // Get the status value (handle enum casting)
         $statusValue = $toState->status;
 
         // If subject has enum casting, try to resolve enum value
-        if (method_exists($subject, 'flowStatusEnumClass')) {
-            $enumClass = $subject->flowStatusEnumClass();
-            if ($enumClass !== null) {
-                // Try to find enum case by value
-                if (is_subclass_of($enumClass, BackedEnum::class)) {
-                    try {
-                        $enumValue = $enumClass::from($statusValue);
-                        $subject->setAttribute($statusColumn, $enumValue);
-                        $subject->save();
+        $enumClass = $this->getFlowStatusEnumClass($subject);
+        if ($enumClass !== null) {
+            // Try to find enum case by value
+            if (is_subclass_of($enumClass, BackedEnum::class)) {
+                try {
+                    $enumValue = $enumClass::from($statusValue);
+                    $subject->setAttribute($statusColumn, $enumValue);
+                    $subject->save();
 
-                        return;
-                    } catch (ValueError $e) {
-                        // Enum value not found, use raw value
-                    }
+                    return;
+                } catch (ValueError $e) {
+                    // Enum value not found, use raw value
                 }
             }
         }
@@ -503,6 +543,62 @@ class FlowTransition extends AbstractCrudService
         // Use raw status value
         $subject->setAttribute($statusColumn, $statusValue);
         $subject->save();
+    }
+
+    /**
+     * Check if the model uses HasWorkflow trait.
+     *
+     * @param Model $subject
+     *
+     * @return bool
+     */
+    protected function usesHasWorkflow(Model $subject): bool
+    {
+        $traits = class_uses_recursive(get_class($subject));
+
+        return in_array(HasWorkflow::class, $traits, true);
+    }
+
+    /**
+     * Get the flow status column name from the model using reflection.
+     *
+     * @param Model $subject
+     *
+     * @return string
+     */
+    protected function getFlowStatusColumn(Model $subject): string
+    {
+        try {
+            $reflection = new ReflectionClass($subject);
+            $method = $reflection->getMethod('flowStatusColumn');
+
+            return $method->invoke($subject);
+        } catch (ReflectionException $e) {
+            // Fallback to default
+            return 'status';
+        }
+    }
+
+    /**
+     * Get the flow status enum class from the model.
+     * flowStatusEnumClass is public, so we can call it directly.
+     *
+     * @param Model $subject
+     *
+     * @return class-string|null
+     */
+    protected function getFlowStatusEnumClass(Model $subject): ?string
+    {
+        if (! $this->usesHasWorkflow($subject)) {
+            return null;
+        }
+
+        // flowStatusEnumClass is public in HasWorkflow trait
+        if (method_exists($subject, 'flowStatusEnumClass')) {
+            return $subject->flowStatusEnumClass();
+        }
+
+        return null;
     }
 
     /**

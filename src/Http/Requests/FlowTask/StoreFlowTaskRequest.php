@@ -52,9 +52,6 @@ class StoreFlowTaskRequest extends FormRequest
      */
     public static function rulesFor(array $input, array $context = []): array
     {
-        /** @var FlowTaskRegistry $registry */
-        $registry = app('FlowTaskRegistry');
-
         $rules = [
             'flow_transition_id' => [
                 'required',
@@ -64,7 +61,7 @@ class StoreFlowTaskRequest extends FormRequest
             'driver'             => [
                 'required',
                 'string',
-                function (string $attribute, mixed $value, \Closure $fail) use ($registry) {
+                function (string $attribute, mixed $value, \Closure $fail) {
                     $class = trim(str_replace('/', '\\', (string) $value));
 
                     if (! class_exists($class)) {
@@ -78,6 +75,10 @@ class StoreFlowTaskRequest extends FormRequest
 
                         return;
                     }
+
+                    // Resolve registry inside closure to ensure we get the current instance
+                    /** @var FlowTaskRegistry $registry */
+                    $registry = app('FlowTaskRegistry');
 
                     // Check if driver is registered in FlowTaskRegistry
                     if (! $registry->hasClass($class)) {

@@ -54,14 +54,11 @@ class UpdateFlowTaskRequest extends FormRequest
     {
         $flowTaskId = (int) ($context['flow_task_id'] ?? null);
 
-        /** @var FlowTaskRegistry $registry */
-        $registry = app('FlowTaskRegistry');
-
         $rules = [
             'driver'   => [
                 'sometimes',
                 'string',
-                function (string $attribute, mixed $value, \Closure $fail) use ($registry) {
+                function (string $attribute, mixed $value, \Closure $fail) {
                     $class = trim(str_replace('/', '\\', (string) $value));
 
                     if (! class_exists($class)) {
@@ -75,6 +72,10 @@ class UpdateFlowTaskRequest extends FormRequest
 
                         return;
                     }
+
+                    // Resolve registry inside closure to ensure we get the current instance
+                    /** @var FlowTaskRegistry $registry */
+                    $registry = app('FlowTaskRegistry');
 
                     // Check if driver is registered in FlowTaskRegistry
                     if (! $registry->hasClass($class)) {

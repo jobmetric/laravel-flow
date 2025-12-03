@@ -28,8 +28,11 @@ abstract class AbstractActionTask extends AbstractTaskDriver
     {
         if (! $this->async()) {
             $this->handle($context);
+
+            return;
         }
 
+        // Only use AsyncProcess if async is enabled
         $defaultOptions = [
             'label'   => static::class,
             'timeout' => null,
