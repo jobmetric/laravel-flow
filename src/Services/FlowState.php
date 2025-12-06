@@ -25,8 +25,6 @@ use Throwable;
  */
 class FlowState extends AbstractCrudService
 {
-    use InvalidatesFlowCache;
-
     /**
      * Human-readable entity name key used in response messages.
      *
@@ -85,14 +83,14 @@ class FlowState extends AbstractCrudService
         // Force STATE type on store (type is not user-provided).
         $data['type'] = FlowStateTypeEnum::STATE();
 
-        $isTerminal = (bool)($data['is_terminal'] ?? false);
+        $isTerminal = (bool) ($data['is_terminal'] ?? false);
         unset($data['is_terminal']);
 
         $defaults = [
             'is_terminal' => false,
-            'color' => config('workflow.state.middle.color'),
-            'icon' => config('workflow.state.middle.icon'),
-            'position' => [
+            'color'       => config('workflow.state.middle.color'),
+            'icon'        => config('workflow.state.middle.icon'),
+            'position'    => [
                 'x' => config('workflow.state.middle.position.x'),
                 'y' => config('workflow.state.middle.position.y'),
             ],
@@ -126,37 +124,52 @@ class FlowState extends AbstractCrudService
         $state = $model;
 
         $data = dto($data, UpdateFlowStateRequest::class, [
-            'flow_id' => $state->flow_id,
+            'flow_id'  => $state->flow_id,
             'state_id' => $state->id,
         ]);
 
         $defaults = [
             'is_terminal' => false,
-            'color' => config('workflow.state.middle.color'),
-            'icon' => config('workflow.state.middle.icon'),
-            'position' => [
+            'color'       => config('workflow.state.middle.color'),
+            'icon'        => config('workflow.state.middle.icon'),
+            'position'    => [
                 'x' => config('workflow.state.middle.position.x'),
                 'y' => config('workflow.state.middle.position.y'),
             ],
         ];
 
         if (array_key_exists('is_terminal', $data)) {
-            $existing = is_object($state->config ?? null) ? (array)$state->config : [];
+            $existing = is_object($state->config ?? null) ? (array) $state->config : [];
             $incoming = is_array($data['config'] ?? null) ? $data['config'] : [];
 
             $config = array_replace_recursive($existing, $incoming);
 
-            Arr::set($config, 'is_terminal', (bool)$data['is_terminal']);
+            Arr::set($config, 'is_terminal', (bool) $data['is_terminal']);
             unset($data['is_terminal']);
 
             $data['config'] = array_replace_recursive($defaults, $config);
-        } elseif (array_key_exists('config', $data) && is_array($data['config'])) {
+        } else if (array_key_exists('config', $data) && is_array($data['config'])) {
             $config = array_replace_recursive($state->config ?? [], $data['config']);
-            if (!array_key_exists('is_terminal', $config)) {
+            if (! array_key_exists('is_terminal', $config)) {
                 $config['is_terminal'] = false;
             }
             $data['config'] = array_replace_recursive($defaults, $config);
         }
+    }
+
+    /**
+     * Common hook executed after all mutation operations.
+     * Invalidates flow-related caches.
+     *
+     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
+     * @param Model $model      The model instance
+     * @param array $data       The data payload (empty for destroy/restore/forceDelete)
+     *
+     * @return void
+     */
+    protected function afterCommon(string $operation, Model $model, array $data = []): void
+    {
+        forgetFlowCache();
     }
 
     /**
@@ -180,41 +193,5 @@ class FlowState extends AbstractCrudService
         }
 
         return parent::destroy($id, $with);
-    }
-
-    /**
-     * Hook after store: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     *
-     * @return void
-     */
-    protected function afterStore(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after update: invalidate caches.
-     *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     * @return void
-     */
-    protected function afterUpdate(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after destroy: invalidate caches.
-     *
-     * @param Model $model
-     * @return void
-     */
-    protected function afterDestroy(Model $model): void
-    {
-        $this->forgetCache();
     }
 }

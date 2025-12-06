@@ -54,9 +54,7 @@ class UpdateFlowStateRequest extends FormRequest
             'is_terminal' => 'sometimes|boolean',
         ];
 
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
 
         if (!empty($input['translation']) && is_array($input['translation'])) {
             foreach ($locales as $locale) {

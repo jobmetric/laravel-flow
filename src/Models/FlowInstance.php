@@ -22,13 +22,13 @@ use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the instance row.
+ * @property int $id                   The primary identifier of the instance row.
  * @property string $instanceable_type The class name of the related model.
- * @property int $instanceable_id The ID of the related model instance.
- * @property int $flow_transition_id The current transition identifier.
- * @property string|null $actor_type The class name of the actor model (nullable).
- * @property int|null $actor_id The ID of the actor model instance (nullable).
- * @property Carbon $started_at The timestamp when this instance started.
+ * @property int $instanceable_id      The ID of the related model instance.
+ * @property int $flow_transition_id   The current transition identifier.
+ * @property string|null $actor_type   The class name of the actor model (nullable).
+ * @property int|null $actor_id        The ID of the actor model instance (nullable).
+ * @property Carbon $started_at        The timestamp when this instance started.
  * @property Carbon|null $completed_at The timestamp when this instance completed.
  *
  * @property-read Model|MorphTo $instanceable
@@ -58,8 +58,7 @@ use JobMetric\PackageCore\Traits\HasMorphResourceAttributes;
  */
 class FlowInstance extends Model
 {
-    use HasFactory,
-        HasMorphResourceAttributes;
+    use HasFactory, HasMorphResourceAttributes;
 
     /**
      * This table does not have Laravel's created_at/updated_at columns.
@@ -96,13 +95,13 @@ class FlowInstance extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'instanceable_type' => 'string',
-        'instanceable_id' => 'integer',
+        'instanceable_type'  => 'string',
+        'instanceable_id'    => 'integer',
         'flow_transition_id' => 'integer',
-        'actor_type' => 'string',
-        'actor_id' => 'integer',
-        'started_at' => 'datetime',
-        'completed_at' => 'datetime',
+        'actor_type'         => 'string',
+        'actor_id'           => 'integer',
+        'started_at'         => 'datetime',
+        'completed_at'       => 'datetime',
     ];
 
     /**
@@ -156,7 +155,8 @@ class FlowInstance extends Model
             /** @var FlowTransition|null $transition */
             $transition = $this->getRelation('transition');
 
-            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()->first();
+            return $transition?->relationLoaded('flow') ? $transition->getRelation('flow') : $transition?->flow()
+                ->first();
         }
 
         $transition = $this->transition()->first();
@@ -171,11 +171,11 @@ class FlowInstance extends Model
      */
     public function getCurrentStateAttribute(): ?FlowState
     {
-        $transition = $this->relationLoaded('transition') ?
-            $this->getRelation('transition') :
-            $this->transition()->with(['toState', 'fromState'])->first();
+        $transition = $this->relationLoaded('transition') ? $this->getRelation('transition') : $this->transition()
+            ->with(['toState', 'fromState'])
+            ->first();
 
-        if (!$transition) {
+        if (! $transition) {
             return null;
         }
 
@@ -210,7 +210,7 @@ class FlowInstance extends Model
      */
     public function getDurationSecondsAttribute(): ?int
     {
-        if (!$this->started_at) {
+        if (! $this->started_at) {
             return null;
         }
 
@@ -256,7 +256,7 @@ class FlowInstance extends Model
     {
         return $query->where([
             'instanceable_type' => $type,
-            'instanceable_id' => $id
+            'instanceable_id'   => $id,
         ]);
     }
 
@@ -299,7 +299,7 @@ class FlowInstance extends Model
     {
         return $query->where([
             'actor_type' => $actorType,
-            'actor_id' => $actorId
+            'actor_id'   => $actorId,
         ]);
     }
 

@@ -23,22 +23,22 @@ use JobMetric\Translation\HasTranslation;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the flow row.
- * @property string $subject_type The class name of the related subject model.
- * @property string|null $subject_scope Optional scope discriminator (tenant/org/etc.).
+ * @property int $id                         The primary identifier of the flow row.
+ * @property string $subject_type            The class name of the related subject model.
+ * @property string|null $subject_scope      Optional scope discriminator (tenant/org/etc.).
  * @property string|null $subject_collection Optional collection discriminator within the subject.
- * @property int $version Version number of this flow definition.
- * @property bool $is_default Whether this flow is preferred among candidates.
- * @property bool $status Active flag (true=enabled, false=disabled).
- * @property Carbon|null $active_from Start of activity window (UTC).
- * @property Carbon|null $active_to End of activity window (UTC).
- * @property string|null $channel Optional channel key (e.g., web, api, pos).
- * @property int $ordering Relative priority among candidates (higher=preferred).
- * @property int|null $rollout_pct Optional canary percentage (0..100).
- * @property string|null $environment Deployment environment (e.g., prod, staging).
- * @property Carbon|null $deleted_at Soft delete timestamp.
- * @property Carbon $created_at The timestamp when this flow was created.
- * @property Carbon $updated_at The timestamp when this flow was last updated.
+ * @property int $version                    Version number of this flow definition.
+ * @property bool $is_default                Whether this flow is preferred among candidates.
+ * @property bool $status                    Active flag (true=enabled, false=disabled).
+ * @property Carbon|null $active_from        Start of activity window (UTC).
+ * @property Carbon|null $active_to          End of activity window (UTC).
+ * @property string|null $channel            Optional channel key (e.g., web, api, pos).
+ * @property int $ordering                   Relative priority among candidates (higher=preferred).
+ * @property int|null $rollout_pct           Optional canary percentage (0..100).
+ * @property string|null $environment        Deployment environment (e.g., prod, staging).
+ * @property Carbon|null $deleted_at         Soft delete timestamp.
+ * @property Carbon $created_at              The timestamp when this flow was created.
+ * @property Carbon $updated_at              The timestamp when this flow was last updated.
  *
  * @property-read FlowState[] $states
  * @property-read FlowTransition[] $transitions
@@ -61,9 +61,7 @@ use JobMetric\Translation\HasTranslation;
  */
 class Flow extends Model
 {
-    use HasFactory,
-        SoftDeletes,
-        HasTranslation;
+    use HasFactory, SoftDeletes, HasTranslation;
 
     /**
      * The attributes that are mass assignable.
@@ -91,18 +89,18 @@ class Flow extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'subject_type' => 'string',
-        'subject_scope' => 'string',
+        'subject_type'       => 'string',
+        'subject_scope'      => 'string',
         'subject_collection' => 'string',
-        'version' => 'integer',
-        'is_default' => 'boolean',
-        'status' => 'boolean',
-        'active_from' => 'datetime',
-        'active_to' => 'datetime',
-        'channel' => 'string',
-        'ordering' => 'integer',
-        'rollout_pct' => 'integer',
-        'environment' => 'string',
+        'version'            => 'integer',
+        'is_default'         => 'boolean',
+        'status'             => 'boolean',
+        'active_from'        => 'datetime',
+        'active_to'          => 'datetime',
+        'channel'            => 'string',
+        'ordering'           => 'integer',
+        'rollout_pct'        => 'integer',
+        'environment'        => 'string',
     ];
 
     /**

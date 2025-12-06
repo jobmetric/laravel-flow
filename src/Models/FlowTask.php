@@ -112,8 +112,7 @@ class FlowTask extends Model
         // Auto-assign ordering if not provided (append to end of the transition's list).
         static::creating(function (self $task): void {
             if ($task->ordering === null) {
-                $max = static::where('flow_transition_id', $task->flow_transition_id)
-                    ->max('ordering');
+                $max = static::where('flow_transition_id', $task->flow_transition_id)->max('ordering');
                 $task->ordering = is_null($max) ? 0 : ($max + 1);
             }
         });
@@ -155,11 +154,9 @@ class FlowTask extends Model
                 ->first();
         }
 
-        $transition = $this->transition()
-            ->first();
+        $transition = $this->transition()->first();
 
-        return $transition?->flow()
-            ->first();
+        return $transition?->flow()->first();
     }
 
     /**

@@ -31,3 +31,16 @@ if (!function_exists('flowGetStatus')) {
     }
 }
 
+if (!function_exists('forgetFlowCache')) {
+    /**
+     * Clear all flow-related caches.
+     *
+     * @return void
+     */
+    function forgetFlowCache(): void
+    {
+        cache()->forget('flows');
+        cache()->forget('flow.pick');
+    }
+}
+

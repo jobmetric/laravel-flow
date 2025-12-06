@@ -2,6 +2,8 @@
 
 namespace JobMetric\Flow;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
+use JobMetric\EventSystem\Support\EventRegistry;
 use JobMetric\Flow\Services\Flow;
 use JobMetric\Flow\Services\FlowState;
 use JobMetric\Flow\Services\FlowTask;
@@ -39,5 +41,43 @@ class FlowServiceProvider extends PackageCoreServiceProvider
             ->registerClass('flow-transition', FlowTransition::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('flow-task', FlowTask::class, RegisterClassTypeEnum::SINGLETON())
             ->registerClass('FlowTaskRegistry', FlowTaskRegistry::class, RegisterClassTypeEnum::SINGLETON());
+    }
+
+    /**
+     * after boot package
+     *
+     * @return void
+     * @throws BindingResolutionException
+     */
+    public function afterBootPackage(): void
+    {
+        // Register events if EventRegistry is available
+        // This ensures EventRegistry is available if EventSystemServiceProvider is loaded
+        if ($this->app->bound('EventRegistry')) {
+            /** @var EventRegistry $registry */
+            $registry = $this->app->make('EventRegistry');
+
+            // Flow Events
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowStoreEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowUpdateEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowDeleteEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowForceDeleteEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowRestoreEvent::class);
+
+            // FlowState Events
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateStoreEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateUpdateEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateDeleteEvent::class);
+
+            // FlowTask Events
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskStoreEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskUpdateEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskDeleteEvent::class);
+
+            // FlowTransition Events
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteEvent::class);
+        }
     }
 }

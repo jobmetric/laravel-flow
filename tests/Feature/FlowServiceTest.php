@@ -13,7 +13,7 @@ use JobMetric\Flow\Tests\Stubs\Enums\OrderStatusEnum;
 use JobMetric\Flow\Tests\Stubs\Models\Order;
 use JobMetric\Flow\Tests\Stubs\Models\User;
 use JobMetric\Flow\Tests\TestCase as BaseTestCase;
-use JobMetric\Language\Models\Language;
+use JobMetric\Language\Facades\Language;
 use Throwable;
 
 class FlowServiceTest extends BaseTestCase
@@ -32,7 +32,7 @@ class FlowServiceTest extends BaseTestCase
      */
     protected function makeFlowPayload(string $subject, ?string $scope, int $version = 1, bool $isDefault = true, bool $status = true, string $title = null): array
     {
-        $locales = Language::query()->where('status', true)->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
         if (empty($locales)) {
             $locales = ['en'];
         }

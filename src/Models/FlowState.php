@@ -22,13 +22,13 @@ use JobMetric\Translation\HasTranslation;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the flow state row.
- * @property int $flow_id The owning flow identifier.
+ * @property int $id                        The primary identifier of the flow state row.
+ * @property int $flow_id                   The owning flow identifier.
  * @property FlowStateTypeEnum|string $type The state type: start | state.
- * @property object|null $config Optional UI/behavior configuration (JSON).
- * @property string|null $status Optional domain status key mapped to the subject model.
- * @property Carbon $created_at The timestamp when this state was created.
- * @property Carbon $updated_at The timestamp when this state was last updated.
+ * @property object|null $config            Optional UI/behavior configuration (JSON).
+ * @property string|null $status            Optional domain status key mapped to the subject model.
+ * @property Carbon $created_at             The timestamp when this state was created.
+ * @property Carbon $updated_at             The timestamp when this state was last updated.
  *
  * @property-read Flow $flow
  * @property-read FlowTransition[] $outgoing
@@ -46,8 +46,7 @@ use JobMetric\Translation\HasTranslation;
  */
 class FlowState extends Model
 {
-    use HasFactory,
-        HasTranslation;
+    use HasFactory, HasTranslation;
 
     /**
      * Touch the parent flow when this state is updated.
@@ -75,9 +74,9 @@ class FlowState extends Model
      */
     protected $casts = [
         'flow_id' => 'integer',
-        'type' => FlowStateTypeEnum::class,
-        'config' => AsArrayObject::class,
-        'status' => 'string',
+        'type'    => FlowStateTypeEnum::class,
+        'config'  => AsArrayObject::class,
+        'status'  => 'string',
     ];
 
     /**
@@ -154,7 +153,7 @@ class FlowState extends Model
      */
     public function getIsEndAttribute(): bool
     {
-        return (bool)$this->config?->is_terminal === true;
+        return (bool) $this->config?->is_terminal === true;
     }
 
     /**

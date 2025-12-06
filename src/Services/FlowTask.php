@@ -14,19 +14,12 @@ use JobMetric\Flow\Http\Requests\FlowTask\UpdateFlowTaskRequest;
 use JobMetric\Flow\Http\Resources\FlowTaskResource;
 use JobMetric\Flow\Models\FlowTask as FlowTaskModel;
 use JobMetric\Flow\Support\FlowTaskRegistry;
+use JobMetric\Form\Support\IOForm;
 use JobMetric\PackageCore\Services\AbstractCrudService;
 use Throwable;
 
 class FlowTask extends AbstractCrudService
 {
-    use InvalidatesFlowCache;
-
-    public function __construct(
-        protected FlowTaskRegistry $taskRegistry
-    ) {
-        parent::__construct();
-    }
-
     /**
      * Human-readable entity name key used in response messages.
      *
@@ -71,6 +64,7 @@ class FlowTask extends AbstractCrudService
      * Validate & normalize payload before create.
      *
      * Role: ensures a clean, validated input for store().
+     * Uses FormBuilder from the task driver to validate and normalize config data via IOForm.
      *
      * @param array<string,mixed> $data
      *
@@ -79,15 +73,26 @@ class FlowTask extends AbstractCrudService
      */
     protected function changeFieldStore(array &$data): void
     {
+        // First validate using StoreFlowTaskRequest
         $data = dto($data, StoreFlowTaskRequest::class, [
-            'flow_id' => $data['flow_id'] ?? null,
+            'flow_transition_id' => $data['flow_transition_id'] ?? null,
         ]);
+
+        // Normalize config using IOForm if driver is provided
+        if (isset($data['driver']) && isset($data['config'])) {
+            $driver = $this->resolveDriver($data['driver']);
+
+            if (! is_null($driver)) {
+                $data['config'] = IOForm::forStore($driver->form(), $data['config']);
+            }
+        }
     }
 
     /**
      * Validate & normalize payload before update.
      *
      * Role: aligns input with update rules for the specific FlowTask.
+     * Uses FormBuilder from the task driver to validate and normalize config data via IOForm.
      *
      * @param Model $model
      * @param array<string,mixed> $data
@@ -101,47 +106,54 @@ class FlowTask extends AbstractCrudService
         $task = $model;
 
         $data = dto($data, UpdateFlowTaskRequest::class, [
-            'flow_id'      => $task->flow_id,
+            'flow_id'      => $task->transition->flow_id,
             'flow_task_id' => $task->id,
         ]);
+
+        // Determine driver class: use updated value if provided, otherwise use existing
+        $driverClass = $data['driver'] ?? null;
+        if (is_null($driverClass) && ! is_null($task->driver)) {
+            $driverClass = is_object($task->driver) ? get_class($task->driver) : $task->driver;
+        }
+
+        // Normalize config using IOForm if driver is available
+        if (! is_null($driverClass) && isset($data['config'])) {
+            $driver = $this->resolveDriver($driverClass);
+
+            if (! is_null($driver)) {
+                $data['config'] = IOForm::forStore($driver->form(), $data['config']);
+            }
+        }
     }
 
     /**
-     * Hook after store: invalidate caches.
+     * Resolve a task driver instance from the registry by class name.
      *
-     * @param Model $model
-     * @param array<string,mixed> $data
+     * @param string $driverClass
      *
-     * @return void
+     * @return AbstractTaskDriver|null
      */
-    protected function afterStore(Model $model, array &$data): void
+    public function resolveDriver(string $driverClass): ?AbstractTaskDriver
     {
-        $this->forgetCache();
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
+        return $registry->get($driverClass);
     }
 
     /**
-     * Hook after update: invalidate caches.
+     * Common hook executed after all mutation operations.
+     * Invalidates flow-related caches.
      *
-     * @param Model $model
-     * @param array<string,mixed> $data
-     *
-     * @return void
-     */
-    protected function afterUpdate(Model $model, array &$data): void
-    {
-        $this->forgetCache();
-    }
-
-    /**
-     * Hook after destroy: invalidate caches.
-     *
-     * @param Model $model
+     * @param string $operation The operation being performed: 'store'|'update'|'destroy'|'restore'|'forceDelete'
+     * @param Model $model      The model instance
+     * @param array $data       The data payload (empty for destroy/restore/forceDelete)
      *
      * @return void
      */
-    protected function afterDestroy(Model $model): void
+    protected function afterCommon(string $operation, Model $model, array $data = []): void
     {
-        $this->forgetCache();
+        forgetFlowCache();
     }
 
     /**
@@ -155,7 +167,10 @@ class FlowTask extends AbstractCrudService
      */
     public function drivers(string $taskDriver = '', array|string|null $taskTypes = null): array
     {
-        $tasks = collect($this->taskRegistry->all());
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
+        $tasks = collect($registry->all());
 
         if ($taskDriver !== '') {
             $normalized = $this->normalizeDriverKey($taskDriver);
@@ -177,7 +192,7 @@ class FlowTask extends AbstractCrudService
             ];
         })->values();
 
-        if ($taskTypes !== null) {
+        if (! is_null($taskTypes)) {
             $filters = array_map(function ($type) {
                 $normalized = Str::lower((string) $type);
 
@@ -208,10 +223,13 @@ class FlowTask extends AbstractCrudService
      */
     public function details(string $taskDriver, string $taskClassName): array
     {
+        /** @var FlowTaskRegistry $registry */
+        $registry = app('FlowTaskRegistry');
+
         $subject = $taskDriver !== '' ? $this->normalizeDriverKey($taskDriver) : null;
         $taskBasename = Str::studly($taskClassName);
 
-        $subjects = $subject !== null ? [$subject => $this->taskRegistry->forSubject($subject)] : $this->taskRegistry->all();
+        $subjects = ! is_null($subject) ? [$subject => $registry->forSubject($subject)] : $registry->all();
 
         foreach ($subjects as $types) {
             foreach ($types as $tasks) {
@@ -253,7 +271,7 @@ class FlowTask extends AbstractCrudService
     protected function taskDetails(AbstractTaskDriver $task): array
     {
         $definition = $task::definition();
-        
+
         $details = [
             'key'   => class_basename($task),
             'title' => trans($definition->title),

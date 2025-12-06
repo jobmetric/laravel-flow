@@ -54,9 +54,7 @@ class UpdateFlowRequest extends FormRequest
             'environment' => 'sometimes|nullable|string|max:64',
         ];
 
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
 
         if (isset($input['translation']) && is_array($input['translation'])) {
             foreach ($locales as $locale) {

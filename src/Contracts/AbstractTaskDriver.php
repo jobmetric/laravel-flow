@@ -22,11 +22,9 @@ abstract class AbstractTaskDriver
     abstract public static function definition(): FlowTaskDefinition;
 
     /**
-     * Registers configuration fields for this task using the provided form builder instance.
+     * Returns the FormBuilder instance with all configuration fields registered for this task.
      *
-     * @param FormBuilder $form
-     *
-     * @return void
+     * @return FormBuilder
      */
-    abstract public function form(FormBuilder $form): void;
+    abstract public function form(): FormBuilder;
 }

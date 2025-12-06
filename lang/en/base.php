@@ -27,10 +27,10 @@ return [
         "reordered" => ":entity reordered successfully.",
         "duplicated" => ":entity duplicated successfully.",
         "flow_valid" => ":entity is valid.",
+        "transition_executed_successfully" => "Transition executed successfully.",
     ],
 
     "exceptions" => [
-        "transition_not_found" => "Flow transition not found.",
         "task_restriction" => "Flow transition execution is restricted.",
     ],
 
@@ -43,6 +43,7 @@ return [
 
     'fields' => [
         'flow_id' => 'Flow',
+        'flow_transition_id' => 'Flow Transition',
         'translation' => 'Translation',
         'name' => 'Name',
         'from' => 'From',
@@ -67,6 +68,8 @@ return [
         'rollout_pct' => 'Rollout Percentage',
         'environment' => 'Environment',
         'ordered_ids' => 'Ordered IDs',
+        'driver' => 'Driver',
+        'config' => 'Configuration',
     ],
 
     "validation" => [
@@ -96,11 +99,108 @@ return [
             'translation_name_required' => 'The translation name field is required.',
             'active_from_before_active_to' => 'The start date must be before or equal to the end date.',
         ],
+
+        'flow_task' => [
+            'driver_not_exists' => 'The specified task driver class does not exist.',
+            'driver_invalid' => 'The specified task driver must extend AbstractTaskDriver.',
+            'driver_not_registered' => 'The specified task driver is not registered in the system.',
+            'transition_not_found' => 'The specified flow transition was not found.',
+        ],
     ],
 
     'errors' => [
         'flow_transition' => [
             'start_state_last_transition_delete' => 'Cannot delete the last transition from the START state.',
+            'subject_model_required' => 'Subject model is required to execute transition. Either provide it directly or ensure a FlowInstance exists for this transition.',
+            'subject_model_type_mismatch' => 'Subject model type mismatch. Expected: :expected, Got: :got.',
+            'transition_restriction_failed' => 'Transition restriction failed.',
+            'transition_execution_failed' => 'Flow transition execution failed.',
+        ],
+    ],
+
+    'events' => [
+        'flow_deleted' => [
+            'group' => 'Flow',
+            'title' => 'Flow Deleted',
+            'description' => 'This event is triggered when a Flow is deleted.',
+        ],
+
+        'flow_force_deleted' => [
+            'group' => 'Flow',
+            'title' => 'Flow Force Deleted',
+            'description' => 'This event is triggered when a Flow is force deleted.',
+        ],
+
+        'flow_restored' => [
+            'group' => 'Flow',
+            'title' => 'Flow Restored',
+            'description' => 'This event is triggered when a Flow is restored.',
+        ],
+
+        'flow_stored' => [
+            'group' => 'Flow',
+            'title' => 'Flow Stored',
+            'description' => 'This event is triggered when a Flow is stored.',
+        ],
+
+        'flow_updated' => [
+            'group' => 'Flow',
+            'title' => 'Flow Updated',
+            'description' => 'This event is triggered when a Flow is updated.',
+        ],
+
+        'flow_state_deleted' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Deleted',
+            'description' => 'This event is triggered when a Flow State is deleted.',
+        ],
+
+        'flow_state_stored' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Stored',
+            'description' => 'This event is triggered when a Flow State is stored.',
+        ],
+
+        'flow_state_updated' => [
+            'group' => 'Flow State',
+            'title' => 'Flow State Updated',
+            'description' => 'This event is triggered when a Flow State is updated.',
+        ],
+
+        'flow_task_deleted' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Deleted',
+            'description' => 'This event is triggered when a Flow Task is deleted.',
+        ],
+
+        'flow_task_stored' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Stored',
+            'description' => 'This event is triggered when a Flow Task is stored.',
+        ],
+
+        'flow_task_updated' => [
+            'group' => 'Flow Task',
+            'title' => 'Flow Task Updated',
+            'description' => 'This event is triggered when a Flow Task is updated.',
+        ],
+
+        'flow_transition_deleted' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Deleted',
+            'description' => 'This event is triggered when a Flow Transition is deleted.',
+        ],
+
+        'flow_transition_stored' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Stored',
+            'description' => 'This event is triggered when a Flow Transition is stored.',
+        ],
+
+        'flow_transition_updated' => [
+            'group' => 'Flow Transition',
+            'title' => 'Flow Transition Updated',
+            'description' => 'This event is triggered when a Flow Transition is updated.',
         ],
     ],
 ];

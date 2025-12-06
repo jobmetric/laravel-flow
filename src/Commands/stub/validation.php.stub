@@ -35,15 +35,15 @@ class {{task}}Task extends AbstractValidationTask
     }
 
     /**
-     * Registers configuration fields for this task using the provided form builder instance.
+     * Returns the FormBuilder instance with all configuration fields registered for this task.
      *
-     * @param FormBuilder $form
-     *
-     * @return void
+     * @return FormBuilder
      */
-    public function form(FormBuilder $form): void
+    public function form(): FormBuilder
     {
-        // Define configuration fields for this validation task here.
+        return (new FormBuilder)
+            // Define configuration fields for this validation task here using ->tab(), ->hiddenCustomField(), etc.
+            ;
     }
 
     /**

@@ -20,11 +20,11 @@ use JobMetric\Translation\HasTranslation;
  *
  * @package JobMetric\Flow
  *
- * @property int $id The primary identifier of the transition row.
- * @property int $flow_id The owning flow identifier.
- * @property int|null $from Source state id (nullable for start edge).
- * @property int|null $to Destination state id (nullable for end edge).
- * @property string|null $slug Optional transition identifier (unique per flow when not null).
+ * @property int $id            The primary identifier of the transition row.
+ * @property int $flow_id       The owning flow identifier.
+ * @property int|null $from     Source state id (nullable for start edge).
+ * @property int|null $to       Destination state id (nullable for end edge).
+ * @property string|null $slug  Optional transition identifier (unique per flow when not null).
  * @property Carbon $created_at The timestamp when this transition was created.
  * @property Carbon $updated_at The timestamp when this transition was last updated.
  *
@@ -75,9 +75,9 @@ class FlowTransition extends Model
      */
     protected $casts = [
         'flow_id' => 'integer',
-        'from' => 'integer',
-        'to' => 'integer',
-        'slug' => 'string',
+        'from'    => 'integer',
+        'to'      => 'integer',
+        'slug'    => 'string',
     ];
 
     /**
@@ -154,7 +154,7 @@ class FlowTransition extends Model
      */
     public function getIsStartEdgeAttribute(): bool
     {
-        return is_null($this->from) && !is_null($this->to);
+        return is_null($this->from) && ! is_null($this->to);
     }
 
     /**
@@ -164,7 +164,7 @@ class FlowTransition extends Model
      */
     public function getIsEndEdgeAttribute(): bool
     {
-        return !is_null($this->from) && is_null($this->to);
+        return ! is_null($this->from) && is_null($this->to);
     }
 
     /**
@@ -204,7 +204,7 @@ class FlowTransition extends Model
     {
         return $query->where([
             'from' => $fromId,
-            'to' => $toId,
+            'to'   => $toId,
         ]);
     }
 

@@ -52,9 +52,7 @@ class StoreFlowTransitionRequest extends FormRequest
             ],
         ];
 
-        $locales = Language::all([
-            'status' => true
-        ])->pluck('locale')->all();
+        $locales = Language::getActiveLocales();
 
         foreach ($locales as $locale) {
             $rules["translation.$locale"] = 'required|array';
