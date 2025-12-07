@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use JobMetric\Flow\Enums\FlowStateTypeEnum;
 use JobMetric\Translation\HasTranslation;
 
 /**
@@ -35,6 +36,11 @@ use JobMetric\Translation\HasTranslation;
  * @property-read FlowInstance[] $instances
  * @property-read bool $is_start_edge
  * @property-read bool $is_end_edge
+ * @property-read bool $is_start_transition
+ * @property-read bool $is_specific_transition
+ * @property-read bool $is_self_loop_transition
+ * @property-read bool $is_generic_input_transition
+ * @property-read bool $is_generic_output_transition
  *
  * @method static Builder|FlowTransition whereFlowId(int $flow_id)
  * @method static Builder|FlowTransition whereFrom(?int $from)
@@ -44,6 +50,11 @@ use JobMetric\Translation\HasTranslation;
  * @method static Builder|FlowTransition endEdges()
  * @method static Builder|FlowTransition between(int $fromId, int $toId)
  * @method static Builder|FlowTransition withSlug(string $slug)
+ * @method static Builder|FlowTransition startTransitions()
+ * @method static Builder|FlowTransition specificTransitions()
+ * @method static Builder|FlowTransition selfLoopTransitions()
+ * @method static Builder|FlowTransition genericInputTransitions()
+ * @method static Builder|FlowTransition genericOutputTransitions()
  */
 class FlowTransition extends Model
 {
@@ -168,6 +179,65 @@ class FlowTransition extends Model
     }
 
     /**
+     * Accessor: is this a start transition? (from start state)
+     *
+     * @return bool
+     */
+    public function getIsStartTransitionAttribute(): bool
+    {
+        if (is_null($this->from)) {
+            return false;
+        }
+
+        $fromState = $this->fromState;
+        if (! $fromState) {
+            return false;
+        }
+
+        return $fromState->is_start;
+    }
+
+    /**
+     * Accessor: is this a specific transition? (both from and to are set and not equal)
+     *
+     * @return bool
+     */
+    public function getIsSpecificTransitionAttribute(): bool
+    {
+        return ! is_null($this->from) && ! is_null($this->to) && $this->from !== $this->to;
+    }
+
+    /**
+     * Accessor: is this a self-loop transition? (from equals to)
+     *
+     * @return bool
+     */
+    public function getIsSelfLoopTransitionAttribute(): bool
+    {
+        return ! is_null($this->from) && ! is_null($this->to) && $this->from === $this->to;
+    }
+
+    /**
+     * Accessor: is this a generic input transition? (from is null)
+     *
+     * @return bool
+     */
+    public function getIsGenericInputTransitionAttribute(): bool
+    {
+        return is_null($this->from) && ! is_null($this->to);
+    }
+
+    /**
+     * Accessor: is this a generic output transition? (to is null)
+     *
+     * @return bool
+     */
+    public function getIsGenericOutputTransitionAttribute(): bool
+    {
+        return ! is_null($this->from) && is_null($this->to);
+    }
+
+    /**
      * Scope: only start edges (from IS NULL).
      *
      * @param Builder $query
@@ -219,5 +289,67 @@ class FlowTransition extends Model
     public function scopeWithSlug(Builder $query, string $slug): Builder
     {
         return $query->whereNotNull('slug')->where('slug', $slug);
+    }
+
+    /**
+     * Scope: only start transitions (from start state).
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeStartTransitions(Builder $query): Builder
+    {
+        return $query->whereHas('fromState', function ($q) {
+            $q->where('type', FlowStateTypeEnum::START());
+        });
+    }
+
+    /**
+     * Scope: only specific transitions (both from and to are set and not equal).
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeSpecificTransitions(Builder $query): Builder
+    {
+        return $query->whereNotNull('from')->whereNotNull('to')->whereColumn('from', '!=', 'to');
+    }
+
+    /**
+     * Scope: only self-loop transitions (from equals to).
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeSelfLoopTransitions(Builder $query): Builder
+    {
+        return $query->whereNotNull('from')->whereNotNull('to')->whereColumn('from', '=', 'to');
+    }
+
+    /**
+     * Scope: only generic input transitions (from is null).
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeGenericInputTransitions(Builder $query): Builder
+    {
+        return $query->whereNull('from')->whereNotNull('to');
+    }
+
+    /**
+     * Scope: only generic output transitions (to is null).
+     *
+     * @param Builder $query
+     *
+     * @return Builder
+     */
+    public function scopeGenericOutputTransitions(Builder $query): Builder
+    {
+        return $query->whereNotNull('from')->whereNull('to');
     }
 }

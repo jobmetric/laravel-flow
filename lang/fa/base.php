@@ -88,6 +88,10 @@ return [
             'duplicate_transition' => 'ترنزیشنی با همین مبدأ و مقصد در این فلو وجود دارد.',
             'first_must_from_start' => 'اولین ترنزیشن این فلو باید از استیت شروع (START) آغاز شود.',
             'must_connect_two_states'   => 'یک ترنزیشن باید بین دو استیت مشخص برقرار باشد (هر دو مقدار مبدأ و مقصد پس از ویرایش الزامی است).',
+            'at_least_one_required' => 'حداقل یکی از فیلدهای مبدأ یا مقصد باید مقدار داشته باشد.',
+            'start_state_cannot_self_loop' => 'استیت شروع (START) نمی‌تواند transition اشاره به خود داشته باشد.',
+            'terminal_state_no_generic_output' => 'استیت پایانی نمی‌تواند transition خروجی عام داشته باشد.',
+            'start_state_only_one_transition' => 'از استیت شروع (START) فقط یک transition می‌تواند خارج شود.',
         ],
 
         'flow_state' => [

@@ -34,6 +34,8 @@ return new class extends Migration {
 
             $table->timestamps();
 
+            // Unique constraint for (flow_id, from, to) - allows self-loops (from = to) and null values
+            // Note: NULL values are considered distinct in unique constraints, so we can have multiple transitions with null from or to
             $table->unique(['flow_id', 'from', 'to'], 'FLOW_TRANSITION_UNIQUE');
             $table->unique(['flow_id', 'slug'], 'FLOW_TRANSITION_SLUG_UNIQUE');
         });
@@ -50,11 +52,15 @@ return new class extends Migration {
             $colFrom = $gram->wrap('from');
             $colTo = $gram->wrap('to');
 
-            // Base checks (MySQL < 8.0.16 parses but ignores CHECK; enforce in app if needed)
+            // Base check: at least one of from or to must not be null
+            // (we can have from=null for generic input, to=null for generic output, but not both null)
             DB::statement("ALTER TABLE {$wrappedTable} ADD CONSTRAINT flow_transition_not_both_null_chk CHECK (({$colFrom} IS NOT NULL) OR ({$colTo} IS NOT NULL))");
-            DB::statement("ALTER TABLE {$wrappedTable} ADD CONSTRAINT flow_transition_not_same_chk CHECK (({$colFrom} IS NULL OR {$colTo} IS NULL OR {$colFrom} <> {$colTo}))");
+
+            // Note: We removed the constraint that prevented from == to to allow self-loops
+            // Self-loops are now allowed (except for start states, which is enforced in application layer)
 
             // One start-edge per flow, via functional unique indexes (works on PG & MySQL 8+)
+            // This ensures only one transition from start state exists per flow
             DB::statement("CREATE UNIQUE INDEX flow_transition_one_start ON {$wrappedTable} ((CASE WHEN {$colFrom} IS NULL THEN {$colFlow} ELSE NULL END))");
         } catch (Throwable $e) {
             // If CHECK/functional indexes are unsupported on this engine/version, enforce in application layer.

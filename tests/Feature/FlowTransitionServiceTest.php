@@ -214,11 +214,11 @@ class FlowTransitionServiceTest extends BaseTestCase
     }
 
     /**
-     * Store: from == to is rejected.
+     * Store: from == to is allowed for self-loop (except for start state).
      *
      * @throws Throwable
      */
-    public function test_store_rejects_equal_from_and_to(): void
+    public function test_store_allows_self_loop_except_for_start_state(): void
     {
         $service = app(FlowTransitionService::class);
         $source = $this->makeFlowWithStartAndTwoStates('TX3');
@@ -235,16 +235,31 @@ class FlowTransitionServiceTest extends BaseTestCase
             'to'          => $source['a']->id,
         ])->ok);
 
+        // Self-loop is now allowed for non-start states
+        $selfLoop = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'AToA',
+                ],
+            ],
+            'from'        => $source['a']->id,
+            'to'          => $source['a']->id,
+        ]);
+
+        $this->assertTrue($selfLoop->ok);
+
+        // But self-loop is not allowed for start state
         $this->expectException(ValidationException::class);
         $service->store([
             'flow_id'     => $source['flow']->id,
             'translation' => [
                 'en' => [
-                    'name' => 'EqualEdge',
+                    'name' => 'StartToStart',
                 ],
             ],
-            'from'        => $source['a']->id,
-            'to'          => $source['a']->id,
+            'from'        => $source['start']->id,
+            'to'          => $source['start']->id,
         ]);
     }
 
@@ -351,16 +366,16 @@ class FlowTransitionServiceTest extends BaseTestCase
     }
 
     /**
-     * Update: can change slug/name; reject from==to.
+     * Update: can change slug/name; self-loop is allowed except for start state.
      *
      * @throws Throwable
      */
-    public function test_update_changes_fields_and_rejects_equal_endpoints(): void
+    public function test_update_changes_fields_and_allows_self_loop_except_start(): void
     {
         $service = app(FlowTransitionService::class);
         $source = $this->makeFlowWithStartAndTwoStates('TX7');
 
-        $service->store([
+        $tSA = $service->store([
             'flow_id'     => $source['flow']->id,
             'translation' => [
                 'en' => [
@@ -394,10 +409,18 @@ class FlowTransitionServiceTest extends BaseTestCase
         ]);
         $this->assertTrue($upd->ok);
 
-        $this->expectException(ValidationException::class);
-        $service->update($tAB->id, [
+        // Self-loop is now allowed for non-start states
+        $selfLoop = $service->update($tAB->id, [
             'from' => $source['a']->id,
             'to'   => $source['a']->id,
+        ]);
+        $this->assertTrue($selfLoop->ok);
+
+        // But self-loop is not allowed for start state
+        $this->expectException(ValidationException::class);
+        $service->update($tSA->id, [
+            'from' => $source['start']->id,
+            'to'   => $source['start']->id,
         ]);
     }
 
@@ -630,11 +653,11 @@ class FlowTransitionServiceTest extends BaseTestCase
         ])->data->resource;
 
         $t = FlowTransitionModel::query()->create([
-                'flow_id' => $flow->id,
-                'from'    => $a->id,
-                'to'      => $b->id,
-                'slug'    => 'a-b',
-            ])->load(['flow', 'fromState', 'toState', 'tasks', 'instances']);
+            'flow_id' => $flow->id,
+            'from'    => $a->id,
+            'to'      => $b->id,
+            'slug'    => 'a-b',
+        ])->load(['flow', 'fromState', 'toState', 'tasks', 'instances']);
 
         $arr = FlowTransitionResource::make($t)->toArray(request());
 
@@ -1247,5 +1270,452 @@ class FlowTransitionServiceTest extends BaseTestCase
         $result = $transitionService->runner($transition->id, $order, ['amount' => 100]);
 
         $this->assertTrue($result->isSuccess());
+    }
+
+    /**
+     * Store: self-loop transition is allowed (from == to, but not for start state).
+     *
+     * @throws Throwable
+     */
+    public function test_store_allows_self_loop_transition(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('SELF1');
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Now create a self-loop transition from A to A
+        $res = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'AToA',
+                ],
+            ],
+            'from'        => $source['a']->id,
+            'to'          => $source['a']->id,
+        ]);
+
+        $this->assertTrue($res->ok);
+        /** @var FlowTransitionModel $t */
+        $t = $res->data->resource;
+        $this->assertEquals($source['a']->id, $t->from);
+        $this->assertEquals($source['a']->id, $t->to);
+        $this->assertTrue($t->is_self_loop_transition);
+    }
+
+    /**
+     * Store: self-loop transition is not allowed for start state.
+     *
+     * @throws Throwable
+     */
+    public function test_store_rejects_self_loop_for_start_state(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('SELF2');
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Try to create a self-loop transition from start to start
+        $this->expectException(ValidationException::class);
+        $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToStart',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['start']->id,
+        ]);
+    }
+
+    /**
+     * Store: generic input transition (from = null) is allowed.
+     *
+     * @throws Throwable
+     */
+    public function test_store_allows_generic_input_transition(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('GENIN1');
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Create a generic input transition (from = null, to = A)
+        $res = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'GenericInputToA',
+                ],
+            ],
+            'from'        => null,
+            'to'          => $source['a']->id,
+        ]);
+
+        $this->assertTrue($res->ok);
+        /** @var FlowTransitionModel $t */
+        $t = $res->data->resource;
+        $this->assertNull($t->from);
+        $this->assertEquals($source['a']->id, $t->to);
+        $this->assertTrue($t->is_generic_input_transition);
+    }
+
+    /**
+     * Store: generic output transition (to = null) is allowed.
+     *
+     * @throws Throwable
+     */
+    public function test_store_allows_generic_output_transition(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('GENOUT1');
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Create a generic output transition (from = A, to = null)
+        $res = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'AToGenericOutput',
+                ],
+            ],
+            'from'        => $source['a']->id,
+            'to'          => null,
+        ]);
+
+        $this->assertTrue($res->ok);
+        /** @var FlowTransitionModel $t */
+        $t = $res->data->resource;
+        $this->assertEquals($source['a']->id, $t->from);
+        $this->assertNull($t->to);
+        $this->assertTrue($t->is_generic_output_transition);
+    }
+
+    /**
+     * Store: generic output transition is not allowed for terminal state.
+     *
+     * @throws Throwable
+     */
+    public function test_store_rejects_generic_output_for_terminal_state(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $stateService = app(FlowStateService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('TERM1');
+
+        // Create a terminal state
+        $terminalState = $stateService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name'        => 'Terminal',
+                    'description' => null,
+                ],
+            ],
+            'status'      => OrderStatusEnum::PAID(),
+            'is_terminal' => true,
+        ])->data->resource;
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Try to create a generic output transition from terminal state
+        $this->expectException(ValidationException::class);
+        $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'TerminalToGenericOutput',
+                ],
+            ],
+            'from'        => $terminalState->id,
+            'to'          => null,
+        ]);
+    }
+
+    /**
+     * Store: at least one of from or to must be set.
+     *
+     * @throws Throwable
+     */
+    public function test_store_rejects_both_null(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('BOTHNULL1');
+
+        // First create a transition from start to A
+        $this->assertTrue($service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Try to create a transition with both from and to as null
+        $this->expectException(ValidationException::class);
+        $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'BothNull',
+                ],
+            ],
+            'from'        => null,
+            'to'          => null,
+        ]);
+    }
+
+    /**
+     * Model accessors: test transition type accessors.
+     *
+     * @throws Throwable
+     */
+    public function test_model_accessors_for_transition_types(): void
+    {
+        $service = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('ACC1');
+
+        // Create start transition
+        $startTransition = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->data->resource;
+
+        $this->assertTrue($startTransition->is_start_transition);
+        $this->assertTrue($startTransition->is_specific_transition);
+        $this->assertFalse($startTransition->is_self_loop_transition);
+        $this->assertFalse($startTransition->is_generic_input_transition);
+        $this->assertFalse($startTransition->is_generic_output_transition);
+
+        // Create self-loop transition
+        $selfLoop = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'AToA',
+                ],
+            ],
+            'from'        => $source['a']->id,
+            'to'          => $source['a']->id,
+        ])->data->resource;
+
+        $this->assertFalse($selfLoop->is_start_transition);
+        $this->assertFalse($selfLoop->is_specific_transition);
+        $this->assertTrue($selfLoop->is_self_loop_transition);
+        $this->assertFalse($selfLoop->is_generic_input_transition);
+        $this->assertFalse($selfLoop->is_generic_output_transition);
+
+        // Create generic input transition
+        $genericInput = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'GenericToA',
+                ],
+            ],
+            'from'        => null,
+            'to'          => $source['a']->id,
+        ])->data->resource;
+
+        $this->assertFalse($genericInput->is_start_transition);
+        $this->assertFalse($genericInput->is_specific_transition);
+        $this->assertFalse($genericInput->is_self_loop_transition);
+        $this->assertTrue($genericInput->is_generic_input_transition);
+        $this->assertFalse($genericInput->is_generic_output_transition);
+
+        // Create generic output transition
+        $genericOutput = $service->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'AToGeneric',
+                ],
+            ],
+            'from'        => $source['a']->id,
+            'to'          => null,
+        ])->data->resource;
+
+        $this->assertFalse($genericOutput->is_start_transition);
+        $this->assertFalse($genericOutput->is_specific_transition);
+        $this->assertFalse($genericOutput->is_self_loop_transition);
+        $this->assertFalse($genericOutput->is_generic_input_transition);
+        $this->assertTrue($genericOutput->is_generic_output_transition);
+    }
+
+    /**
+     * Runner: can execute generic input transition independently.
+     *
+     * @throws Throwable
+     */
+    public function test_runner_can_execute_generic_input_transition_independently(): void
+    {
+        $transitionService = app(FlowTransitionService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('GENINRUN1');
+
+        // First create a transition from start to A (required for first transition)
+        $this->assertTrue($transitionService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Create a generic input transition (from = null, to = A)
+        $genericInputTransition = $transitionService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'GenericInputToA',
+                ],
+            ],
+            'from'        => null,
+            'to'          => $source['a']->id,
+            'slug'        => 'generic-input-to-a',
+        ])->data->resource;
+
+        $order = Order::factory()
+            ->setUserID($source['flow']->subject_scope ? (int) $source['flow']->subject_scope : 1)
+            ->setStatus(OrderStatusEnum::PENDING())
+            ->create();
+
+        // Execute the generic input transition directly
+        $result = $transitionService->runner($genericInputTransition->id, $order);
+
+        $this->assertTrue($result->isSuccess());
+
+        // Check FlowInstance was created
+        $instance = FlowInstance::query()->forModel($order)->first();
+        $this->assertNotNull($instance);
+        $this->assertEquals($genericInputTransition->id, $instance->flow_transition_id);
+    }
+
+    /**
+     * Runner: generic input transition can be executed even when state has no specific transitions.
+     *
+     * @throws Throwable
+     */
+    public function test_runner_generic_input_works_when_state_has_no_specific_transitions(): void
+    {
+        $transitionService = app(FlowTransitionService::class);
+        $stateService = app(FlowStateService::class);
+        $source = $this->makeFlowWithStartAndTwoStates('GENINRUN2');
+
+        // First create a transition from start to A (required for first transition)
+        $this->assertTrue($transitionService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'StartToA',
+                ],
+            ],
+            'from'        => $source['start']->id,
+            'to'          => $source['a']->id,
+        ])->ok);
+
+        // Create a new state that will only be reachable via generic input
+        $isolatedState = $stateService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name'        => 'IsolatedState',
+                    'description' => 'State only reachable via generic input',
+                ],
+            ],
+            'status'      => OrderStatusEnum::PENDING(),
+            'is_terminal' => false,
+        ])->data->resource;
+
+        // Create a generic input transition to this isolated state
+        $genericInputTransition = $transitionService->store([
+            'flow_id'     => $source['flow']->id,
+            'translation' => [
+                'en' => [
+                    'name' => 'GenericInputToIsolated',
+                ],
+            ],
+            'from'        => null,
+            'to'          => $isolatedState->id,
+            'slug'        => 'generic-input-to-isolated',
+        ])->data->resource;
+
+        $order = Order::factory()
+            ->setUserID($source['flow']->subject_scope ? (int) $source['flow']->subject_scope : 1)
+            ->setStatus(OrderStatusEnum::PENDING())
+            ->create();
+
+        // Execute the generic input transition - should work even though isolatedState has no incoming specific transitions
+        $result = $transitionService->runner($genericInputTransition->id, $order);
+
+        $this->assertTrue($result->isSuccess());
+
+        // Check FlowInstance was created
+        $instance = FlowInstance::query()->forModel($order)->first();
+        $this->assertNotNull($instance);
+        $this->assertEquals($genericInputTransition->id, $instance->flow_transition_id);
     }
 }
