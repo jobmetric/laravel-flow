@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use JobMetric\Flow\Models\Flow;
 
@@ -34,7 +33,7 @@ class FlowPicker
      * Pick a single Flow according to the builder's strategy.
      * Applies fallback cascade when no candidates are found initially.
      *
-     * @param Model $model Flowable model instance.
+     * @param Model $model               Flowable model instance.
      * @param FlowPickerBuilder $builder Configured builder.
      *
      * @return Flow|null
@@ -50,9 +49,7 @@ class FlowPicker
         if ($builder->shouldCacheInRequest()) {
             $cacheKey = $this->computeCacheKey($model, $builder);
             if ($cacheKey !== null && array_key_exists($cacheKey, self::$requestCache)) {
-                return self::$requestCache[$cacheKey] instanceof Flow
-                    ? self::$requestCache[$cacheKey]
-                    : (self::$requestCache[$cacheKey][0] ?? null);
+                return self::$requestCache[$cacheKey] instanceof Flow ? self::$requestCache[$cacheKey] : (self::$requestCache[$cacheKey][0] ?? null);
             }
         }
 
@@ -61,7 +58,7 @@ class FlowPicker
         $picked = $candidates->first();
 
         // Fallback cascade if nothing matched.
-        if (!$picked && $builder->getFallbackCascade()) {
+        if (! $picked && $builder->getFallbackCascade()) {
             $picked = $this->applyFallbackCascade($model, $builder);
         }
 
@@ -79,14 +76,14 @@ class FlowPicker
     /**
      * Build and execute the candidate query according to the current builder (no fallback).
      *
-     * @param Model $model Flowable model instance.
+     * @param Model $model               Flowable model instance.
      * @param FlowPickerBuilder $builder Configured builder.
      *
      * @return Collection<int,Flow>
      */
     public function candidates(Model $model, FlowPickerBuilder $builder): Collection
     {
-        $flowTable = Config::get('workflow.tables.flow', 'flows');
+        $flowTable = config('workflow.tables.flow');
         $q = Flow::query();
 
         // Subject filters.
@@ -110,29 +107,26 @@ class FlowPicker
 
         // Include / exclude Flow IDs.
         $includeIds = $builder->getIncludeFlowIds();
-        if (!empty($includeIds)) {
+        if (! empty($includeIds)) {
             $q->whereIn("{$flowTable}.id", $includeIds);
         }
         $excludeIds = $builder->getExcludeFlowIds();
-        if (!empty($excludeIds)) {
+        if (! empty($excludeIds)) {
             $q->whereNotIn("{$flowTable}.id", $excludeIds);
         }
 
         // Active/time-window constraints.
         if ($builder->isOnlyActive()) {
-            if (!$builder->shouldIgnoreTimeWindow()) {
+            if (! $builder->shouldIgnoreTimeWindow()) {
                 $now = $builder->getNowUtc() ?? Carbon::now('UTC');
 
-                $q->where("{$flowTable}.status", true)
-                    ->where(function (Builder $w) use ($flowTable, $now) {
-                        $w->whereNull("{$flowTable}.active_from")
-                            ->orWhere("{$flowTable}.active_from", '<=', $now);
-                    })
-                    ->where(function (Builder $w) use ($flowTable, $now) {
-                        $w->whereNull("{$flowTable}.active_to")
-                            ->orWhere("{$flowTable}.active_to", '>=', $now);
+                $q->where("{$flowTable}.status", true)->where(function (Builder $w) use ($flowTable, $now) {
+                        $w->whereNull("{$flowTable}.active_from")->orWhere("{$flowTable}.active_from", '<=', $now);
+                    })->where(function (Builder $w) use ($flowTable, $now) {
+                        $w->whereNull("{$flowTable}.active_to")->orWhere("{$flowTable}.active_to", '>=', $now);
                     });
-            } else {
+            }
+            else {
                 $q->where("{$flowTable}.status", true);
             }
         }
@@ -145,7 +139,8 @@ class FlowPicker
         // Version constraints.
         if (($v = $builder->getVersionEquals()) !== null) {
             $q->where("{$flowTable}.version", $v);
-        } else {
+        }
+        else {
             if (($min = $builder->getVersionMin()) !== null) {
                 $q->where("{$flowTable}.version", '>=', $min);
             }
@@ -163,17 +158,13 @@ class FlowPicker
             }
 
             if ($rolloutKey !== null && $rolloutKey !== '') {
-                $bucket = $this->stableBucket(
-                    $builder->getRolloutNamespace(),
-                    $builder->getRolloutSalt(),
-                    $rolloutKey
-                );
+                $bucket = $this->stableBucket($builder->getRolloutNamespace(), $builder->getRolloutSalt(), $rolloutKey);
 
                 $q->where(function (Builder $w) use ($flowTable, $bucket) {
-                    $w->whereNull("{$flowTable}.rollout_pct")
-                        ->orWhere("{$flowTable}.rollout_pct", '>=', $bucket);
+                    $w->whereNull("{$flowTable}.rollout_pct")->orWhere("{$flowTable}.rollout_pct", '>=', $bucket);
                 });
-            } else {
+            }
+            else {
                 // No rollout key: be conservative and accept only flows without rollout gate.
                 $q->whereNull("{$flowTable}.rollout_pct");
             }
@@ -192,11 +183,13 @@ class FlowPicker
         // Final ordering / strategy.
         if ($builder->getMatchStrategy() === FlowPickerBuilder::STRATEGY_FIRST) {
             $q->orderBy("{$flowTable}.id", 'asc');
-        } else {
+        }
+        else {
             $ordering = $builder->getOrderingCallback();
             if ($ordering !== null) {
                 $ordering($q);
-            } else {
+            }
+            else {
                 $q->orderByDesc("{$flowTable}.version")
                     ->orderByDesc("{$flowTable}.is_default")
                     ->orderByDesc("{$flowTable}.ordering")
@@ -214,7 +207,7 @@ class FlowPicker
     /**
      * Apply fallback steps progressively until a candidate is found or steps are exhausted.
      *
-     * @param Model $model Flowable model instance.
+     * @param Model $model                Flowable model instance.
      * @param FlowPickerBuilder $original Original builder to clone/relax.
      *
      * @return Flow|null
@@ -222,7 +215,7 @@ class FlowPicker
     protected function applyFallbackCascade(Model $model, FlowPickerBuilder $original): ?Flow
     {
         $steps = $original->getFallbackCascade();
-        if (!$steps) {
+        if (! $steps) {
             return null;
         }
 
@@ -259,7 +252,7 @@ class FlowPicker
     /**
      * Resolve a forced Flow from the model and validate its active/time constraints when enabled.
      *
-     * @param Model $model Flowable model instance.
+     * @param Model $model               Flowable model instance.
      * @param FlowPickerBuilder $builder Configured builder.
      *
      * @return Flow|null
@@ -278,22 +271,21 @@ class FlowPicker
 
         /** @var Flow|null $flow */
         $flow = Flow::query()->find($flowId);
-        if (!$flow) {
+        if (! $flow) {
             return null;
         }
 
         if ($builder->isOnlyActive()) {
-            if (!$builder->shouldIgnoreTimeWindow()) {
+            if (! $builder->shouldIgnoreTimeWindow()) {
                 $now = $builder->getNowUtc() ?? Carbon::now('UTC');
-                $isActive = $flow->status
-                    && (is_null($flow->active_from) || $flow->active_from <= $now)
-                    && (is_null($flow->active_to) || $flow->active_to >= $now);
+                $isActive = $flow->status && (is_null($flow->active_from) || $flow->active_from <= $now) && (is_null($flow->active_to) || $flow->active_to >= $now);
 
-                if (!$isActive) {
+                if (! $isActive) {
                     return null;
                 }
-            } else {
-                if (!$flow->status) {
+            }
+            else {
+                if (! $flow->status) {
                     return null;
                 }
             }
@@ -305,8 +297,8 @@ class FlowPicker
     /**
      * Apply CASE-based ordering boost for a list of preferred Flow IDs.
      *
-     * @param Builder $q Query builder.
-     * @param string $table Flow table name.
+     * @param Builder $q          Query builder.
+     * @param string $table       Flow table name.
      * @param array<int,int> $ids Preferred IDs (earlier => higher rank).
      *
      * @return void
@@ -320,7 +312,7 @@ class FlowPicker
         $case = 'CASE';
         foreach ($ids as $idx => $id) {
             $rank = 1000 - $idx;
-            $case .= ' WHEN ' . (int)$id . ' = ' . "{$table}.id THEN {$rank}";
+            $case .= ' WHEN ' . (int) $id . ' = ' . "{$table}.id THEN {$rank}";
         }
         $case .= ' ELSE 0 END';
 
@@ -330,9 +322,9 @@ class FlowPicker
     /**
      * Apply CASE-based ordering boost for a string column (e.g., environment/channel).
      *
-     * @param Builder $q Query builder.
-     * @param string $table Flow table name.
-     * @param string $column Column name.
+     * @param Builder $q                Query builder.
+     * @param string $table             Flow table name.
+     * @param string $column            Column name.
      * @param array<int,string> $values Preferred values (earlier => higher rank).
      *
      * @return void
@@ -358,8 +350,8 @@ class FlowPicker
      * Compute a stable rollout bucket in the range 0..99 from the given components.
      *
      * @param string|null $namespace Optional namespace to isolate domains.
-     * @param string|null $salt Optional salt to segregate hashing.
-     * @param string $key Stable rollout key (e.g., user_id).
+     * @param string|null $salt      Optional salt to segregate hashing.
+     * @param string $key            Stable rollout key (e.g., user_id).
      *
      * @return int
      */
@@ -369,14 +361,14 @@ class FlowPicker
         $hash = crc32($compound);
         $bucket = $hash % 100;
 
-        return (int)$bucket;
+        return (int) $bucket;
     }
 
     /**
      * Build a cache key for per-request memoization.
      * Returns null when dynamic callbacks prevent safe caching.
      *
-     * @param Model $model Flowable model instance.
+     * @param Model $model               Flowable model instance.
      * @param FlowPickerBuilder $builder Configured builder.
      *
      * @return string|null
@@ -388,11 +380,11 @@ class FlowPicker
         }
 
         $resolver = $builder->getRolloutKeyResolver();
-        $rolloutKey = $resolver ? (string)($resolver($model) ?? '') : '';
+        $rolloutKey = $resolver ? (string) ($resolver($model) ?? '') : '';
 
         return implode('|', [
             'class=' . get_class($model),
-            'id=' . (string)$model->getKey(),
+            'id=' . (string) $model->getKey(),
             'stype=' . ($builder->getSubjectType() ?? ''),
             'sscope=' . ($builder->getSubjectScope() ?? ''),
             'scol=' . ($builder->getSubjectCollection() ?? ''),
@@ -405,9 +397,9 @@ class FlowPicker
             'rSalt=' . ($builder->getRolloutSalt() ?? ''),
             'rKey=' . $rolloutKey,
             'reqDef=' . ($builder->isRequireDefault() ? '1' : '0'),
-            'vEq=' . (string)($builder->getVersionEquals() ?? ''),
-            'vMin=' . (string)($builder->getVersionMin() ?? ''),
-            'vMax=' . (string)($builder->getVersionMax() ?? ''),
+            'vEq=' . (string) ($builder->getVersionEquals() ?? ''),
+            'vMin=' . (string) ($builder->getVersionMin() ?? ''),
+            'vMax=' . (string) ($builder->getVersionMax() ?? ''),
             'inc=' . implode(',', $builder->getIncludeFlowIds()),
             'exc=' . implode(',', $builder->getExcludeFlowIds()),
             'prefIds=' . implode(',', $builder->getPreferFlowIds()),
