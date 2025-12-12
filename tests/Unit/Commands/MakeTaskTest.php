@@ -1,6 +1,6 @@
 <?php
 
-namespace JobMetric\Flow\Tests\Unit;
+namespace JobMetric\Flow\Tests\Unit\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
@@ -566,3 +566,4 @@ class MakeTaskTest extends TestCase
         }
     }
 }
+

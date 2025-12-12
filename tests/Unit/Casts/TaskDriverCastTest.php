@@ -1,6 +1,6 @@
 <?php
 
-namespace JobMetric\Flow\Tests\Unit;
+namespace JobMetric\Flow\Tests\Unit\Casts;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
@@ -687,3 +687,4 @@ class TaskDriverCastTest extends TestCase
         $this->assertNull($retrieved);
     }
 }
+
