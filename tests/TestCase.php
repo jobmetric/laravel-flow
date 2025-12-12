@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use JobMetric\CustomField\CustomFieldServiceProvider;
 use JobMetric\EventSystem\EventSystemServiceProvider;
 use JobMetric\Flow\FlowServiceProvider;
+use JobMetric\Flyron\FlyronServiceProvider;
 use JobMetric\Form\FormServiceProvider;
 use JobMetric\Language\LanguageServiceProvider;
 use JobMetric\Language\Models\Language;
@@ -21,6 +22,7 @@ class TestCase extends BaseTestCase
         return [
             CustomFieldServiceProvider::class,
             EventSystemServiceProvider::class,
+            FlyronServiceProvider::class,
             FormServiceProvider::class,
             LanguageServiceProvider::class,
             TranslationServiceProvider::class,
