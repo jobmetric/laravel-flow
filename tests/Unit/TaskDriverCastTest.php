@@ -12,6 +12,7 @@ use JobMetric\Flow\Models\FlowTask;
 use JobMetric\Flow\Tests\Stubs\Tasks\DummyActionTask;
 use JobMetric\Flow\Tests\TestCase;
 use Mockery;
+use stdClass;
 
 /**
  * Comprehensive tests for TaskDriverCast
@@ -50,6 +51,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with null value
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_returns_null_when_value_is_null(): void
     {
@@ -60,6 +63,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with empty string
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_returns_null_when_value_is_empty_string(): void
     {
@@ -70,6 +75,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with valid class that extends AbstractTaskDriver
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_returns_instance_when_class_exists_and_extends_abstract_task_driver(): void
     {
@@ -84,6 +91,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with forward slash in namespace (should be converted to backslash)
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_normalizes_forward_slashes_to_backslashes(): void
     {
@@ -97,6 +106,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with whitespace at beginning and end of string (should be trimmed)
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_trims_whitespace_from_class_name(): void
     {
@@ -110,20 +121,16 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with non-existent class (should return null and log warning)
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_returns_null_and_logs_warning_when_class_does_not_exist(): void
     {
         Log::shouldReceive('warning')
             ->once()
-            ->with(
-                'Workflow task driver missing or invalid on retrieval.',
-                Mockery::on(function ($context) {
-                    return $context['stored_driver'] === 'NonExistent\\Class\\Name'
-                        && $context['model'] === FlowTask::class
-                        && $context['task_id'] === 5
-                        && $context['transition_id'] === 20;
-                })
-            );
+            ->with('Workflow task driver missing or invalid on retrieval.', Mockery::on(function ($context) {
+                return $context['stored_driver'] === 'NonExistent\\Class\\Name' && $context['model'] === FlowTask::class && $context['task_id'] === 5 && $context['transition_id'] === 20;
+            }));
 
         $attributes = ['id' => 5, 'flow_transition_id' => 20];
         $result = $this->cast->get($this->model, 'driver', 'NonExistent\\Class\\Name', $attributes);
@@ -133,39 +140,35 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with class that exists but does not extend AbstractTaskDriver
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_returns_null_and_logs_warning_when_class_does_not_extend_abstract_task_driver(): void
     {
         Log::shouldReceive('warning')
             ->once()
-            ->with(
-                'Workflow task driver missing or invalid on retrieval.',
-                Mockery::on(function ($context) {
-                    return $context['stored_driver'] === \stdClass::class
-                        && $context['model'] === FlowTask::class;
-                })
-            );
+            ->with('Workflow task driver missing or invalid on retrieval.', Mockery::on(function ($context) {
+                return $context['stored_driver'] === stdClass::class && $context['model'] === FlowTask::class;
+            }));
 
         $attributes = ['id' => 1];
-        $result = $this->cast->get($this->model, 'driver', \stdClass::class, $attributes);
+        $result = $this->cast->get($this->model, 'driver', stdClass::class, $attributes);
 
         $this->assertNull($result);
     }
 
     /**
      * Test get() with attributes that don't have id
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_handles_missing_id_in_attributes(): void
     {
         Log::shouldReceive('warning')
             ->once()
-            ->with(
-                'Workflow task driver missing or invalid on retrieval.',
-                Mockery::on(function ($context) {
-                    return $context['task_id'] === null
-                        && $context['transition_id'] === null;
-                })
-            );
+            ->with('Workflow task driver missing or invalid on retrieval.', Mockery::on(function ($context) {
+                return $context['task_id'] === null && $context['transition_id'] === null;
+            }));
 
         $result = $this->cast->get($this->model, 'driver', 'NonExistent\\Class', []);
 
@@ -174,18 +177,16 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() with attributes that only have id
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_handles_missing_transition_id_in_attributes(): void
     {
         Log::shouldReceive('warning')
             ->once()
-            ->with(
-                'Workflow task driver missing or invalid on retrieval.',
-                Mockery::on(function ($context) {
-                    return $context['task_id'] === 3
-                        && $context['transition_id'] === null;
-                })
-            );
+            ->with('Workflow task driver missing or invalid on retrieval.', Mockery::on(function ($context) {
+                return $context['task_id'] === 3 && $context['transition_id'] === null;
+            }));
 
         $attributes = ['id' => 3];
         $result = $this->cast->get($this->model, 'driver', 'NonExistent\\Class', $attributes);
@@ -195,6 +196,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Test get() resolves instance from container
+     *
+     * @throws BindingResolutionException
      */
     public function test_get_resolves_instance_from_container(): void
     {
@@ -295,11 +298,9 @@ class TaskDriverCastTest extends TestCase
     public function test_set_throws_exception_when_class_does_not_extend_abstract_task_driver(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Task driver class [" . \stdClass::class . "] must extend " . AbstractTaskDriver::class . "."
-        );
+        $this->expectExceptionMessage("Task driver class [" . stdClass::class . "] must extend " . AbstractTaskDriver::class . ".");
 
-        $this->cast->set($this->model, 'driver', \stdClass::class, []);
+        $this->cast->set($this->model, 'driver', stdClass::class, []);
     }
 
     /**
@@ -352,15 +353,13 @@ class TaskDriverCastTest extends TestCase
     public function test_set_throws_exception_when_instance_does_not_extend_abstract_task_driver(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Task driver class [" . \stdClass::class . "] must extend " . AbstractTaskDriver::class . "."
-        );
+        $this->expectExceptionMessage("Task driver class [" . stdClass::class . "] must extend " . AbstractTaskDriver::class . ".");
 
-        $this->cast->set($this->model, 'driver', new \stdClass(), []);
+        $this->cast->set($this->model, 'driver', new stdClass(), []);
     }
 
     /**
-     * Test set() with valid class that has forward slash and whitespace
+     * Test set() with valid class that has forwarded slash and whitespace
      */
     public function test_set_handles_forward_slash_and_whitespace_together(): void
     {
@@ -517,11 +516,11 @@ class TaskDriverCastTest extends TestCase
      */
     public function test_serialize_returns_class_name_even_for_non_task_driver_instances(): void
     {
-        $instance = new \stdClass();
+        $instance = new stdClass();
 
         $result = $this->cast->serialize($this->model, 'driver', $instance, []);
 
-        $this->assertEquals(\stdClass::class, $result);
+        $this->assertEquals(stdClass::class, $result);
     }
 
     /**
@@ -562,6 +561,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Integration test: set then get
+     *
+     * @throws BindingResolutionException
      */
     public function test_integration_set_then_get(): void
     {
@@ -580,6 +581,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Integration test: set with instance then get
+     *
+     * @throws BindingResolutionException
      */
     public function test_integration_set_instance_then_get(): void
     {
@@ -615,6 +618,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Integration test: set, serialize, then get
+     *
+     * @throws BindingResolutionException
      */
     public function test_integration_set_serialize_then_get(): void
     {
@@ -636,6 +641,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Integration test: set with forward slash, serialize, and get
+     *
+     * @throws BindingResolutionException
      */
     public function test_integration_set_with_forward_slash_serialize_then_get(): void
     {
@@ -659,6 +666,8 @@ class TaskDriverCastTest extends TestCase
 
     /**
      * Integration test: set null, serialize, and get
+     *
+     * @throws BindingResolutionException
      */
     public function test_integration_set_null_serialize_then_get(): void
     {
