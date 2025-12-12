@@ -379,6 +379,11 @@ class FlowPicker
             return null;
         }
 
+        // Force flow resolver is dynamic, cannot cache
+        if ($builder->getForceFlowIdResolver() !== null) {
+            return null;
+        }
+
         $resolver = $builder->getRolloutKeyResolver();
         $rolloutKey = $resolver ? (string) ($resolver($model) ?? '') : '';
 
