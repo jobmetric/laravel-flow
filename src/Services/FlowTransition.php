@@ -6,6 +6,7 @@ use BackedEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use JobMetric\Flow\Contracts\AbstractActionTask;
@@ -286,14 +287,51 @@ class FlowTransition extends AbstractCrudService
             $context = new FlowTaskContext($subject, $transitionResult, $payload, $user);
 
             try {
-                // Step 1: Run restriction tasks
-                $this->runRestrictionTasks($transition, $subjectType, $context);
+                // Check transition type and execute accordingly
+                $isSelfLoop = $transition->is_self_loop_transition;
+                $isGenericInput = $transition->is_generic_input_transition;
 
-                // Step 2: Run validation tasks
-                $this->runValidationTasks($transition, $subjectType, $context, $payload);
+                if ($isSelfLoop) {
+                    // For self-loop transitions, only run tasks of this transition
+                    $this->runRestrictionTasks($transition, $subjectType, $context);
+                    $this->runValidationTasks($transition, $subjectType, $context, $payload);
+                    $this->runActionTasks($transition, $subjectType, $context);
+                }
+                else if ($isGenericInput) {
+                    // For generic input transitions (from = null), only run tasks of this transition
+                    // This allows executing a transition that doesn't come from a specific state
+                    // Useful when a state can only be reached via generic input transitions
+                    $this->runRestrictionTasks($transition, $subjectType, $context);
+                    $this->runValidationTasks($transition, $subjectType, $context, $payload);
+                    $this->runActionTasks($transition, $subjectType, $context);
+                }
+                else {
+                    // For specific transitions (from and to are set), run related transitions in order:
+                    // 1. Generic output transitions (to = null) - transitions leaving from fromState
+                    // 2. Specific transitions (from and to are set and not equal) - the current transition
+                    // 3. Generic input transitions (from = null) - transitions entering to fromState
 
-                // Step 3: Run action tasks
-                $this->runActionTasks($transition, $subjectType, $context);
+                    // Get the state we're transitioning from
+                    $fromState = $transition->fromState;
+
+                    if ($fromState) {
+                        // Get all related transitions for this state in the correct order
+                        $relatedTransitions = $this->getRelatedTransitionsForState($fromState, $transition);
+
+                        // Execute transitions in order: generic output, specific, generic input
+                        foreach ($relatedTransitions as $relatedTransition) {
+                            $this->runRestrictionTasks($relatedTransition, $subjectType, $context);
+                            $this->runValidationTasks($relatedTransition, $subjectType, $context, $payload);
+                            $this->runActionTasks($relatedTransition, $subjectType, $context);
+                        }
+                    }
+                    else {
+                        // Fallback: if fromState is null, but it's not a generic input, just run this transition's tasks
+                        $this->runRestrictionTasks($transition, $subjectType, $context);
+                        $this->runValidationTasks($transition, $subjectType, $context, $payload);
+                        $this->runActionTasks($transition, $subjectType, $context);
+                    }
+                }
 
                 // Step 4: Update model status if toState has a status
                 $this->updateModelStatus($subject, $transition->toState);
@@ -350,6 +388,84 @@ class FlowTransition extends AbstractCrudService
         }
 
         return null;
+    }
+
+    /**
+     * Get related transitions for a state in the correct order.
+     * Order: 1. Generic output (to = null), 2. Specific (from and to set), 3. Generic input (from = null)
+     *
+     * @param FlowState $state                       The state we're transitioning from
+     * @param FlowTransitionModel $currentTransition The transition being executed
+     *
+     * @return Collection<FlowTransitionModel>
+     */
+    protected function getRelatedTransitionsForState(
+        FlowState $state,
+        FlowTransitionModel $currentTransition
+    ): Collection {
+        $result = collect();
+
+        // 1. Generic output transitions (to = null) - transitions leaving from this state
+        // Note: Terminal states don't have generic output transitions
+        if (! $state->is_end) {
+            $genericOutput = FlowTransitionModel::query()
+                ->where('flow_id', $state->flow_id)
+                ->where('from', $state->id)
+                ->whereNull('to')
+                ->with([
+                    'tasks' => function ($query) {
+                        $query->where('status', true)->orderBy('ordering');
+                    },
+                ])
+                ->get();
+
+            $result = $result->merge($genericOutput);
+        }
+
+        // 2. Specific transitions (from and to are set and not equal)
+        // Include the current transition if it's a specific transition from this state
+        if ($currentTransition->is_specific_transition && $currentTransition->from === $state->id) {
+            // Load tasks if not already loaded
+            if (! $currentTransition->relationLoaded('tasks')) {
+                $currentTransition->load([
+                    'tasks' => function ($query) {
+                        $query->where('status', true)->orderBy('ordering');
+                    },
+                ]);
+            }
+            $result->push($currentTransition);
+        }
+        else {
+            // Get all specific transitions from this state (excluding the current one if it's not specific)
+            $specific = FlowTransitionModel::query()
+                ->where('flow_id', $state->flow_id)
+                ->where('from', $state->id)
+                ->whereNotNull('to')
+                ->whereColumn('from', '!=', 'to')
+                ->where('id', '!=', $currentTransition->id)
+                ->with([
+                    'tasks' => function ($query) {
+                        $query->where('status', true)->orderBy('ordering');
+                    },
+                ])
+                ->get();
+
+            $result = $result->merge($specific);
+        }
+
+        // 3. Generic input transitions (from = null) - transitions entering to this state
+        $genericInput = FlowTransitionModel::query()
+            ->where('flow_id', $state->flow_id)
+            ->whereNull('from')
+            ->where('to', $state->id)
+            ->with([
+                'tasks' => function ($query) {
+                    $query->where('status', true)->orderBy('ordering');
+                },
+            ])
+            ->get();
+
+        return $result->merge($genericInput);
     }
 
     /**

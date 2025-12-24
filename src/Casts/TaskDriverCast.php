@@ -37,6 +37,10 @@ class TaskDriverCast implements CastsAttributes
 
         $class = trim(str_replace('/', '\\', (string) $value));
 
+        if ($class === '') {
+            return null;
+        }
+
         if (! class_exists($class) || ! is_subclass_of($class, AbstractTaskDriver::class)) {
             Log::warning('Workflow task driver missing or invalid on retrieval.', [
                 'stored_driver' => $class,
@@ -107,7 +111,9 @@ class TaskDriverCast implements CastsAttributes
             $raw = $attributes[$key] ?? null;
 
             if (is_string($raw) && $raw !== '') {
-                return trim(str_replace('/', '\\', $raw));
+                $normalized = trim(str_replace('/', '\\', $raw));
+                
+                return $normalized === '' ? null : $normalized;
             }
 
             return null;
@@ -118,7 +124,9 @@ class TaskDriverCast implements CastsAttributes
         }
 
         if (is_string($value)) {
-            return trim(str_replace('/', '\\', $value));
+            $normalized = trim(str_replace('/', '\\', $value));
+            
+            return $normalized === '' ? null : $normalized;
         }
 
         return null;

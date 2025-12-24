@@ -46,11 +46,13 @@ class FilesystemHasWorkflowInModelLocator
         foreach ($finder as $file) {
             $contents = $file->getContents();
 
-            if (strpos($contents, 'HasWorkflow') === false) {
+            if (! str_contains($contents, 'HasWorkflow')) {
                 continue;
             }
 
-            if (strpos($contents, 'extends Model') === false && strpos($contents, 'extends \\Illuminate\\Database\\Eloquent\\Model') === false && strpos($contents, 'extends Illuminate\\Database\\Eloquent\\Model') === false) {
+            if (! str_contains($contents, 'extends Model') &&
+                ! str_contains($contents, 'extends \\Illuminate\\Database\\Eloquent\\Model') &&
+                ! str_contains($contents, 'extends Illuminate\\Database\\Eloquent\\Model')) {
                 continue;
             }
 

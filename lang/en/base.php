@@ -83,11 +83,15 @@ return [
         'status_enum_missing' => 'No allowed status values were found for the subject model.',
         'flow_transition' => [
             'translation_name_required' => 'The translation name field is required.',
-            'from_cannot_equal_to' => 'The transition’s source and destination cannot be the same.',
+            'from_cannot_equal_to' => 'The transition\'s source and destination cannot be the same.',
             'to_cannot_be_start' => 'The transition destination cannot be the START state.',
             'duplicate_transition' => 'A transition with the same source and destination already exists in this flow.',
             'first_must_from_start' => 'The first transition in this flow must originate from the START state.',
             'must_connect_two_states'   => 'A transition must connect two concrete states (both from and to are required after update).',
+            'at_least_one_required' => 'At least one of the from or to fields must have a value.',
+            'start_state_cannot_self_loop' => 'The START state cannot have a self-loop transition.',
+            'terminal_state_no_generic_output' => 'Terminal states cannot have generic output transitions.',
+            'start_state_only_one_transition' => 'Only one transition can exit from the START state.',
         ],
 
         'flow_state' => [
