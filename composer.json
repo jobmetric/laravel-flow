@@ -16,7 +16,7 @@
         "laravel/framework": ">=9.19",
         "spatie/laravel-query-builder": "^6.3",
         "jobmetric/laravel-package-core": "^1.34",
-        "jobmetric/laravel-translation": "^3.3",
+        "jobmetric/laravel-translation": "^3.4",
         "jobmetric/laravel-event-system": "^2.7",
         "jobmetric/laravel-form": "^1.5"
     },
