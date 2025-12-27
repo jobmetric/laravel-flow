@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest a new feature for Laravel Flow
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide the following details to help us understand your request.
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you want to add.
+      placeholder: Add support for conditional workflow transitions based on user roles
+    validations:
+      required: true
+  - type: textarea
+    id: problem-need
+    attributes:
+      label: Problem/Need
+      description: What problem does this feature solve or what need does it address?
+      placeholder: This feature would help restrict workflow transitions based on user permissions
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How do you think this feature should work?
+      placeholder: |
+        Add a new restriction task that checks user roles
+        Example usage:
+        $flow->addRestriction('checkRole', ['admin', 'manager']);
+    validations:
+      required: true
+

@@ -1,0 +1,60 @@
+name: Bug Report
+description: Report an Issue or Bug with the Laravel Flow
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We're sorry to hear you have a problem. Can you help us solve it by providing the following details.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What Happened
+      description: What did you expect to happen?
+      placeholder: When I try to transition a workflow state, I get an incorrect result
+    validations:
+      required: true
+  - type: textarea
+    id: how-to-reproduce
+    attributes:
+      label: How to Reproduce
+      description: How did this occur, please add any command or code used and provide a set of reliable steps if possible.
+      placeholder: |
+        Using HasFlow trait:
+        use JobMetric\Flow\HasFlow;
+        
+        class Order extends Model
+        {
+            use HasFlow;
+        }
+        
+        $order = Order::create(['status' => 'pending']);
+        $order->workflow()->transition('approved');
+    validations:
+      required: true
+  - type: input
+    id: expected-output
+    attributes:
+      label: Expected Output
+      description: What output did you expect to receive?
+      placeholder: "Workflow should transition to approved state successfully"
+    validations:
+      required: true
+  - type: input
+    id: actual-output
+    attributes:
+      label: Actual Output
+      description: What output did you actually receive?
+      placeholder: "Transition fails or throws an exception"
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: Package Version
+      description: What version of Laravel Flow are you running? Please be as specific as possible
+      placeholder: 1.0.0
+    validations:
+      required: true
+
