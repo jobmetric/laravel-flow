@@ -13,9 +13,8 @@ readonly class FlowTaskUpdateEvent implements DomainEvent
      */
     public function __construct(
         public FlowTask $flowTask,
-        public array    $data
-    )
-    {
+        public array $data
+    ) {
     }
 
     /**

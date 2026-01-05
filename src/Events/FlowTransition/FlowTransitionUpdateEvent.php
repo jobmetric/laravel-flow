@@ -13,9 +13,8 @@ readonly class FlowTransitionUpdateEvent implements DomainEvent
      */
     public function __construct(
         public FlowTransition $flowTransition,
-        public array          $data
-    )
-    {
+        public array $data
+    ) {
     }
 
     /**

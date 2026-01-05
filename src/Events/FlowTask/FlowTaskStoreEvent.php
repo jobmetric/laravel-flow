@@ -13,8 +13,7 @@ readonly class FlowTaskStoreEvent implements DomainEvent
      */
     public function __construct(
         public FlowTask $flowTask
-    )
-    {
+    ) {
     }
 
     /**

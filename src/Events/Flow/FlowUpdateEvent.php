@@ -12,10 +12,9 @@ readonly class FlowUpdateEvent implements DomainEvent
      * Create a new event instance.
      */
     public function __construct(
-        public Flow  $flow,
+        public Flow $flow,
         public array $data
-    )
-    {
+    ) {
     }
 
     /**

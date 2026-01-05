@@ -13,8 +13,7 @@ readonly class FlowTransitionDeleteEvent implements DomainEvent
      */
     public function __construct(
         public FlowTransition $flow_transition
-    )
-    {
+    ) {
     }
 
     /**
