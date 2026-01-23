@@ -3,28 +3,30 @@
 namespace JobMetric\Flow\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use JobMetric\Flow\Services\FlowTask as FlowTaskService;
 
 /**
- * @method static \JobMetric\Flow\Models\FlowTask store(int $flow_id, int $flow_transition_id, array $data)
- * @method static \JobMetric\Flow\Models\FlowTask show(int $flow_task_id)
- * @method static \JobMetric\Flow\Models\FlowTask update(int $flow_task_id, array $data)
- * @method static \JobMetric\Flow\Models\FlowTask delete(int $flow_task_id)
+ * @mixin \JobMetric\Flow\Services\FlowTask
+ *
+ * @method static \JobMetric\PackageCore\Output\Response store(array $data)
+ * @method static \JobMetric\PackageCore\Output\Response show(int $id, array $with = [])
+ * @method static \JobMetric\PackageCore\Output\Response update(int $id, array $data, array $with = [])
+ * @method static \JobMetric\PackageCore\Output\Response destroy(int $id, array $with = [])
+ * @method static \JobMetric\PackageCore\Output\Response toggleStatus(int $id, array $with = [])
  * @method static array drivers(string $taskDriver = '', array|string|null $taskTypes = null)
  * @method static array details(string $taskDriver, string $taskClassName)
  * @method static \JobMetric\Flow\Contracts\AbstractTaskDriver|null resolveDriver(string $driverClass)
- *
- * @see \JobMetric\Flow\Services\FlowTaskService
  */
 class FlowTask extends Facade
 {
     /**
-     * Get the registered name of the component.
+     * Get the registered name of the component in the service container.
+     *
+     * This accessor must match the binding defined in the package service provider.
      *
      * @return string
      */
     protected static function getFacadeAccessor(): string
     {
-        return FlowTaskService::class;
+        return 'flow-task';
     }
 }
