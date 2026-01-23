@@ -49,6 +49,13 @@ class Flow extends AbstractCrudService
     protected bool $softDelete = true;
 
     /**
+     * Enable toggleStatus API.
+     *
+     * @var bool
+     */
+    protected bool $hasToggleStatus = true;
+
+    /**
      * Human-readable entity name key used in response messages.
      *
      * @var string
@@ -190,33 +197,6 @@ class Flow extends AbstractCrudService
         ]);
     }
 
-    /**
-     * Toggle the boolean 'status' field for a given Flow.
-     *
-     * Role: quick enable/disable switch.
-     *
-     * @param int $flowId
-     * @param array<int,string> $with
-     *
-     * @return Response
-     * @throws Throwable
-     */
-    public function toggleStatus(int $flowId, array $with = []): Response
-    {
-        return DB::transaction(function () use ($flowId, $with) {
-            /** @var FlowModel $flow */
-            $flow = FlowModel::query()->findOrFail($flowId);
-
-            $flow->status = ! $flow->status;
-            $flow->save();
-
-            $this->afterCommon('toggleStatus', $flow);
-
-            return Response::make(true, trans('workflow::base.messages.toggle_status', [
-                'entity' => trans($this->entityName),
-            ]), FlowResource::make($flow->load($with)));
-        });
-    }
 
     /**
      * Get the START state of a Flow.

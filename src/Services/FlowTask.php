@@ -21,6 +21,13 @@ use Throwable;
 class FlowTask extends AbstractCrudService
 {
     /**
+     * Enable toggleStatus API.
+     *
+     * @var bool
+     */
+    protected bool $hasToggleStatus = true;
+
+    /**
      * Human-readable entity name key used in response messages.
      *
      * @var string
