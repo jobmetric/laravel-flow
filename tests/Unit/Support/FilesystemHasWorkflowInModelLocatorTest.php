@@ -3,9 +3,10 @@
 namespace JobMetric\Flow\Tests\Unit\Support;
 
 use Exception;
-use Illuminate\Support\Facades\File;
 use JobMetric\Flow\Support\FilesystemHasWorkflowInModelLocator;
 use JobMetric\Flow\Tests\TestCase;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use ReflectionClass;
 use ReflectionException;
 
@@ -21,6 +22,7 @@ use ReflectionException;
  * - Returns a sorted array of fully qualified class names
  *
  * These tests cover all scenarios including edge cases and error conditions.
+ *
  */
 class FilesystemHasWorkflowInModelLocatorTest extends TestCase
 {
@@ -30,27 +32,22 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
     {
         parent::setUp();
 
-        // Create a temporary directory for test models
+        // Create a temporary directory for test models (native PHP to avoid File facade)
         $this->testModelsPath = storage_path('app/temp_test_models');
-        if (File::exists($this->testModelsPath)) {
-            File::deleteDirectory($this->testModelsPath);
-        }
-        File::makeDirectory($this->testModelsPath, 0755, true);
+        $this->ensureEmptyDirectory($this->testModelsPath);
     }
 
     protected function tearDown(): void
     {
-        // Clean up test files
-        if (File::exists($this->testModelsPath)) {
-            File::deleteDirectory($this->testModelsPath);
-        }
-
+        $this->deleteDirectoryIfExists($this->testModelsPath);
         parent::tearDown();
     }
 
     /**
      * Test that all() method returns array of model classes with HasWorkflow trait
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_all_returns_array_of_models_with_has_workflow_trait(): void
     {
         $result = FilesystemHasWorkflowInModelLocator::all();
@@ -62,6 +59,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
     /**
      * Test that all() method accepts custom paths
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_all_accepts_custom_paths(): void
     {
         $this->createTestModelWithHasWorkflow('TestModel1', $this->testModelsPath);
@@ -75,17 +74,19 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
     /**
      * Test that all() method returns empty array when no models found
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_all_returns_empty_array_when_no_models_found(): void
     {
         $emptyPath = storage_path('app/temp_empty_test');
-        File::makeDirectory($emptyPath, 0755, true);
+        $this->ensureEmptyDirectory($emptyPath);
 
         $result = FilesystemHasWorkflowInModelLocator::all([$emptyPath]);
 
         $this->assertIsArray($result);
         $this->assertEmpty($result);
 
-        File::deleteDirectory($emptyPath);
+        $this->deleteDirectoryIfExists($emptyPath);
     }
 
     /**
@@ -93,6 +94,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_filters_files_without_has_workflow_trait(): void
     {
         $this->createTestModelWithoutHasWorkflow('TestModelWithoutTrait', $this->testModelsPath);
@@ -111,6 +114,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_filters_files_that_dont_extend_model(): void
     {
         $this->createTestClassWithoutModel('TestClassWithoutModel', $this->testModelsPath);
@@ -129,6 +134,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_includes_models_with_has_workflow_trait(): void
     {
         $className = 'TestModelWithTrait';
@@ -148,6 +155,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_filters_abstract_classes(): void
     {
         $this->createAbstractTestModel('AbstractTestModel', $this->testModelsPath);
@@ -166,6 +175,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_filters_classes_not_subclass_of_model(): void
     {
         // Create a class that has HasWorkflow but doesn't extend Model
@@ -185,6 +196,8 @@ class FilesystemHasWorkflowInModelLocatorTest extends TestCase
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_extract_class_from_source_extracts_namespace_correctly(): void
     {
         $source = <<<'PHP'
@@ -211,6 +224,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_extract_class_from_source_handles_classes_without_namespace(): void
     {
         $source = <<<'PHP'
@@ -235,6 +250,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_extract_class_from_source_handles_multiple_namespace_declarations(): void
     {
         $source = <<<'PHP'
@@ -264,6 +281,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_extract_class_from_source_handles_classes_with_whitespace(): void
     {
         $source = <<<'PHP'
@@ -290,6 +309,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_extract_class_from_source_returns_null_for_invalid_source(): void
     {
         $source = '<?php echo "test";';
@@ -308,6 +329,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_default_paths_returns_array_with_base_path(): void
     {
         $reflection = new ReflectionClass(FilesystemHasWorkflowInModelLocator::class);
@@ -324,10 +347,12 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_handles_files_with_syntax_errors_gracefully(): void
     {
         $filePath = $this->testModelsPath . '/InvalidSyntax.php';
-        File::put($filePath, '<?php class InvalidSyntax { invalid syntax }');
+        file_put_contents($filePath, '<?php class InvalidSyntax { invalid syntax }');
 
         $reflection = new ReflectionClass(FilesystemHasWorkflowInModelLocator::class);
         $method = $reflection->getMethod('scan');
@@ -343,6 +368,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_returns_sorted_array(): void
     {
         $this->createTestModelWithHasWorkflow('ZModel', $this->testModelsPath);
@@ -365,6 +392,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_returns_unique_values(): void
     {
         $this->createTestModelWithHasWorkflow('DuplicateModel', $this->testModelsPath);
@@ -384,13 +413,15 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_handles_multiple_paths(): void
     {
-        $path1 = storage_path('app/temp_test_models_1');
-        $path2 = storage_path('app/temp_test_models_2');
+        $path1 = storage_path('app/temp_test_models_1_' . uniqid());
+        $path2 = storage_path('app/temp_test_models_2_' . uniqid());
 
-        File::makeDirectory($path1, 0755, true);
-        File::makeDirectory($path2, 0755, true);
+        $this->ensureEmptyDirectory($path1);
+        $this->ensureEmptyDirectory($path2);
 
         $this->createTestModelWithHasWorkflow('Model1', $path1);
         $this->createTestModelWithHasWorkflow('Model2', $path2);
@@ -403,13 +434,15 @@ PHP;
         $this->assertIsArray($result);
         $this->assertNotEmpty($result);
 
-        File::deleteDirectory($path1);
-        File::deleteDirectory($path2);
+        $this->deleteDirectoryIfExists($path1);
+        $this->deleteDirectoryIfExists($path2);
     }
 
     /**
      * Test that scan() handles non-existent paths gracefully
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_handles_non_existent_paths_gracefully(): void
     {
         $nonExistentPath = storage_path('app/non_existent_path_' . uniqid());
@@ -432,6 +465,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_handles_files_with_extends_model_in_comments(): void
     {
         $filePath = $this->testModelsPath . '/CommentModel.php';
@@ -447,7 +482,7 @@ class CommentModel extends \Illuminate\Database\Eloquent\Model
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
 
         $reflection = new ReflectionClass(FilesystemHasWorkflowInModelLocator::class);
         $method = $reflection->getMethod('scan');
@@ -462,6 +497,8 @@ PHP;
      *
      * @throws ReflectionException
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_scan_handles_models_with_different_extends_syntax(): void
     {
         $filePath = $this->testModelsPath . '/DifferentExtendsModel.php';
@@ -478,7 +515,7 @@ class DifferentExtendsModel extends Model
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
 
         $reflection = new ReflectionClass(FilesystemHasWorkflowInModelLocator::class);
         $method = $reflection->getMethod('scan');
@@ -507,7 +544,7 @@ class {$className} extends Model
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
     }
 
     /**
@@ -528,7 +565,7 @@ class {$className} extends Model
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
     }
 
     /**
@@ -548,7 +585,7 @@ class {$className}
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
     }
 
     /**
@@ -570,6 +607,39 @@ abstract class {$className} extends Model
 }
 PHP;
 
-        File::put($filePath, $content);
+        file_put_contents($filePath, $content);
+    }
+
+    /**
+     * Ensure directory exists and is empty (native PHP to avoid File facade).
+     */
+    private function ensureEmptyDirectory(string $path): void
+    {
+        if (is_dir($path)) {
+            $this->deleteDirectoryIfExists($path);
+        }
+        if (! is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+    }
+
+    /**
+     * Recursively delete directory if it exists (native PHP).
+     */
+    private function deleteDirectoryIfExists(string $path): void
+    {
+        if (! is_dir($path)) {
+            return;
+        }
+        $items = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($items as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getRealPath());
+            }
+            else {
+                unlink($item->getRealPath());
+            }
+        }
+        rmdir($path);
     }
 }
