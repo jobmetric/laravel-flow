@@ -381,7 +381,10 @@ class FlowTransition extends AbstractCrudService
     protected function resolveSubjectFromInstance(FlowTransitionModel $transition): ?Model
     {
         // Try to find an active instance for this transition
-        $instance = FlowInstance::query()->where('flow_transition_id', $transition->id)->active()->latest()->first();
+        $instance = FlowInstance::query()->where('flow_transition_id', $transition->id)->active()
+            ->orderByDesc('started_at')
+            ->orderByDesc('id')
+            ->first();
 
         if ($instance) {
             return $instance->instanceable;
@@ -735,7 +738,10 @@ class FlowTransition extends AbstractCrudService
 
         // Check if there's an existing active instance for this subject
         /* @var FlowInstance|null $existingInstance */
-        $existingInstance = FlowInstance::query()->forModel($subject)->active()->latest()->first();
+        $existingInstance = FlowInstance::query()->forModel($subject)->active()
+            ->orderByDesc('started_at')
+            ->orderByDesc('id')
+            ->first();
 
         if ($existingInstance) {
             // Update existing instance
