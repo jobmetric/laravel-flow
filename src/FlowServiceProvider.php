@@ -51,6 +51,27 @@ class FlowServiceProvider extends PackageCoreServiceProvider
      */
     public function afterBootPackage(): void
     {
+        if ($this->app->bound('EventRegistry')) {
+            $registry = $this->app->make('EventRegistry');
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowStoreCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowUpdateCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowDeleteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowRestoreCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\Flow\FlowForceDeleteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateStoreCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateUpdateCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowState\FlowStateDeleteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskStoreCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskUpdateCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTask\FlowTaskDeleteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowTransition\FlowTransitionExecuteCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent::class);
+            $registry->register(\JobMetric\Flow\Events\FlowBinding\FlowBindingDetachCommittedEvent::class);
+        }
+
         // Register events if EventRegistry is available
         // This ensures EventRegistry is available if EventSystemServiceProvider is loaded
         if ($this->app->bound('EventRegistry')) {

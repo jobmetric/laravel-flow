@@ -20,6 +20,13 @@ use Throwable;
 
 class FlowTask extends AbstractCrudService
 {
+    /** @var array<string, class-string<\JobMetric\EventSystem\Contracts\DomainEvent>> */
+    protected static array $committedEventClasses = [
+        'store' => \JobMetric\Flow\Events\FlowTask\FlowTaskStoreCommittedEvent::class,
+        'update' => \JobMetric\Flow\Events\FlowTask\FlowTaskUpdateCommittedEvent::class,
+        'destroy' => \JobMetric\Flow\Events\FlowTask\FlowTaskDeleteCommittedEvent::class,
+    ];
+
     /**
      * Enable toggleStatus API.
      *

@@ -41,6 +41,18 @@ use Throwable;
  */
 class Flow extends AbstractCrudService
 {
+    /** @var array<string, class-string<\JobMetric\EventSystem\Contracts\DomainEvent>> */
+    protected static array $committedEventClasses = [
+        'store' => \JobMetric\Flow\Events\Flow\FlowStoreCommittedEvent::class,
+        'update' => \JobMetric\Flow\Events\Flow\FlowUpdateCommittedEvent::class,
+        'destroy' => \JobMetric\Flow\Events\Flow\FlowDeleteCommittedEvent::class,
+        'restore' => \JobMetric\Flow\Events\Flow\FlowRestoreCommittedEvent::class,
+        'forceDelete' => \JobMetric\Flow\Events\Flow\FlowForceDeleteCommittedEvent::class,
+    ];
+
+    /** @var list<string> */
+    protected array $committedEventRelations = ['translations'];
+
     /**
      * Enable soft-deletes + restore/forceDelete APIs.
      *
@@ -252,7 +264,7 @@ class Flow extends AbstractCrudService
 
             // Lock all flows in the same scope to prevent race conditions
             // when multiple requests try to set different flows as default simultaneously
-            $scopeQueryBuilder()->lockForUpdate()->get();
+            $outcomeScope = $scopeQueryBuilder()->lockForUpdate()->get();
 
             // Update all other flows in scope to non-default
             $scopeQueryBuilder()->whereKeyNot($flow->getKey())->update(['is_default' => false]);
@@ -262,6 +274,11 @@ class Flow extends AbstractCrudService
 
             $flow->refresh();
             $this->afterCommon('setDefault', $flow);
+            foreach ($outcomeScope as $outcomeFlow) {
+                if ((bool) $outcomeFlow->is_default !== ((int) $outcomeFlow->id === (int) $flow->id)) {
+                    $this->fireCommittedEvent('update', $outcomeFlow);
+                }
+            }
 
             return Response::make(true, trans('workflow::base.messages.set_default', [
                 'entity' => trans($this->entityName),
@@ -299,6 +316,7 @@ class Flow extends AbstractCrudService
             $flow->save();
 
             $this->afterCommon('setActiveWindow', $flow);
+            $this->fireCommittedEvent('update', $flow, $flow->wasChanged(['active_from', 'active_to']));
 
             return Response::make(true, trans('workflow::base.messages.set_active_window', [
                 'entity' => trans($this->entityName),
@@ -332,6 +350,7 @@ class Flow extends AbstractCrudService
             $flow->save();
 
             $this->afterCommon('setRollout', $flow);
+            $this->fireCommittedEvent('update', $flow, $flow->wasChanged(['rollout_pct']));
 
             return Response::make(true, trans('workflow::base.messages.set_rollout', [
                 'entity' => trans($this->entityName),
@@ -359,9 +378,14 @@ class Flow extends AbstractCrudService
             $position = 1;
             $firstModel = null;
             foreach ($orderedIds as $id) {
+                $outcomeFlow = FlowModel::query()->find($id);
+                $outcomeChanged = $outcomeFlow && (int) $outcomeFlow->ordering !== $position;
                 FlowModel::query()->whereKey($id)->update([
                     'ordering' => $position++,
                 ]);
+                if ($outcomeChanged) {
+                    $this->fireCommittedEvent('update', $outcomeFlow);
+                }
                 if ($firstModel === null) {
                     $firstModel = FlowModel::query()->find($id);
                 }
@@ -458,6 +482,7 @@ class Flow extends AbstractCrudService
             }
 
             $this->afterCommon('duplicate', $copy);
+            $this->fireCommittedEvent('store', $copy);
 
             return Response::make(true, trans('workflow::base.messages.duplicated', [
                 'entity' => trans($this->entityName),
@@ -705,6 +730,7 @@ class Flow extends AbstractCrudService
             }
 
             $this->afterCommon('import', $flow);
+            $this->fireCommittedEvent('store', $flow);
 
             return $flow;
         });

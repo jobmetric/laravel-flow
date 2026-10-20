@@ -25,6 +25,16 @@ use Throwable;
  */
 class FlowState extends AbstractCrudService
 {
+    /** @var array<string, class-string<\JobMetric\EventSystem\Contracts\DomainEvent>> */
+    protected static array $committedEventClasses = [
+        'store' => \JobMetric\Flow\Events\FlowState\FlowStateStoreCommittedEvent::class,
+        'update' => \JobMetric\Flow\Events\FlowState\FlowStateUpdateCommittedEvent::class,
+        'destroy' => \JobMetric\Flow\Events\FlowState\FlowStateDeleteCommittedEvent::class,
+    ];
+
+    /** @var list<string> */
+    protected array $committedEventRelations = ['translations'];
+
     /**
      * Human-readable entity name key used in response messages.
      *

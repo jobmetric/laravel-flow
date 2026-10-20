@@ -158,6 +158,9 @@ trait HasFlow
             /** @var FlowUse $use */
             $use = $this->getRelation('flowUse');
             $use->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+            if ($use->wasChanged('flow_id')) {
+                app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+            }
 
             return $use;
         }
@@ -165,13 +168,18 @@ trait HasFlow
         $existing = $this->flowUse()->first();
         if ($existing) {
             $existing->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+            if ($existing->wasChanged('flow_id')) {
+                app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+            }
 
             return $existing;
         }
 
-        return $this->flowUse()->create([
+        $outcomeBinding = $this->flowUse()->create([
             'flow_id' => $flow->getKey(),
             'used_at' => $usedAt,
         ]);
+        app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+        return $outcomeBinding;
     }
 }

@@ -91,6 +91,7 @@ trait HasWorkflow
                 'flow_id' => $flowId,
                 'used_at' => Carbon::now('UTC'),
             ]);
+            app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($model->getMorphClass(), $model->getKey(), (int) $flowId), $model->getConnectionName());
         });
     }
 
@@ -192,6 +193,9 @@ trait HasWorkflow
             /** @var FlowUse $use */
             $use = $this->getRelation('flowUse');
             $use->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+            if ($use->wasChanged('flow_id')) {
+                app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+            }
 
             return $use;
         }
@@ -199,14 +203,19 @@ trait HasWorkflow
         $existing = $this->flowUse()->first();
         if ($existing) {
             $existing->fill(['flow_id' => $flow->getKey(), 'used_at' => $usedAt])->save();
+            if ($existing->wasChanged('flow_id')) {
+                app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+            }
 
             return $existing;
         }
 
-        return $this->flowUse()->create([
+        $outcomeBinding = $this->flowUse()->create([
             'flow_id' => $flow->getKey(),
             'used_at' => $usedAt,
         ]);
+        app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingAttachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $flow->getKey()), $this->getConnectionName());
+        return $outcomeBinding;
     }
 
     /**
@@ -238,7 +247,11 @@ trait HasWorkflow
      */
     public function unbindFlow(): void
     {
-        $this->flowUse()->delete();
+        $outcomeBinding = $this->flowUse()->first();
+        $outcomeDeleted = $this->flowUse()->delete();
+        if ($outcomeBinding && $outcomeDeleted > 0) {
+            app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowBinding\FlowBindingDetachCommittedEvent($this->getMorphClass(), $this->getKey(), (int) $outcomeBinding->flow_id), $this->getConnectionName());
+        }
         $this->selectedFlowIdForBinding = null;
     }
 

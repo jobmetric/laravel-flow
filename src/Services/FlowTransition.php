@@ -41,6 +41,16 @@ use ValueError;
 
 class FlowTransition extends AbstractCrudService
 {
+    /** @var array<string, class-string<\JobMetric\EventSystem\Contracts\DomainEvent>> */
+    protected static array $committedEventClasses = [
+        'store' => \JobMetric\Flow\Events\FlowTransition\FlowTransitionStoreCommittedEvent::class,
+        'update' => \JobMetric\Flow\Events\FlowTransition\FlowTransitionUpdateCommittedEvent::class,
+        'destroy' => \JobMetric\Flow\Events\FlowTransition\FlowTransitionDeleteCommittedEvent::class,
+    ];
+
+    /** @var list<string> */
+    protected array $committedEventRelations = ['translations'];
+
     public function __construct(
         protected FlowTaskRegistry $taskRegistry
     ) {
@@ -341,6 +351,7 @@ class FlowTransition extends AbstractCrudService
 
                 // Mark transition as successful
                 $transitionResult->addMessage(trans('workflow::base.messages.transition_executed_successfully'));
+                app(\JobMetric\EventSystem\Support\CommittedEventDispatcher::class)->dispatch(new \JobMetric\Flow\Events\FlowTransition\FlowTransitionExecuteCommittedEvent($transition->getKey(), $subject->getMorphClass(), $subject->getKey()), $subject->getConnectionName());
 
                 return $transitionResult;
             } catch (TaskRestrictionException $e) {

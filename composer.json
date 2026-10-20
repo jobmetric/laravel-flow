@@ -12,12 +12,12 @@
     ],
     "homepage": "https://doc.jobmetric.net/package/laravel-flow",
     "require": {
-        "php": ">=8.0.1",
+        "php": ">=8.2",
         "laravel/framework": ">=9.19",
         "spatie/laravel-query-builder": "^6.3",
-        "jobmetric/laravel-package-core": "^1.35",
+        "jobmetric/laravel-package-core": "^1.39",
         "jobmetric/laravel-translation": "^3.5|^4.0",
-        "jobmetric/laravel-event-system": "^2.7",
+        "jobmetric/laravel-event-system": "^2.10",
         "jobmetric/laravel-form": "^1.5"
     },
     "autoload": {
